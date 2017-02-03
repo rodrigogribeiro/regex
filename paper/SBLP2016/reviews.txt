@@ -1,0 +1,277 @@
+----------------------- REVIEW 1 ---------------------
+PAPER: 31
+TITLE: Certified Derivative Based Parsing of Regular Expressions
+AUTHORS: Raul Lopes, Rodrigo Ribeiro and Carlos Camarão
+
+OVERALL EVALUATION: -1 (weak reject)
+REVIEWER'S CONFIDENCE: 3 (medium)
+
+----------- Review -----------
+The paper presents the formalization of a certified
+algorithm to parse a regular language. The algorithm
+is based on the use of derivatives for regular expressions (RE),
+and it is implemented in the dependently typed language Idris.
+The formalized algorithm is then used to build a tool similar
+to "grep", which tries to match an RE against an input text.
+
+After the paper "Regular-expression derivatives re-examined"
+(Owens et al., 2009), the interest about the use of derivatives
+for REs increased, and some papers about the subject were published.
+After looking some of these papers, I was not able to identify a significant
+contribution in the present work.
+
+#####
+
+The contribution is to describe the formalization of a tool for RE parsing
+based on Brzozowski derivatives.
+
+#####
+
+
+When Brzozowski proposed RE derivatives, as described by Owens,
+it seems the ultimate goal was to generate a Deterministic Finite Automata (DFA)
+to efficiently recognize a regular language. The present paper does
+not follow this approach, it tries to recognize a regular language
+using the RE derivative itself, which is not an efficient approach.
+This question is well-known and is also discussed in a related work [11].
+
+####
+Yes, the main issue, also stated in related work, is that Brzozowski definition
+of derivatives uses an equivalence relation modulo ACUI axioms. So, the algorithm
+needs, at each step, to simplify the resulting RE. This is one of the contributions of
+the work, to give a precise account of Owens smart constructors.
+###
+
+I think the formalization of derivatives in Idris presented is not
+a big contribution because other similar approches were already
+published. For example, [Almeida et al., 2011] described a formalization
+of regular languages in the Coq proof assistant and proved the correctness
+of a partial derivative automata construction from a regular expression.
+As the paper itself mentions, other parsing algorithms, such as Valiant's
+algorithm to recognize a context-free language, were already certified.
+
+####
+
+Ok. I added Almeida et al. to related work.
+
+####
+
+As mentioned in Section 6, when comparing the present work with related
+ones, there are already several tools based on derivatives. Although these
+tools do not have formal proofs of correctness, they are based on a nice
+theory/algorithm and are already used in production tools, such as a Scheme
+compiler. By its turn, the tool described in the paper still needs some
+improvements, because it is around 10x slower than the other tools in
+simple benchmarks.
+
+####
+
+Ok, but they use different compilers. For instance, GHC generates much
+faster code than Idris compiler.
+
+####
+
+In resume, I think the paper follows a current trend in certification
+of algorithms, but it still needs to mature more in order to present
+a clear contribution.
+
+
+Below there are some specific comments:
+  - Section 3, page 5: "of these ERs" -> "of these REs"
+
+###
+Ok, fixed.
+####
+
+  - I did not understand why we need two rules (InAltL and InAltR) for alternation.
+
+###
+I'll ignore this. Obvious.
+
+###
+
+
+ - In Figure 2, the X axis is labeled 'Input size (thousands of "a"s)',
+   but I think should be thousands of "ab"s.
+   
+#####
+Ok.
+
+(Raul) : Could you fix this on this figure?
+
+###
+
+
+ - In Section 5, I think it would be better to use a more robust/known benchmark,
+   the current benchmark seems too simple
+
+###
+
+We use the same benchmark as Sulzmann et al. 2012 --- Posix RE parsing with Derivatives.
+I put this explicitly on the text.
+
+###
+
+[Almeida et al., 2011] Partial Derivative Automata Formalized in Coq.
+
+
+----------------------- REVIEW 2 ---------------------
+PAPER: 31
+TITLE: Certified Derivative Based Parsing of Regular Expressions
+AUTHORS: Raul Lopes, Rodrigo Ribeiro and Carlos Camarão
+
+OVERALL EVALUATION: 2 (accept)
+REVIEWER'S CONFIDENCE: 4 (high)
+
+----------- Review -----------
+The authors successfully presents a formalization of a
+derivative-based parser for regular expressions. This formalization
+comprises, according to the authors, 563 lines of Idris code, and
+the proof of 23 theorems and lemmas, which, for the
+sake of brevity, have been omitted from the paper, and replaced by
+short-proof sketches, given the limitation on the number of papers pages.
+The paper is well organized, but, in order to follow the papers idea,
+the reader must be a specialist acquainted with the notation used and
+with the dependent type system of Idris.
+
+The paper main contribution is the formalization of the parsing algorithm
+and the explanation of the techniques used.
+
+On the negative side, it should be pointed out that:
+1) the evaluation section on the experiment performed is too short;
+2) the review of the related work is too brief and does not show the
+validity of the approach proposed;
+3) there is not a proper evaluation discussion on the advantages and
+disadvantages of the proposal.
+
+###
+
+Ok. The experiments are really short and I do not know how to express
+"advantages" of the formalization. Suggestions?
+
+###
+
+In order to improve paper readability, I recommmend that the following
+typos be corrected:
+section 1, paragraph 7, line 5: proof sketchs > proof sketches
+
+###
+Ok, fixed.
+####
+
+section 5, paragraph 1, line 1: formalized algorithm > algorithm formalized
+###
+Ok, fixed.
+####
+
+section 5, paragraph 1, line 4: [4], that relies > [4], which relies
+###
+Ok, fixed.
+####
+
+section 6, paragraphs 1, 2, 3, 4 and 5 (several occurences): et. al. > et al.
+###
+Ok, fixed.
+####
+
+section 6, paragraph 2, line 1: Might et al. reports >  Might et al. report
+###
+Ok, fixed.
+####
+
+section 6, paragraph 2, line 5: Might et al. doesnt >  Might et al. do not
+###
+Ok, fixed.
+####
+
+section 6, paragraph 6, line 3: [31], that >  [31], which
+###
+Ok, fixed.
+####
+
+section 7, paragraph 3: about how ->  on
+###
+Ok, fixed.
+####
+
+
+In conclusion, I consider that the paper has enough quality to be accepted
+to SBLP, because it addresses an important issue, it is sound, it contains
+original contributions to the field, and it is well written and organized.
+
+----------------------- REVIEW 3 ---------------------
+PAPER: 31
+TITLE: Certified Derivative Based Parsing of Regular Expressions
+AUTHORS: Raul Lopes, Rodrigo Ribeiro and Carlos Camarão
+
+OVERALL EVALUATION: 2 (accept)
+REVIEWER'S CONFIDENCE: 3 (medium)
+
+----------- Review -----------
+The authors present in this paper (1) the complete formalization of a certified algorithm for regular expression parsing based on Brzozowski derivatives, in the dependently typed language Idris. The formalized algorithm produces a proof that an input string matches a given regular expression or a proof that no matching exists. (2) A tool for regular expression based search, in the style of GNU grep with the certified algorithm, and conducted practical experiments with this tool, called iGrep.
+
+The topic of this paper is interesting, and is in the scope of SBLP. It has a solid contribution. It is well organized and well written. The two experimental results are interesting, even though  iGrep shows less performance compared to other tools used in the experiments: GNU Grep, Google regular expression library and Haskell RE parsing algorithms.
+
+I recommend to accept this paper.
+
+Suggestions for improvement of the paper:
+
+1. The Related Work section should be enhanced.
+
+2. It needs minor corrections:
+    2.1 Page 2, last paragraph of Section 1, change “no” to “not”
+    ###
+Ok, fixed.
+####
+
+    2,2 In the same page and paragraph change “version” to “Version”
+    ###
+Ok, fixed.
+####
+
+    2.3 Page 12, first paragraph of Section 6, change “: Recently” to “: recently”
+    ###
+Ok, fixed.
+####
+
+    2.4 In the same page and 5th paragraph, change “ : Certified algorithms” to “ : certified algorithms”
+    ###
+Ok, fixed.
+####
+
+    2.5 Page 13t, second paragraph, change “producedure” to “procedure”
+    ###
+Ok, fixed.
+####
+
+
+3. All the source code was formalized in Idris. Considering that only the overview of Idris has been presented in the article, it is difficult to understand the proofs of some properties since the authors do not presented every detail, only proof sketches and point out where details can be found in the source code.
+
+###
+Well, there's no way to present every detail of formalized algorithm in 15 pages...
+####
+
+
+
+----------------------- REVIEW 4 ---------------------
+PAPER: 31
+TITLE: Certified Derivative Based Parsing of Regular Expressions
+AUTHORS: Raul Lopes, Rodrigo Ribeiro and Carlos Camarão
+
+OVERALL EVALUATION: 2 (accept)
+REVIEWER'S CONFIDENCE: 4 (high)
+
+----------- Review -----------
+The dependently typed language Idris is used to formalize a derivative-based algorithm for parsing regular expressions.
+
+An inductive type (InRegExp) is defined to specify the semantics of regular expressions. The datatype is indexed by a regular expression and the String it accepts.
+Then the algorithm is translated to Idris functions and its properties are proven in terms of the InRegExp type.
+
+I like the paper, the proposed formalization is simple and elegant.
+
+
+Although the text is quite clear, I think there are code fragments that need some more explanation. For example, in the hasEmptyDec function, the construction of some of the evidences that the empty string is not accepted is not clear, since some of the used functions (inZeroInv, inChrNil, etc.) are neither defined nor explained.
+###
+I added a paragraph after hasEmptyDec definition trying to explain the inversion lemmas used.
+####
+

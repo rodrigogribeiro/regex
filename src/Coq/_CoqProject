@@ -1,0 +1,8 @@
+-R . regex
+
+Tactics/LibTactics.v
+Syntax/Regex.v
+Derivatives/Smart.v
+Derivatives/Brzozowski.v
+Derivatives/Antimirov.v
+

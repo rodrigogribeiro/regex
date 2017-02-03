@@ -1,0 +1,1921 @@
+\documentclass[review]{elsarticle}
+
+\usepackage{amsmath,amsthm,amssymb,thmtools}
+%\modulolinenumbers[5]
+
+\journal{Science of Computer Programming}
+
+\input{newcommands}
+
+\bibliographystyle{elsarticle-num}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{Ambiguity and Constrained Polymorphism}
+
+%% Group authors per affiliation:
+\author{Carlos Camar\~ao}
+\address{Dep. de Ci\^encia da Computa\c{c}\~ao, Universidade Federal
+  de Minas Gerais, Av. Ant\^onio Carlos 6627, Belo Horizonte, Minas Gerais, Brasil}
+\ead{camarao@dcc.ufmg.br}
+
+%% or include affiliations in footnotes:
+\author{Luc\'{\i}lia Figueiredo}
+\address{Dep. de Computa\c{c}\~ao, Universidade
+  Federal de Ouro Preto, ICEB, Campus Universit\'ario Morro do
+  Cruzeiro, Ouro Preto, Minas Gerais, Brasil}
+\ead{luciliacf@gmail.com}
+
+\author{Rodrigo Ribeiro}
+\cortext[rgr]{Corresponding author}
+\ead{rodrigo@decsi.ufop.br}
+
+\address[rgr]{Dep. de Computa\c{c}\~ao e Sistemas, Universidade
+  Federal de Ouro Preto, ICEA, Jo\~ao Monlevade, Minas Gerais, Brasil}
+
+\begin{abstract}
+
+This paper considers the problem of ambiguity in Haskell-like
+languages. Overloading resolution is characterized in the context of
+constrained polymorphism by the presence of unreachable variables in
+constraints on the type of the expression. A new definition of
+ambiguity is presented, where existence of more than one instance for
+the constraints on an expression type is considered only after
+overloading resolution. This introduces a clear distinction between
+ambiguity and overloading resolution, makes ambiguity more intuitive
+and independent from extra concepts, such as functional dependencies,
+and enables more programs to type-check as fewer ambiguities arise.
+
+The paper presents a type system and a type inference algorithm that
+includes: a constraint-set satisfiability function, that determines
+whether a given set of constraints is entailed or not in a given
+context, focusing on issues related to decidability, a constraint-set
+improvement function, for filtering out constraints for which
+overloading has been resolved, and a context-reduction function, for
+reducing constraint sets according to matching instances. A standard
+dictionary-style semantics for core Haskell is also presented.
+
+\end{abstract}
+
+\begin{keyword}
+Ambiguity; Context-dependent overloading; Haskell
+\end{keyword}
+
+\end{frontmatter}
+
+\section{Introduction}
+\label{sec:intro}
+
+This paper considers the problem of ambiguity in the context of
+constrained polymorphism.
+
+We use {\em constrained polymorphism\/} to refer to the polymorphism
+originated by the combination of parametric polymorphism and
+context-dependent overloading.
+
+Context-dependent overloading is characterized by the fact that
+overloading resolution in expressions (function calls) $e\: e'$ is
+based not only on the types of the function ($e$) and the argument
+($e'$), but also on the context in which the expression ($e\: e'$)
+occurs. As result of this, constants can also be overloaded --- for
+example, literals (like {\tt 1}, {\tt 2} etc.) can be used to
+represent fixed and arbitrary precision integers as well as fractional
+numbers (for instance, they can be used in expressions such as {\tt 1
+  + 2.0}) --- and functions with types that differ only on the type of
+the result (for example, {\em read\/} functions can be overloaded, of
+types {\tt \String\ $\rightarrow$ \Bool}, {\tt \String $\rightarrow$
+  \Int} etc., each taking a string and generating the denoted value in
+the corresponding type). In this way, context-dependent overloading
+allows overloading to have a less restrictive and more prominent role
+in the presence of parametric polymorphism, as explored mainly in the
+programming language Haskell.
+
+Ambiguity is however a major concern in context-dependent overloading.
+The usual meaning of an {\em ambiguous expression\/} is, informally,
+an expression that has more than one meaning, or an expression that can
+be interpreted in two or more distinct ways.
+
+A formalization of this, with respect to a language semantics
+definition by means of type derivations, defines that an expression
+$e$ is ambiguous if there exist two or more type derivations that give
+the same type and may assign distinct semantics values to $e$ (in the
+following, $\Gamma \vdash e:\sigma$ specifies that type $\sigma$ is
+derivable for expression $e$ in typing context $\Gamma$, using the
+axioms and rules of the type system; $\x \Gamma \vdash e:\sigma \y$
+denotes the semantic value obtained by using such axioms and rules):
+
+\begin{Definition}[Standard Ambiguity]
+\label{Ambiguity-standard-def}
+
+  An expression $e$ is called {\em ambiguous\/} if there exist
+  derivations $\Delta$ and $\Delta'$ of $\x \Gamma \vdash e:\sigma \y$
+  and of $\x \Gamma' \vdash e:\sigma \y$, respectively, such that $\x
+  \Gamma \vdash e:\sigma \y \not= \x \Gamma' \vdash e:\sigma \y$,
+  where $\Gamma$ and $\Gamma'$ give the same type to every $x$ free in
+  $e$.
+
+\end{Definition}
+
+This is equivalent to defining that an expression $e$ is ambiguous if
+it prevents the definition of a coherent semantics to $e$ \cite[page
+  286]{Mitchell96}, that is, a semantics defined by induction on the
+structure of expressions where the semantic value assigned to a
+well-typed expression is not independent of the type derivation.
+
+Without an explicit reference to a distinct definition, ambiguous
+refers to the standard definition above.
+
+Detection of ambiguity is usually done at compile-time, by the
+compiler type analysis phase --- in Haskell, by the type inference
+algorithm. Unfortunately, however, detection of ambiguity can not be
+based on type system definitions, at least for usual definitions, that
+allow context-free type instantiations, that is, type instantiations
+that can be done independently of the context where an expression
+occurs. This causes a well-known incompleteness problem for usual
+definitions of Haskell type systems
+\cite{MarkJones94a,Faxen2002,OutsideIn2011}.  This problem is not the
+focus of this paper.
+
+This paper concentrates instead on another issue related to ambiguity
+in Haskell, which has not received attention in the technical
+literature, namely the relation between ambiguity and overloading
+resolution in the context of constrained polymorphism, in particular
+the fact that the possibility of inserting new (instance) definitions
+disregards that an expression may be disambiguated by occurring in
+some context where there exists a single instance which can be used to
+instantiate type variables that do not occur in the simple type
+component of the constrained type.
+
+Specifically, our contributions are:
+\begin{itemize}
+    \item A precise characterization of overloading resolution and ambiguity.
+    \item Discussion of Haskell's open-world definition of ambiguity
+      and proposal of a new definition, called delayed-closure
+      ambiguity, that is distinguished from overloading resolution: in
+      the open-world approach, ambiguity is a syntactic property of a
+      type, not distinguished from overloading resolution, whereas
+      with delayed-closure this syntactic property (existence of
+      unreachable variables in constraints) characterizes overloading
+      resolution, and ambiguity is a property depending on the context
+      where the relevant expression occurs, namely the existence of
+      two or more instances that entail the constraint with
+      unreachable variables. Ambiguity is tested only after
+      overloading resolution. 
+\end{itemize}
+
+In Section \ref{Haskell-ambiguity} we present Haskell's definition of
+ambiguity, called open-world ambiguity. In Section
+\ref{Haskell-and-standard-ambiguity} we compare open-world ambiguity
+with the standard, semantical notion of ambiguity.
+
+Substitutions, denoted by meta-variable $\phi$, possibly primed or
+subscripted, are used throughout the paper. A substitution denotes a
+function from type variables to simple type
+expressions. $\phi\:\sigma$ and $\phi(\sigma)$ denote the capture-free
+operation of substituting $\phi(\alpha)$ for each free occurrence of
+type variable $\alpha$ in $\sigma$, and analogously for the
+application of substitutions to constraints, sets of types and sets of
+constraints.
+
+Symbol $\circ$ denotes function composition, and $\dom(\phi)=\{\alpha
+\mid \phi(\alpha)\not=\alpha\}$ and $\id$ denotes the identity
+substitution.  The restriction $\phi|_V$ of $\phi$ to $V$ denotes the
+substitution $\phi'$ such that $\phi'(\alpha) = \phi(\alpha)$ if
+$\alpha\in V$, otherwise $\alpha$.
+
+A substitution $\phi$ is more general than another $\phi'$, written
+$\phi\leq \phi'$, if there exists $\phi_1$ such that $\phi = \phi_1
+\circ \phi'$.
+
+Section \ref{Delayed-closure-ambiguity} presents an alternative
+definition of ambiguity, called {\em delayed-closure\/} ambiguity,
+that specifies essentially that:
+
+ \begin{enumerate}
+  \item Ambiguity should be checked when (and only when) overloading
+    is resolved.  We identify that overloading is resolved in a
+    constraint on the type of an expression by the presence of
+    unreachable variables in this constraint (overloading resolution
+    is defined formally in Section \ref{Haskell-ambiguity}). A type
+    variable that occurs in a constraint is called reachable if it
+    occurs in the simple type or in a constraint where another
+    reachable type variable occurs, otherwise unreachable.
+
+    This is unlike open-world ambiguity, where the existence of any
+    type variable that does not occur in the simple type component of
+    a constrained type implies, in the abscence of functional
+    dependencies (see below), ambiguity . For example, type {\tt
+      \Coll\ $c$ $e$ $\Rightarrow$ $c$} of an \mempty\ member of a
+    class \Coll\ $c$ $e$, is considered ambiguous in Haskell, since
+    type variable $e$ does not occur in the simple type component of
+    the constrained type \Coll\ $c$ $e$ $\Rightarrow$ $c$ (despite
+    being reachable). In delayed-closure ambiguity, types with only
+    reachable type variables are not checked for ambiguity, since
+    overloading is still unresolved and may be resolved later,
+    depending on a program context in which it occurs.
+
+  \item Constraints with unreachable type variables may be removed if
+    there exists only a single satisfying substitution that can be
+    used to instantiate the unreachable type variables.
+
+    An important observation is that such constraints, removed by the
+    existence of a single satisfying substitution, become ambiguous by
+    the addition of further instances if a satisfying substitution
+    exists for a removed constraint with respect to the instances that
+    have been added.
+
+    The specification of defaults, as proposed in subsection
+    \ref{Defaults}, allows programmers to avoid types to become
+    ambiguous by the addition of further instances.
+
+    % Subsection \ref{Instance-export-import} describes a change to
+    % the language that would also allow control over the visibility
+    % of instances in program modules.
+
+  \end{enumerate}
+
+%In Section \ref{Closed-world-ambiguity} we present and discuss
+%definitions of ambiguity based on a closed world approach to
+%overloading that are alternatives to the standard semantical
+%definition.
+Section \ref{Satisfiability} contains a description of constraint set
+satisfiability, focusing on issues related to decidability. Section
+\ref{Type-system} presents a type system for a core-Haskell language
+that adopts delayed-closure ambiguity.  Section \ref{Type-inference}
+presents a type inference algorithm for core-Haskell and discusses
+soundness and completeness of the type inference algorithm with
+respect to the type system. Section \ref{Semantics} presents a a
+standard dictionary-style semantics for core Haskell. Section
+\ref{Related-work} discusses related work and Section \ref{Conclusion}
+summarizes our conclusions.
+
+\section{Open-world ambiguity}
+\label{Haskell-ambiguity}
+
+The support of overloading in Haskell is based on the definition of
+{\em type classes\/}. A type class declaration specifies names or
+symbols, called class members, and their corresponding types. Several
+definitions of these names can be given, each one in an {\em instance
+  definition\/}. Each definition of a name $x$, in an instance
+definition, must have a type that is an instance of the type given to
+$x$ in the type class declaration.
+
+Consider, for example, a declaration of type class \Eq\ that defines
+symbols {\tt (==)} and {\tt (/=)} and their types, for comparing if
+two values are equal or not, respectively:
+
+  \prog{xx\=\kill
+       class \Eq\ $a$ where\+\\
+         (==) :: $a$ $\rightarrow$ $a$ $\rightarrow$ \Bool\\
+         (/=) :: $a$ $\rightarrow$ $a$ $\rightarrow$ \Bool\\
+         $x$ == $y$ = \nott\ ($x$ /= $y$)\\
+         $x$ /= $y$ = \nott\ ($x$ == $y$)
+       }
+
+The class declaration of \Eq\ specifies also so-called {\em default\/}
+definitions. A default definition of a name $x$ is assumed to be given
+in an instance definition that does not specify itself a definition
+for $x$.
+
+Instances of type class \Eq\ defining equality and inequality of
+operations, denoted by {\tt (==)} and {\tt (/=)}, for values of types
+\Int\ and \Bool, can then be given as follows, assuming that
+\primEqInt\ is a primitive function for testing equality of values of
+type \Int:
+
+  \prog{xx\=\kill
+       instance \Eq\ \Int\ where\+\\
+         (==) = \primEqInt \-\\ \\
+
+       instance \Eq\ \Bool\ where\+\\
+         \False\ \=== \False\ \== \True\kill
+         \True\  \>== \True\  \>= \True\\
+         \False\ \>== \False\ \>= \True\\
+         \_      \>== \_      \>= \False
+       }
+
+It is well-known that it is possible to explore infinitary constrained
+polymorphism in Haskell, for example by defining equality for an
+infinite number of types of lists, as follows:
+
+  \prog{xx\=\kill
+       instance \Eq\ $a$ $\Rightarrow$ \Eq\ [$a$] where\+\\
+         ($a$:$x$) \=== ($b$:$y$) \=\kill
+         []        \>== []        \>= \True \\
+         ($a$:$x$) \>== ($b$:$y$) \>= (a==b) \&\& (x==y)\\
+         \_        \>== \_        \>= \False
+       }
+As a consequence of this instance definition, every list formed by
+elements which can be compared for equality can itself be compared for
+equality.
+
+Polymorphic functions may be defined by the use of polymorphic
+overloaded symbols; for example:
+
+   \prog{\member\ \=$a$ \=($b$:$x$) \=\kill
+         \member  \>\_  \>[]        \>= \False\\
+         \member  \>$a$ \>($b$:$x$) \>= ($a$ == $b$) || \member\ $a$ $x$
+        }
+The type of {\it \member\/} is {\tt $\forall a$.\,\Eq\ $a\Rightarrow a\!\rightarrow\!$ [$a$] $\!\rightarrow\!$ \Bool}. 
+Constraint $\Eq\ a$ restricts \member\ to be applied only
+for types that are instances of type class \Eq.
+
+A type class can be defined as a subclass of an existing type
+class. For example:
+
+  \prog{xx\=\kill
+        class \Eq\ $a$ $\Rightarrow$ \Ord\ $a$ where\+\\
+          (>),(>=),(<),(<=)::$\:\,a \rightarrow a\rightarrow \Bool$
+       }
+defines \Ord\ as a subclass of \Eq, which means that every type that
+is an instance of \Ord\ must also be an instance of \Eq. Consider the
+following example:
+
+  \prog{\search\ \=$a$ \=($b$:$x$) \=\kill
+        \search\ \>\_        \>[]    \>= \False\\
+        \search\ \>$a$       \>($b$:$x$) \\
+        xx\=\+\kill
+           \otherw\ :$x$  \=\kill
+           | ($a$==$b$)     \>= \True\\
+           | ($a$<$b$)      \>= \False\\
+           | \otherw        \>= \search\ $a$ $x$
+        }
+
+The type of {\it search\/} is {\tt $\forall a$.\!\Ord\ $\!a\!\Rightarrow\! a\!\!\rightarrow\!\!$ [$a$] $\!\!\rightarrow\!\!$ \Bool}. 
+
+The fact that \Eq\ is a subclass of \Ord\ enables the constraint on
+the type of \search\ to be \Ord\ $a$, instead of
+(\Ord\ $a$,$\:$\Eq\ $a$). Constraint \Eq\ $a$ need not be explicitly
+included, because it is implied by the constraint \Ord\ $a$.
+
+$\overline{x}$ denotes the sequence $x_1,\ldots,x_n$, where $n\geq 0$.
+When used in the context of a set, it denotes the corresponding set of
+elements in the sequence ($\{ x_1,\ldots,x_n\}$).
+
+In general, in a constrained type
+$\forall\,\overline{a}.\,C\!\Rightarrow\!\tau$, $C$ is a set of
+constraints, that restricts the set of types to which
+$\forall\,\overline{a}.\,\tau$ may be instantiated, so that every
+instance $\tau [\overline{a} \mapsto \overline{\tau}]$ is satisfiable
+in the program theory, where $\overline{a} = a_1,\ldots,a_n,
+\overline{\tau} = \tau_1, \ldots, \tau_n$ and $\tau [\overline{a}
+  \mapsto \overline{\tau}]$ denotes the simultaneous substitution of
+$a_i$ by $\tau_i$ in $\tau$, for $i=1,\ldots,n$. Notation
+$\tau[\overline{a} \mapsto \overline{\tau}]$ is defined similarly for
+quantified types $\sigma$ ($\sigma[\overline{a} \mapsto
+  \overline{\tau}]$) and for constraints.  Constraint-set
+satisfiability is discussed in Section \ref{Satisfiability}.
+
+Ambiguity in Haskell is considered as a syntactic property on types of
+expressions. The definition of this property has been changing over
+time, since Haskell 98, which supports only single parameter type
+classes (it has remained the same in Haskell 2010): for single
+parameter type classes, ambiguity of a constrained type
+$\forall\,\overline{a}.\,C\!\Rightarrow\! \tau$ is characterized
+simply by $\tv(C)\not\subseteq \tv(\tau)$ (i.e.~by the fact that there
+is a type variable that occurs in $C$ but not in $\tau$)
+\cite{MarkJones94a,Hall96}.
+
+In the sequel we consider multi-parameter type classes (MPTCs), and
+Haskell as it is defined in GHC \cite{ghc} with extensions related to
+MPTCs (when we refer to standard Haskell, we mean Haskell 98 or
+Haskell 2010). MPTCs are recognized as a natural extension to Haskell,
+that should be incorporated into the language. This has been
+recognized as early as in the original paper related to type classes
+\cite{Wadler-Blott89}. This has not happened, however, mainly because
+of problems related to ambiguity, namely that the use of overloaded
+symbols were thought to introduce expressions with ambiguous
+types.
+
+% Such ambiguity was defined as follows: an expression is ambiguous if
+% it has a constrained type $C\Rightarrow \tau$ such that there exist
+% type variables that occur in the constraints $C$ but not
+% in the simple type $\tau$.
+
+In order to introduce support for MPTCs, the definition of ambiguity
+in GHC was changed so that ambiguity could be avoided. Ambiguity of a
+constrained type $C\Rightarrow \tau$ was changed to a definition based
+on the property of reachability of type variables occurring in $C$,
+from the set of type variables occurring in the simple type $\tau$,
+where reachability is defined as follows:
+
+\begin{Definition}
+
+A variable $a\in \tv(C)$ is called reachable from, or with respect to,
+a set of type variables $V$ if $a\in V$ or if $a\in \pi$ for some
+$\pi\in C$ such that there exists $b\in \tv(\pi)$ such that $b$ is
+reachable. $a\in \tv(C)$ is called unreachable if it is not
+reachable.
+
+The set of reachable and unreachable type variables of constraint set
+$C$ {\em from V\/} are denoted respectively by $\reachableVars(C,V)$
+and $\unreachableVars(C,V)$.
+
+The subset of constraints with reachable and of unreachable type
+variables of constraint set $C$ {\em from V\/} are denoted
+respectively by $C_V^r$ and $C_V^u$.
+
+We also say that type variables $W$ are reachable in constrained type
+$C\Rightarrow \tau$ if $W\subseteq \reachableVars(C,\tv(\tau))$ (and
+similarly for unreachable type variables and if $W$ is a type variable
+instead of a set of type variables).
+
+\label{Reachability}
+\end{Definition}
+
+For example, for type $\sigma= \forall c,e.\,${\tt \Coll\ $c$ $e$
+  $\Rightarrow$ $c$}, variable $e$ is reachable from $\{ c\}$, the set
+of type variables of the simple type ($c$) of $\sigma$; for type
+$\sigma=\forall a.\,(\SShow\ a, \RRead\ a)\Rightarrow (\String
+\rightarrow \String)$, variable $a$ is unreachable from the empty set
+of type variables of the simple type ($\String \rightarrow \String$)
+of $\sigma$.
+
+It is easy to see that, for all $C, V$ we have that:
+  \[
+    \begin{array}{ll}
+       \tv(C) = \reachableVars(C,V) \cup \unreachableVars(C,V) &
+       \text{ and } \\
+     \reachableVars(C,V) \cap \unreachableVars(C,V) = \emptyset.
+   \end{array}
+  \]
+
+For example, both type variables $a$ and $b$ are reachable in
+constrained type $(F\;a\;b,O\; a)\Rightarrow b$, since $b$ occurs in
+the simple type part ($b$), and $a$ occurs in the constraint
+$F\:a\:b$, which contains $b$.
+
+% As far as we know, this idea appeared firstly in \cite{CT-FLOPS99}.
+
+We also use, in this paper, the following:
+
+\begin{Definition}
+
+Overloading (of symbols that originate the constraints) in constraint
+set $D$ occurring in an expression with a constrained type $C
+\Rightarrow \tau$ is resolved if all type variables in $D\subseteq C$
+are unreachable from $\tv(\tau)$.
+
+\label{overloading-resolution}
+\end{Definition}
+
+For example, overloading in constraint set $\{ F\:a\:b,O\: a\}$, as
+well as in both constraints in this constraint set, of type
+$(F\:a\:b,O\: a) \Rightarrow b$ is yet unresolved, and overloading is
+resolved for any constraint set that occurs in a constraint set on a
+type where the simple type has no type variables, as $\{\SShow\ a,
+\RRead\ a\}$ on $\forall a.\,(\SShow\ a, \RRead\ a)\Rightarrow \String
+\rightarrow \String$.
+
+The distinction between reachable and unreachable type variables in
+constraints on types of an expression is relevant because unreachable
+type variables can never be instantiated by unification with some
+other type, due to occurrence of this expression in some context.
+
+GHC defines an expression as ambiguous by ambiguity of its type
+$C\Rightarrow \tau$, which does not mean simply the existence of an
+unreachable variable in $C$, with respect to the set of type variables
+occurring in $\tau$, but takes into account the use of functional
+dependencies
+\cite{Type-classes-with-FDs-MarkJones00,Ti-for-FDs04,MarkJonesIatchki2008-FDs}. Following
+Haskell's open-world assumption, according to which instances may be
+added to a well-typed program without causing a type error, ambiguity
+of a constrained type $C\Rightarrow \tau$ is characterized by the
+existence of a type variable in $C$ that is not {\em uniquely
+  determined\/} from the set of type variables in the simple type
+$\tau$ \cite{TheoryOfOverloading}.
+
+Informally, this unique determination specifies that, for each type
+variable $\alpha$ that is in $C$ but not in $\tau$, there must exist a
+functional dependency $\beta \mapsto \alpha$, for some $\beta$ in
+$\tau$ (or a similar unique determination specified via type families,
+instead of functional dependencies). In this paper we use $\beta
+\mapsto \alpha$, instead of $\beta \rightarrow \alpha$, used in
+Haskell, to indicate a functional dependency (to avoid confusion with
+the notation used to denote functions).
+
+This unique determination has been formalized in
+\cite{Type-classes-with-FDs-MarkJones00,MarkJonesIatchki2008-FDs},
+upon which the formalization of open-world ambiguity below is based.
+
+Consider that:
+
+  \begin{enumerate}
+
+    \item sequences of constraints and of types can be indexed
+      directly by type class parameters (i.e.~type variable names),
+      taken into account that to each type class parameter there is a
+      corresponding integer, which gives its position in the class
+      declaration;
+
+    \item $X \mapsto Y$ denotes a functional dependency from the set
+      of type variables $X$ to the set of type variables $Y$,
+      specifying that the values in $Y$ are determined by those in
+      $X$;
+
+    \item $\Fd(A)$ denotes the set of functional dependencies of type
+      class $A$.
+
+  \end{enumerate}
+
+Then, for any constraint set $C$, there is a set of {\em induced
+  functional dependencies\/} of $C$, given by:
+
+  \[ \Ifd(C) = \{ \tv(\overline{t_X}) \mapsto \tv(\overline{t_Y})
+                  \mid A\:\overline{t} \in C, (X\mapsto Y) \in \Fd(A) \}
+          \]
+
+The transitive closure of $V$ with respect to $\Ifd(C)$, denoted by
+$V_{\Ifd(C)}^+$, defines set of type variables in $C$ that are {\em
+  uniquely determined\/} from $V$.
+
+For example, given {\tt class $F$ $a$ $b$ | $b \mapsto a$ where
+  \ldots} (that specifies functional dependency ${b} \mapsto {a}$),
+we have that $\{ b \}_{\Ifd(F)}^+ = \{ a, b \}$.
+
+We have:
+
+\begin{Definition}[Open-world ambiguity]
+A type $\forall\,\overline{a}.\,C \Rightarrow \tau$ is called
+{\em{open-world ambiguous\/}} (abbreviated as {\em ow-ambiguous\/})
+if $(\overline{a} \cap \tv(P)) \not\subseteq \tv(\tau)_{\Ifd(C)}^+$.
+\label{open-world-ambiguity-def}
+ \end{Definition}
+
+For example, constrained type $(F\:a\:b,O\: a) \Rightarrow b$ is
+ow-ambiguous. To prevent this ambiguity, programmers can use a
+functional dependency ($b \mapsto a$) in the declaration of class $F$.
+
+Figuring out which functional dependencies (or type functions) need to
+be specified for dealing with ambiguity errors can be avoided with
+delayed-closure ambiguity, as explained in Section
+\ref{Delayed-closure-ambiguity}.
+
+We define now the set of constraints formed by class and instance
+declarations that occur in a program, called a program theory (a term
+borrowed from \cite{Understanding-FDs-via-CHRs}), and constraint set
+provability (entailment), in a program theory.
+
+\begin{Definition}
+
+A program theory $P$ is a set of axioms of first-order logic,
+generated from class and instance declarations occurring in the
+program, as follows (where $C \Rightarrow \pi$ is considered
+syntactically equivalent to $\pi$ if $C$ is empty):
+
+\begin{itemize}
+
+\item For each class declaration
+  \prog{class $C$ $\Rightarrow$ \TCC\ $a_1\: \ldots \: a_n$ where \ldots}
+the program theory contains the following formula if $C$ is not empty:
+    \[ \forall\,\overline{a}.\,C \Rightarrow \TCC\ \overline{a}\]
+where $\overline{a} = a_1\: \ldots \: a_n$.
+
+%  \item For each such class declaration (with $C$ empty or not), each
+%    functional dependency of the form $a_{i_1}, \ldots a_{i_k}
+%    \rightarrow a_{i_0}$ the program theory contains the following formula:
+
+%       \[ \forall\,\overline{a b}.\,
+%             \TCC\ \overline{a} \wedge \TCC\ \phi(b_1) \ldots \phi(b_n) \rightarrow (a_{i_0} = b_{i_0}) \]
+%  where $\overline{b} = b_1,\ldots, b_n$ are type variables distinct from $\overline{a} = a_1,\ldots, a_n$,
+%  and $\phi(b_i) = a_i$ if $i \in \{ i_1, \ldots, i_k\}$, otherwise $b_i$.
+
+\item For each instance declaration
+  \prog{instance $C$ $\Rightarrow$ \TCC\ $t_1\: \ldots \: t_n$ where \ldots}
+the program theory contains the following formula:
+               \[ \forall\,\overline{a}.\,C \Rightarrow \TCC\ t_1\: \ldots \: t_n \]
+where $\overline{a} = \tv(t_1) \cup \ldots \tv(t_n) \cup \tv(C)$;
+if $C$ is empty, then the instance declaration is of the form 
+  \prog{instance \TCC\ $t_1\: \ldots \: t_n$ where \ldots}
+and the program theory contains the formula:
+     \[ \forall\,\overline{a}.\,\TCC\ t_1\: \ldots \: t_n \]
+
+%\item Furthemore, for each such instance declaration, each functional
+%  dependency of the form $a_{i_1}, \ldots a_{i_k} \rightarrow a_{i_0}$
+%  the program theory contains the following formula:
+
+%       \[ \forall \,\overline{a b}.\,\TCC\ \phi(b_1) \ldots \phi(b_n) \rightarrow (t_{i_0} = b_{i_0}) \]
+%  where $\overline{b} = b_1,\ldots, b_n$ are type variables distinct from $\overline{a} = a_1,\ldots, a_n$,
+%  and $\phi(b_i) = t_i$ if $i \in \{ i_1, \ldots, i_k\}$, otherwise $b_i$.
+
+\end{itemize}
+\label{program-theory-def}
+\end{Definition}
+
+% We consider below that $\wedge$ and $\rightarrow$ are the logical
+% conectives for conjunction and implication, respectively, and that
+% $\models$ denotes satisfiability in first-order logic: $P \models p$
+% denotes that $p$ is provable using the axioms in program theory $P$,
+% using only the modus ponens inference rule.
+
+% \begin{definition}[Open-world ambiguity]
+% A type $\forall\,\overline{a}.\,C \Rightarrow \tau$ is called
+% {\em{open-world ambiguous\/}} (often abbreviated as {\em
+%   ow-ambiguous\/}), with respect to program theory $P$, if there
+% exists $a \in \overline{a}$ such that $\x P\y \not\models (((C \wedge
+% \rho(C)) \wedge (t = \rho(t))) \rightarrow (a = \rho(a)))$, where
+% $\rho$ is a variable renaming with domain $\overline{a}$.
+% \label{open-world-ambiguity-def}
+%  \end{definition}
+
+The property that a set of constraints $C$ is entailed by a program
+theory $P$, written as $P \entail C$, is defined in Figure
+\ref{Entailment-fig}.  Following
+\cite{Associated-types-with-class,Associated-type-synonyms},
+entailment is obtained from closed constraints contained in a program
+theory $P$.
+
+%  (unlike in \cite{MarkJones94a}, entailment and satisfiability rules
+% do not move constraints from types to non-closed constraints in the
+% program theory, nor vice-versa).
+
+\begin{figure}
+   \[ \begin{array}{r}
+         \begin{array}{cr}
+   		\displaystyle\frac{}{P \entail \emptyset} (\ento)\hspace*{.3cm} &
+		\displaystyle\frac
+                        {(\forall\,\overline{a}.\,C\Rightarrow \pi) \in P}
+			{P \entail \{ (C\Rightarrow\pi)[\overline{a}\,\mapsto\,\overline{\tau}] \} }
+			(\entinst)
+         \end{array}\\ \\
+         \begin{array}{cr}
+		\displaystyle\frac
+			{P \entail C \:\:\: P \entail \{C\Rightarrow\pi\} }
+			{P \entail \{ \pi \}} (\entmp)
+			&
+		\displaystyle\frac
+			{P \entail C \:\:\: P \entail D}
+			{P \entail C \cup D} (\entn)
+	 \end{array}
+       \end{array}
+   \]
+\caption{Constraint Set Entailment}
+\label{Entailment-fig}
+\end{figure}
+
+\section{Ambiguity and constrained polymorphism}
+\label{Haskell-and-standard-ambiguity}
+
+Both the open-world and the standard definitions consider as ambiguous
+an expression $e$ that might be used in a program context where
+distinct instances exist for an overloaded symbol that occurs in
+$e$. The motivation for this is that a coherent semantics for $e$,
+obtained by using type derivations that derive the type obtained by
+considering the chosen instance types are selected for each overloaded
+symbol, does not exist (because distinct semantics values could be
+given by considering such distinct instances).
+
+However:
+
+\begin{enumerate}
+
+   \item if the expression is effectively used in a context where
+     overloading is resolved and there is a constraint on the
+     expression's type for which distinct instances exist, then, and
+     only then, a type-error, characterizing ambiguity, can be
+     detected;
+
+   \item the expression may be used only in contexts where overloading
+     is resolved in such a way that there exists a single instance for
+     the type of each overloaded symbol used in the expression.
+
+\end{enumerate}
+
+This indicates a prematureness of ambiguity detection because of the
+possibility of an expression being used in a context where two distinct
+types exist for some used overloaded symbol. Such possibility is what
+both the open-world and the standard definitions of ambiguity
+consider, albeit in different ways, as shown in the remainder of this
+section.
+
+The standard definition of ambiguity considers the existing instances
+but closes the world for expressions without considering whether
+overloading has been resolved or not. We consider an example below
+(Example \ref{ExPlus1}). The open-world definition of ambiguity
+disregards the existence or not of instances in the relevant context,
+and considers ambiguity by the possibility of inserting any instance
+definitions.
+
+\begin{Example}
+Consider {\em the\/} canonical ambiguous expression in Haskell
+(cf.~e.g.~\cite{MarkJones94a,OutsideIn2011}): {\tt
+  (\sshow\ $\!\!$.$\!\!$ \rread)}, called $e_0$ for further reference
+(where {\tt "."}  denotes function composition).
+
+This expression is considered ambiguous in Haskell, irrespective of
+the context in which it occurs. This is related to the fact that
+instances definitions are global, i.e.~are always present in any
+scope. However, defaults could be specified (in this example, for
+\SShow, \RRead) in order to avoid ambiguity. In standard Haskell,
+defaults are restricted, in a rather ad-hoc way, for constraint sets
+that include a constraint on class \Num. Subsection \ref{Defaults}
+describes the use of defaults for avoiding ambiguity of constraint
+sets, and considers an extension for the use of defaults under
+delayed-closure ambiguity (Section
+\ref{Delayed-closure-ambiguity}).
+%Subsection \ref{Instance-export-import} discusses the possibility of
+%allowing instance definitions to be exported and imported from modules
+% (cf.~e.g.~\cite{Controlling-scope-of-instances}), that can avoid the
+% use of defaults for removing ambiguity.
+Under delayed-closure ambiguity, the type of $e_0$ is \String\
+$\rightarrow$ \String\ if the context has only one instance of
+\SShow\ and \RRead; otherwise there is a type error (unsatisfiabilty
+if there is no such instance, ambiguity if there are two or more).
+
+The fact that the simple type in the type of $e_0$ cannot be changed
+by placing $e_0$ in another context characterizes that ambiguity (and
+unsatisfiability) of $e_0$ should be checked, that is, it should be
+verified whether there exists or not only one instance that satisfies
+the constraints on the type of the expression.  If there is only one
+instance, the constraints are satisfied, and can then be removed from
+the type of the expression (in the example, the type of {\tt
+  (\sshow\ $\!\!$.$\!\!$ \rread)} can be simplified from $\forall
+a.\,(\SShow\ a, \RRead\ a)\Rightarrow (\String \rightarrow \String)$
+to \String $\rightarrow$ \String.
+
+\label{ex0}
+\end{Example}
+
+Although both open-world and standard definitions of ambiguity both
+disregard whether overloading is or is not yet resolved and both
+anticipate the test of ambiguity, they disagree in key aspects: there
+are expressions that are unambiguous according to the standard
+definition but ow-ambiguous and vice-versa.
+
+Examples of the first case occur both when overloading is and is not
+resolved. $e_0$ is an example of when overloading is resolved: it is
+always ow-ambiguous, and standard ambiguity depends on the existence
+of two or more instances of {\tt (\SShow\ $a$, \RRead\ $a$)} (in this
+case, the standard definition agrees with delayed-closure, presented
+in the next section). The following is an example of an expression for
+which overloading is not yet resolved (and is therefore not ambiguous
+according to the delayed-closure approach), that is ow-ambiguous and
+can be ambiguous or not according to the standard interpretation.
+
+\begin{Example} \label{ExPlus1}
+ Consider expression {\tt ((+) 1)} --- which in Haskell can be written
+ as {\tt (1+)} ---, in a program with classes \Sum\ and \NumLit, given
+ in a program with the following classes, where {\tt 1} is considered
+ to have type $\forall a.\,\NumLit\ a \Rightarrow a$:
+
+  \prog{xx\=\kill
+        class \Sum\ $a$ $b$ $c$ where\+\\
+          (+):: $a$ $\rightarrow$ $b$ $\rightarrow$ $c$\-\\
+        class \NumLit\ $a$ where \ldots
+       }
+
+We have that {\tt (1+)} is considered ow-ambiguous, but the standard
+definition would consider it ambiguous only if there exist two or more
+instances of the type of {\tt (1+)}, namely $\forall
+a,b,c.\,(\NumLit\ a, \Sum\ a\: b\: c)\Rightarrow b \rightarrow c$, in
+the program.  For example, let $P_0$ be a program theory that contains
+instances \Sum\ \Int\ \Float\ \Float, \Sum\ \Float\ \Float\ \Float,
+\NumLit\ \Int\ and \NumLit\ \Float. Then {\tt (1+)} is considered
+ambiguous, according to the standard definition, in $P_0$.
+
+Both open-world and standard ambiguity disregard that overloading is
+not yet resolved, and that the test of ambiguity should not be done
+yet, since the type of the polymorphic expression {\tt (1+)} can still
+change depending on the context where it is used (in this case, both
+disagree with delayed-closure, described in the next section;
+remember: overloading is not yet resolved for an expression of type
+$\forall a,b,c.\,(\NumLit\ a, \Sum\ a\: b\: c)\Rightarrow b
+\rightarrow c$).
+
+\end{Example}
+
+\section{Delayed-closure ambiguity}
+\label{Delayed-closure-ambiguity}
+
+In this section we present an approach for dealing with ambiguity in
+Haskell that uses the presence of unreachable variables in a
+constraint for characterizing overloading resolution (or, more
+precisely, for characterizing that overloading should have been
+resolved), instead of characterizing ambiguity. 
+
+
+% As already mentioned (Section \ref{Haskell-ambiguity}), before
+% version 7.4.1 GHC used the presence of unreachable type variables to
+% characterize ambiguity in multi-parameter type classes.
+
+Informally, instead of issuing an ambiguity error, the presence of an
+unreachable type variable $a$ from the set of type variables in
+$\tv(\tau)$, in a constrained type
+$\forall\,\overline{a}.\,C\Rightarrow \tau$, triggers a test of
+whether this variable can be instantiated (i.e.~eliminated), because
+of the existence of a single instance that can be used to instantiate
+it. We use the following for this.
+
+\begin{Definition}
+
+Consider constrained type $C\Rightarrow \tau$, program theory $P$, and
+that type variable $a$ occurs in $\pi\in C$ and is unreachable with
+respect to $\tv(\tau)$ and consider a substitution $\phi$, with domain
+restricted to unreachable type variables in $C$, such that $P \entail
+\phi(C)$.  Then $\phi$ is called a {\em satisfying substitution for
+  $C$ in $P$}. 
+{\em A unique satisfying substitution for $C$ in $P$ is called an
+  improvement substitution of $C$ in $P$ and $\phi(C)$ the improved
+  constraint}.
+
+\end{Definition}
+
+We can now define delayed-closure ambiguity, as follows.
+
+\begin{Definition}
+Type $\forall\,\overline{a}.\,C \Rightarrow \tau$ is
+\emph{delayed-closure ambiguous\/}, with respect to a program theory
+$P$, if $\unreachableVars(C,\tv(\tau)) \not= \emptyset$ and there
+exists at least two satisfying substitutions for $C$ in $P$.  
+
+If there exists no satisfying substitution for $C$ in $P$ then $C$ is
+called unsatisfiable in $P$.
+\end{Definition}
+
+We call {\em improvement\/} (cf.~\cite{MarkJonesImprovement}) the
+process of substituting a constrained type $C \Rightarrow \tau$, in a
+given program theory $P$, by $\phi(C) \Rightarrow \tau$, where
+$\phi(C)$ is the improved constraint of $C$ in $P$.
+
+\begin{Example} Consider type {\tt ($F$ $a$ \Bool) $\Rightarrow$ \Bool},
+in a program with the following instances (forming a program theory
+$P$):
+
+  \prog{instance $C$ $a$ => $F$ $a$ \Bool\ where \ldots\\
+        instance $C$ \Char\ where \ldots
+  }
+Substitution $(a\mapsto \Char)$ is the improvement substitution of
+{\tt ($F$ $a$ \Bool)} in $P$, and {\tt ($F$ \Char\ \Bool)} is the
+improved constraint of {\tt ($F$ $a$ \Bool)} in $P$.
+
+\end{Example}
+
+\begin{Example} Consider a classical example of MPTCs with functional
+dependencies\footnote{Taken from {\small {\tt
+      www.haskell.org/haskellwiki/Functional\_dependencies}}.}, namely
+matrix multiplication.
+
+\input{matrix-multiplication}
+
+\end{Example}
+
+\subsection{Discussion}
+\label{Discussion}
+
+Haskell's open-world has a notable characteristic that a well-typed
+program never becomes untypeable by the introduction of new instance
+declarations. Delayed-closure restricts this advantage to expressions
+for which overloading is not resolved; when overloading is resolved,
+the world is closed, i.e.~existing definitions of overloaded names are
+considered, by checking ambiguity and unsatisfiability.
+
+This seems a significant disadvantage, but let us consider further
+aspects. With delayed-closure ambiguity more programs become
+well-typed and ambiguity becomes easier to understand: under
+delayed-closure, ambiguity is not a syntactic property of a type, and
+it does not mean a possibility, of using an expression in a context
+where two or more instances for the type of the expression {\em
+  might\/} exist. It means the actual fact that there exist two or
+more instances, when overloading is resolved. This agrees with the
+usual understanding of ambiguity in a natural language, that considers
+ambiguity for concrete sentences, that may be interpreted in distinct
+ways. In our view the most important aspect is that ambiguity is
+distinguished from overloading resolution. Ambiguity is tested only
+after overloading resolution.  The notion of unsatisfiability becomes
+a related notion, that refers to the nonexistence of instances for
+entailment of a constraint set. Variables in a constraint are either
+all reachable or all unreachable. If they are unreachable, the
+constraint can be removed (in the case of single entailment) or there
+is a type-error (ambiguity in cases of two or more, unsatisfiability
+in cases of no entailment). Another slight counter weight in favour of
+delayed-closure ambiguity is the fact that it yields a more symmetric
+treatment: for expressions for which overloading is resolved, removal
+of an instance declaration may cause unsatisfiability and insertion
+may cause ambiguity.
+
+The use of delayed-closure ambiguity in Haskell would benefit by
+another significant change: the ability to control exportation and
+importation of instances in modules. There are several proposals for
+doing this (see
+e.g.~\cite{Named-instances,Modular-type-classes,Controlling-scope-instances}),
+but this is left for future work.
+
+We discuss next the specification of defaults for constraint sets in
+Haskell.
+
+% Subsection \ref{Instance-export-import} summarizes the work in
+% \cite{Controlling-scope-of-instances} for allowing module
+% exportation and importation of instance definitions.
+
+\subsection{Defaults}
+\label{Defaults}
+
+Defaults can be specified in standard Haskell but only for constraint
+sets where all constraints consist of classes declared in the Haskell
+Prelude and one of them is class \Num. Consequences of this are that
+predefined classes in general and class \Num\ in particular have to be
+distinguished by Haskell compilers and, more significantly, an
+exceptional rule is created, without a strong technical reason for
+restricting defaults to specific classes. The motivation is to avoid
+some frequent uses of type annotations.
+
+Distinct proposals related to changing the way of handling defaults in
+GHC can be consulted at:
+  \[ {\small\texttt{http://ghc.haskell.org/trac/haskell-prime/wiki/Defaulting}} \]
+These include a proposal for removing the possibility of specifying
+defaults altogether. We basically follow the basic proposal (number 2)
+related to the possibility of specifying defaults for MPTCs.
+
+A default clause should be in our view a top level declaration (like
+class and instance declarations) to be applied only within the module
+containing the declaration, and it should not be possible to either
+export or import defaults. The relevant issue here is to disallow a
+change in the behavior of a module because of a change in which
+modules are imported.
+
+A default clause may specify a default for a constraint, which may be
+a type expression (not only a type) of any kind. For example, we can
+have:
+  \prog{default (\RRead\ $a$) \Int\\
+        default (\Monad\ $m$) []}
+
+Default application is only considered for constraint sets with
+unreachable variables, and the only result of applying defaults is the
+removal of constraints (since a constraint which contains an
+unreachable type variable can only contain unreachable type
+variables).
+
+A constraint set $C$ can be removed from $(A\:\tau_1\:\ldots\ \tau_n),
+D \Rightarrow \tau$ by application of a default if and only if the
+following conditions hold:
+  \begin{enumerate}
+
+   \item there is a default clause of the form {\tt default ($A$
+     $\overline{\tau}$) $\overline{\rho}$} in the current module,
+
+   \item $C$ is of the form $(A\:\overline{\epsilon}, C')$, for some
+     $C' \subseteq D$ such that each constraint in $C$ has unreachable
+     type variables, $\tv(C') \subseteq \tv(A\:\overline{\epsilon})$,
+     and there exists a substitution $\phi$ of $C$ in the program
+     theory such that $\phi(\overline{\tau}) = \overline{\rho}$.
+
+  \end{enumerate}
+
+For example, considering default clause {\tt default (\RRead\ $a$)
+  \Int}, and that $C = \{\RRead\ a\}$, $D = \{ \SShow\ a\}$, we have
+that the substitution $\phi$ must be such that $\phi(a) = \Int$.
+
+
+% \input{importation-and-exportation-of-instances}
+
+% \input{closed-world-ambiguity}
+
+\section{Satisfiability}
+\label{Satisfiability}
+
+This section contains a description of constraint set satisfiability,
+including a discussion of decidability, based on work already
+presented in \cite{Ambiguity-and-context-dependent-overloading}.
+
+Following~\cite{MarkJonesImprovement}, $\lfloor C \rfloor_P$ is used
+to denote the set of satisfiable instances of constraint set $C$ with
+respect to program theory $P$:
+  \[ \lfloor C \rfloor_P = \{\,\phi(C) \,\mid\, P\, \entail \phi(C)\, \} \]
+
+\begin{Example} {\rm
+As an example, consider:
+  \[ P = \{ \forall a,b.\,D\, a\,
+             b\Rightarrow C\, \text{\tt{[$a$]}}\, b, D\, \text{\it Bool\/}\,
+             \text{\tt {[{\it Bool\/}]}}\}\]
+We have that
+  $\lfloor C\:a\:a\rfloor_P$ =
+  $\lfloor C\:\text{\tt{[\it Bool\/}]}\: \text{\tt{[\it Bool\/}]}\rfloor_P$.
+Both constraints
+  $D\:\text{\Bool\ [\Bool]} \Rightarrow C\:\text{\tt{[{\it Bool\/}]}}\: \text{\tt [{\it Bool\/}]}$
+and
+  $C\:\text{\tt{[{\it Bool\/}]}}\: \text{\tt [{\it Bool\/}]}$
+are members of
+  $\lfloor C\:a\:a\rfloor_P$ and also members of
+  $\lfloor C\:\text{\tt{[\it Bool\/}]}\: \text{\tt{[\it Bool\/}]}\rfloor_P$.
+
+A proof that $P \entail \{ C\:\text{\tt{[\it Bool\/}]}\: \text{\tt{[\it Bool\/}]} \}$
+holds can be given from the entailment rules given in Figure \ref{Entailment-fig},
+since this is the conclusion of rule (\entmp) with premises
+  $P \entail \{ D\:\text{\it Bool\/}\: \text{\tt{[\it Bool\/}]} \}$ and
+  $P \entail \{ D\:\text{\Bool\ [\Bool]} \Rightarrow C\:\text{\tt{[{\it Bool\/}]}}
+                                                                               \:\text{\tt{[{\it Bool\/}]}}\}$,
+and these two premises can be derived by using rule (\entinst).}
+
+\end{Example}
+
+Equality of constraint sets is considered modulo type variable
+renaming. That is, constraint sets $C,D$ are also equal if there
+exists a renaming substitution $\phi$ that can be applied to $C$ to
+make $\phi\,C$ and $D$ equal. $\phi$ is a renaming substitution if for
+all $\alpha\in\dom(S)$ we have that $\phi(\alpha)=\beta$, for some
+type variable $\beta\not\in\dom(\phi)$.
+
+%If $\phi(C) \in \lfloor C \rfloor_P$ then $\phi$ is called a
+%satisfying substitution for $C$.
+
+Constraint set satisfiability is in general an undecidable problem
+\cite{Smith-PhD-Thesis91}. It is restricted in this work so that it
+becomes decidable, as described below.
+
+The restriction is based on a measure of constraints, given by a
+so-called constraint-head-value function, based on a measure of the
+sizes of types in this constraint head. Essentially, the sequence of
+constraints that unify with a constraint axiom in recursive calls of
+the function that checks satisfiability or simplification of a type
+constraint is such that either the sizes of types of each constraint
+in this sequence is decreasing or there exists at least one type
+parameter position with decreasing size.
+
+The definition of the constraint-head-value function is based on the
+use of a constraint value $\nu(\pi)$ that gives the number of
+occurrences of type variables and type constructors in $\pi$, defined
+as follows:
+  \[ \begin{array}{ll}
+        \nu(C\: \tau_1 \cdots \tau_n) & = \sum_{i=1}^n \nu(\tau_i)\\
+        \nu(T)                        & = 1\\
+        \nu(\alpha)                   & = 1\\
+        \nu(\tau\: \tau')             & = \nu(\tau) + \nu(\tau')
+     \end{array}
+  \]
+
+Consider computation of satisfiability of a given constraint set $C$
+with respect to program theory $P$ and consider that, during the
+process of checking satisfiability of a constraint $\pi\in C$, a
+constraint $\pi'$ unifies with the head of constraint $\forall\,
+\overline{\alpha}.C_0 \Rightarrow \pi_0$ in $P$, with unifying
+substitution $\phi$. Then, for any constraint $\pi_1$ that, in this
+process of checking satisfiability of $\pi$, also unifies with
+$\pi_0$, where the corresponding unifying substitution is $\phi_1$,
+the following is required, for satisfiability of $\pi$ to hold:
+
+\begin{enumerate}
+\item $\nu(\phi\,\pi')$ is less than $\nu(\phi_1\,\pi_1)$ or, if
+  $\nu(\phi\, \pi')=\nu(\phi_1 \pi_1)$, then $\phi\,\pi' \not= \pi''$,
+  for all $\pi''$ that has the same constraint value as $\pi'$ and has
+  unified with $\pi_0$ in process of checking for satisfiability of
+  $\pi$, or
+
+\item $\nu(\phi\,\pi')$ is greater than $\nu(\phi_1\,\pi_1)$ but then
+  there is a type argument position such that the number of type
+  variables and constructors, in this argument position, of
+  constraints that unify with $\pi_0$ decreases.
+
+\end{enumerate}
+
+\label{Phi0}
+More precisely, constrain-head-value-function $\Phi$ associates a pair
+$(I,\Pi)$ to each constraint $(\forall\, \overline{\alpha}. P_0
+\Rightarrow \pi_0)\in P$, where $I$ is a tuple of constraint values
+and $\Pi$ is a set of constraints. Let $\Phi_0(\pi_0) =
+(I_0,\emptyset)$ for each constraint axiom $\forall\,
+\overline{\alpha}.\,P_0 \Rightarrow \pi_0 \in P$, where $I_0$ is a
+tuple of $n+1$ values equal to $\infty$, a large enough constraint
+value defined so that $\infty > \nu(\pi)$ for any constraint
+$\pi$ in the program theory.
+
+Decidability is guaranteed by defining the operation of updating
+$\Phi(\pi_0) = (I,\Pi)$, denoted by $\Phi[\pi_0,\pi]$, as follows,
+where $I = (v_0, v_1,\ldots, v_n)$ and $\pi =
+C\,\tau_1\,\cdots\,\tau_n$:
+
+\[ \Phi[\pi_0,\pi] = \left\{ \begin{array}{lll}
+                                   \textit{Fail}  & & \text{if } v'_i = -1 \text{ for } i=0,\ldots,n \\
+                                   \Phi'          & & \text{otherwise}
+                             \end{array} \right.
+\]
+where $\begin{array}[t]{ll}
+              \Phi' (\pi_0) &=  ((v'_0,v'_1,\ldots,v'_n), \Pi \cup \{ \pi \} ) \\
+              \Phi' (x)      &= \Phi(x) \text{ for } x  \not= \pi_0
+              \end{array}$
+
+\[ \begin{array}{l}
+   v'_0 = \left\{ \begin{array}{lll}
+                \nu(\pi) & & \text{if } \nu(\pi) < v_0 \text{ or} \\
+                          & & \nu(\pi) = v_0 \text{ and } \pi \not\in \Pi \\
+                -1        & & \text{otherwise}
+              \end{array} \right. \\ \\
+   \text{for $i=1,\ldots,n$ }
+   \hspace{.5cm} v'_i = \left\{ \begin{array}{lll}
+                                           \nu(\tau_i) & & \text{if } \nu(\tau_i) < v_i \\
+                                           -1           & & \text{otherwise}
+                                        \end{array} \right. \\
+   \end{array}
+\]
+Let $\satsUm\bigl(\pi,P,\Delta)$ hold if
+\[ \Delta = \left\{ (\phi|_{\tv(\pi)},\phi C_0,\pi_0)\,\,
+					\begin{array}{|l}
+	                  \,\,(\forall\,\overline{\alpha}.\,C_0 \Rightarrow \pi_0) \in P,\\
+                  		\,\,\mgu(\pi = \pi_0,\phi) \text{ holds}
+                  	\end{array} \right\}
+  \]
+where $\mgu$ is the most general (least) unifier
+relation\cite{Robinson65}: $\mgu(\Tau,\phi)$ is defined to hold
+between a set of pairs of simple types or constraints $\Tau$ and a
+substitution $\phi$ if i) $\phi$ is a unifier of every pair in $\Tau$
+(i.e.~$\phi \tau = \phi\tau'$ for every $(\tau,\tau')\in \Tau$, and
+analogously for pairs of simple constraints $(\pi,\pi')\in \Tau$), and
+ii) it is the least such unifier (i.e. if $\phi'$ is a unifier of all
+pairs in $\Tau$, then $\phi\leq \phi'$).
+
+The set of satisfying substitutions for $C$ with respect to the
+program theory $P$ is given by $\mathbb{S}$, such that $C \sats
+{P,\Phi_0} \mathbb{S}$ holds, as defined in Figure \ref{fig-tsat}.
+
+\begin{figure}
+  \[ \begin{array}{cc}
+  	\displaystyle\frac{}{C \sats {P,\Fail} \emptyset} (\SatFailUm)
+  		{} &
+  	\displaystyle\frac{}{\emptyset \sats {P,\Phi} \{ id\}} (\SatEmptyUm)\\ \\ \\
+	\multicolumn{2}{c}{
+    \displaystyle\frac
+    	{\{\pi\} \cup C \sats {P,\Phi} \mathbb{S}}
+    	{\begin{array}{l}
+	     \{ \pi \} \sats {P,\Phi} \mathbb{S}_0 \\[.1cm]
+	     \mathbb{S} = \{ \phi' \phi \,\mid\, \phi \in \mathbb{S}_0,\, \phi' \in \mathbb{S}_1,\:
+                             \phi(C) \sats {P,\Phi} \mathbb{S}_1 \}
+	   \end{array}} (\SatConjUm)
+	}\\ \\ \\
+	\multicolumn{2}{c}{
+	\displaystyle\frac
+	{\begin{array}{l}
+	     \satsUm(\pi, P,\Delta) \\[.1cm]
+	     \mathbb{S} = \left\{  \phi'\phi \,\,
+	     				\begin{array}{|c}
+	     					\,\,(\phi,D,\pi') \in \Delta,\, \phi' \in \mathbb{S}_0,\\
+	     					\,\,D  \sats {P,\Phi[\pi',\phi\pi]} \mathbb{S}_0
+	     				\end{array}\right\}
+	 \end{array}}
+	{\{\pi\} \sats {P,\Phi} \mathbb{S}} (\SatInstUm) }
+      \end{array} \]
+\caption{Decidable Constraint Set Satisfiability}
+\label{fig-tsat}
+\end{figure}
+
+The following examples illustrate the definition of constraint set
+satisfiability as defined in Figure~\ref{fig-tsat}.
+Let $\Phi(\pi).I$ and $\Phi(\pi).\Pi$ denote the first and second
+components of $\Phi(\pi)$, respectively.
+
+\begin{Example}
+\label{EqL}
+{\rm Consider satisfiability of $\pi = \text{{\tt {\it
+        Eq\/}[[\I]]}}$ in $P = \{ \text{\it Eq \I\/},\: \forall\,
+  a.\,\text{\it Eq\/}\: a \Rightarrow \text{{\tt {\it Eq\/}[$a$]}}
+  \}$, letting $\pi_0 = \text{{\tt {\it Eq\/}[$a$]}}$; we have:
+
+  \[ \displaystyle\frac{
+         \begin{array}{l}
+            \satsUm (\pi,P,
+               \{ \bigl( \phi |_\emptyset,
+                         \{ \text{\tt{\Eq[\I]}} \}, \pi_0\bigr) \}), \:\: \phi = [a_1\mapsto \text{\tt [\I]}]\\
+               \mathbb{S}_0 = \{ \phi_1\circ \id \mid \: \phi_1 \in \mathbb{S}_1,\:\:\:
+                \text{\tt{\Eq[\I]}} \sats {P,\Phi_1} \mathbb{S}_1\}
+         \end{array}}
+      {\pi \sats {P,\Phi_0} \mathbb{S}_0}
+  \]
+where $\Phi_1 = \Phi_0[\pi_0,\pi]$, which implies that $\Phi_1(\pi_0) = ((3, 3), \{ \pi \} )$,  since
+      $\nu(\pi) = 3$, and
+      $a_1$ is a fresh type variable; then:
+  \[ \displaystyle\frac{
+         \begin{array}{l}
+            \satsUm(\text{\tt {\it Eq\/}[\I]},\Theta,
+              \{\bigl(\phi'|_\emptyset,
+                     \{ \text{{\tt {\it Eq\/}}}\,\I \}, \pi_0\bigr)\}), \:\: \phi' = [a_2\mapsto \I]\\
+            \mathbb{S}_1 = \{ \phi_2\circ \id \mid \: \phi_2 \in \mathbb{S}_2,\:\:\:
+             \text{\it Eq\/}\,\I \sats {P,\Phi_2} \mathbb{S}_2\}
+         \end{array}}
+      {\text{{\tt {\it Eq\/}[\I]}} \sats {P,\Phi_1} \mathbb{S}_1}
+  \]
+where $\Phi_2 = \Phi_1[\pi_0,\text{\tt {\it Eq\/}[\I]}]$, which implies that
+      $\Phi_2(\pi_0) = ((2,2), \Pi_2)$, with $\Pi_2 = \{ \pi, \text{\tt{\it Eq\/}[\I]}  \}  )$, since
+      $\nu(\text{\tt{\it Eq\/}[\I]}) = 2$ is less than
+       $\Phi_1(\pi_0).I.v_0 = 3$; then:
+  \[ \displaystyle\frac{
+         \begin{array}{l}
+            \satsUm\bigl(\text{\it Eq\/}\,\I,P, \{ (\id, \emptyset, \text{\it Eq\/}\,\I ) \}\bigr)\\
+            \mathbb{S}_2 = \{ \phi_3\circ \id \mid \: \phi_3 \in \mathbb{S}_3,\:\:\:
+            \emptyset \sats {P,\Phi_3} \mathbb{S}_3\}
+         \end{array}}
+      {\text{\it Eq\/}\,\I \sats {P,\Phi_2} \mathbb{S}_2}
+  \]
+where $\Phi_3 = \Phi_2[\text{\it Eq\/}\,\I,\text{\it Eq\/}\,\I]$
+      and $\mathbb{S}_3 = \{ \id\}$ by ($\text{\tt SEmpty}_1$).}
+\end{Example}
+
+The following illustrates a case of satisfiability involving a
+constraint $\pi'$ that unifies with a constraint head $\pi_0$ such
+that $\nu(\pi')$ is greater than the upper bound associated to
+$\pi_0$, which is the first component of $\Phi(\pi_0).I$.
+
+\begin{Example}
+\label{sat-eta-greater} {\rm
+
+Consider satisfiability of $\pi=A\,\I\,(T^3\,\I)$ in program theory $P
+= \{ A\,(T\,a)\,\I, \forall\, a,b.\,A\,(T^2\, a)\,b \Rightarrow
+A\,a\,(T\,b)\}$. We have, where $\pi_0 = A\,a\,(T\,b)$:
+
+\[
+	\displaystyle\frac
+		{\begin{array}{c}
+            \satsUm\bigl(\pi,P,\{ ( \phi\,|_\emptyset, \{ \pi_1 \}, \pi_0 ) \}\bigr) \\
+            \phi = [a_1\mapsto \I, b_1\mapsto T^2\:\I] \\
+            \pi_1 = A\:(T^2\,\I)\:(T^2\,\I)\\
+            \mathbb{S}_0 = \{ \phi_1\circ \id \mid \phi_1 \in \mathbb{S}_1,\:\:\:
+            \pi_1 \sats {P,\Phi_1} \mathbb{S}_1\}
+         \end{array}}
+		{\pi \sats {P,\Phi_0} \mathbb{S}_0}
+\]
+where $\Phi_1 = \Phi_0 [\pi_0, \pi]$, which implies that $\Phi_1(\pi_0).I = (5,1,4)$; then:
+
+\[
+	\displaystyle\frac
+		{\begin{array}{c}
+            \satsUm\bigl(\pi_1,\Theta, \{ ( \phi'\,|_\emptyset, \{\pi_2\}, \pi_0 ) \}\bigr)\\
+            \phi' = [a_2\mapsto T^2\,\I, b_2\mapsto T\,\I] \\
+	    \pi_2 = A\:(T^4\,\I)\:(T\,\I)\\
+            \mathbb{S}_1 = \{ \phi_2\circ [a_1\mapsto T^2\,a_2] \mid \phi_2 \in \mathbb{S}_2,\:\:
+            \pi_2 \sats {P,\Phi_2} \mathbb{S}_2\}
+         \end{array}}
+		{\pi_1 \sats {P,\Phi_1} \mathbb{S}_1}
+\]
+where  $\Phi_2 = \Phi_1 [\pi_0, \pi_1]$.
+Since $\nu(\pi_1) = 6 > 5 = \Phi_1(\pi_0).I.v_0$,
+we have that $\Phi_2(\pi_0).I = (-1,-1,3)$.
+
+Again, $\pi_2$ unifies with $\pi_0$, with unifying substitution
+$\phi' =  [a_3\mapsto T^4\,\I, b_2\mapsto \I] $, and
+updating $\Phi_3 = \Phi_2[\pi_0,\pi_2]$ gives $\Phi_3(\pi_0).I = (-1,-1,2)$.
+Satisfiability is then finally tested for $\pi_3 = A\,(T^6\,\I) \I$, that unifies with
+$A\,(T\,a)\,\I$, returning $\mathbb{S}_3 = \{ [a_3\mapsto
+  T^5\,\I]|_\emptyset\} = \{ \id\}$.  Constraint $\pi$ is thus
+satisfiable, with $\mathbb{S}_0 = \{\id\}$.}
+\end{Example}
+
+The following example illustrates a case where the information kept in
+the second component of $\Phi(\pi_0)$ is relevant.
+
+\begin{Example}
+\label{Paterson-condition-failure-example}
+{\rm Consider the satisfiability of $\pi = A\,(T^2\,\I)\,\F$ in
+  program theory $P = \{ A\,\I\,(T^2\,\F), \forall\,a,b.\,A\,a\,(T\,b)
+  \Rightarrow A\,(T\,a)\,b\}$ and let $\pi_0 = A\,(T\,a)\,b$. Then:}
+
+\[
+	\displaystyle\frac
+		{\begin{array}{c}
+            \satsUm(\pi,P,\{ \bigl( \phi\,|_\emptyset, \{ \pi_1 \}, \pi_0 \bigr) \}) \\
+            \phi = [a_1\mapsto (T\,\I), b_1 \mapsto \F] \\ \pi_1 = A\,(T\:\I)\,(T\:\F)\\
+            \mathbb{S}_0 = \{ \phi_1\circ \id \mid \: \phi_1 \in \mathbb{S}_1,\:\:\:
+                                                \pi_1 \sats {P,\Phi_1} \mathbb{S}_1\}
+         \end{array}}
+		{\pi \sats {P,\Phi_0} \mathbb{S}_0}
+\]
+{\rm where $\Phi_1 = \Phi_0[\pi_0,\pi]$, giving $\Phi_1(\pi_0) = ((4,3,1), \{ \pi \})$; then:
+\[
+	\displaystyle\frac
+		{\begin{array}{c}
+            \satsUm(\pi_1,P,\{ \bigl( \phi'\,|_\emptyset, \{ \pi_2 \}, \pi_0 \bigr) \})\\
+            \phi' = [a_2\mapsto \text{\tt \I}, b_2 \mapsto T\,\F],\,\,\,\,\,\,\, \pi_2 = A\,\I\, (T^2\,\F)\\
+            \mathbb{S}_1 = \{ \phi_2\circ \id \mid \: \phi_2 \in \mathbb{S}_2,\:\:\:
+            \pi_2 \sats {P,\Phi_2} \mathbb{S}_2\}
+         \end{array}}
+		{\pi_1 \sats {P,\Phi_1} \mathbb{S}_1}
+\]
+where $\Phi_2 = \Phi_1[\pi_0,\pi_1]$. Since
+      $\nu(\pi_1) = 4$, which is equal to the first component of $\Phi_1(\pi_0).I$,
+      and
+      $\pi_1$ is not in $\Phi_1(\pi_0).\Pi$, we obtain that
+ $\mathbb{S}_2 = \{ \id \}$ and $\pi$ is thus satisfiable
+ (since $\satsUm(A\,\I\,(T^2\,\F),P) =
+   \{ (\id, \emptyset, A\,\I\,(T^2\,\F)\}$). }
+\end{Example}
+
+Since satisfiability of type class constraints is in general
+undecidable \cite{Smith-PhD-Thesis91}, there exist satisfiable
+instances which are considered to be unsatisfiable according to the
+definition of Figure \ref{fig-tsat}. Examples can be constructed by
+encoding instances of solvable Post Correspondence problems by means
+of constraint set satisfiability, using G.~Smith's scheme
+\cite{Smith-PhD-Thesis91}.
+
+%\begin{example}\label{PCP-Example}
+%{\rm This example uses a PCP instance taken from
+%\cite{Ling-Zhao-Master-Thesis}. A PCP instance can be defined as
+%composed of pairs of strings, each pair having a top and a bottom
+%string, where the goal is to select a sequence of pairs such that the
+%two strings obtained by concatenating top and bottom strings in such
+%pairs are identical. The example uses three pairs of strings: $p_1 =
+%(\text{\tt{100}}, \text{\tt{1}})$ (that is, pair 1 has string {\tt
+%  100} as the top string and {\tt 1} as the bottom string), $p_2 =
+%(\text{{\tt 0}}, \text{\tt{100}})$ and $p_3 =
+%(\text{\tt{1}},\text{\tt{00}})$.}
+
+%{\rm This instance has a solution: using numbers to represent corresponding
+%pairs (i.e. {\tt 1} represents pair 1 and analogously for {\tt 2} and
+%{\tt 3}), the sequence of pairs {\tt 1311322} is a solution.}
+
+%{\rm A satisfiability problem that has a solution if and only if the
+%  PCP instance has a solution can be constructed by adapting
+%  G.~Smith's scheme to Haskell's notation. We consider for this a
+%  two-parameter class $C$, and a constraint context such that $\Theta
+%  = \Theta_1 \cup \Theta_2 \cup \Theta_3$, where $\Theta_i$ is
+%  constructed from pair $i$, for $i=1,2,3$:}
+%  \[ \begin{array}{l}
+%     \Theta_1 = \{ \begin{array}[t]{l}
+%                     C\, (1 \rightarrow 0 \rightarrow 0) \, 1, \\
+%                     \forall\, a,b.\, C\, a\, b \Rightarrow
+%                                      C\, (1 \rightarrow 0 \rightarrow 0 \rightarrow a) \, (1 \rightarrow b)\: \}
+%                   \end{array} \\
+%     \Theta_2 = \{ \begin{array}[t]{l}
+%                    C\, 0\, (1 \rightarrow 0 \rightarrow 0), \\
+%                    \forall\, a,b.\, C\, a\, b \Rightarrow
+%                    C\, (0 \rightarrow a) \,  (1 \rightarrow 0 \rightarrow 0 \rightarrow b)\: \}
+%                    \end{array} \\
+%     \Theta_3 = \{ \begin{array}[t]{l}
+%                     C\, 1\: (0 \rightarrow 0), \\
+%                    \forall\, a,b.\, C\, a\, b \Rightarrow
+%                    C\, (1 \rightarrow a)\, (0 \rightarrow 0 \rightarrow b)\: \}
+%                    \end{array}
+%     \end{array}
+%\]
+%{\rm We have that constraint $C\:a\:a$ is satisfiable, with a solution
+%constructed from solution {\tt 1311322} of the PCP
+%instance. Computation by our algorithm terminates, erroneously
+%reporting unsatisfiability. The steps of the computation are
+%omitted. The computation proceeds until {\tt 131}, when updating parameter
+%$\Phi$ results in {\it Fail}.}
+%\end{example}
+
+To prove that satisfiability as defined in Figure~\ref{fig-tsat} is
+decidable, consider that there exist finitely many constraints in
+program theory $P$, and that, for any constraint $\pi$ that unifies
+with $\pi_0$, we have, by the definition of $\Phi[\pi_0,\pi]$, that
+$\Phi(\pi_0)$ is updated so as to include a new value in its second
+component (otherwise $\Phi[\pi_0,\pi] = \text{\it Fail\/}$ and
+satisfiability yields $\emptyset$ as the set of satisfying
+substitutions for the original constraint). The conclusion follows
+from the fact that $\Phi(\pi_0)$ can have only finitely many distinct
+values, for any $\pi_0$.
+
+\subsection{Improvement}
+\label{Improvement}
+
+In this paper, improvement filters out constraints with unreachable
+type variables (remember that the presence of unreachable type
+variables in a constraint is an indication that overloading has been
+resolved) from a constraint $C$, on a constrained type $C\Rightarrow
+\tau$. Improvement tests satisfiability on $C_{\tv(\tau)}^u$ (the
+subset of constraints of $C$ with unreachable type variables) and
+removes $C_{\tv(\tau)}^u$ if each constraint in this subset has a
+single satisfying substitution.
+
+%Improvement as defined in this paper is not a satisfiability
+%preserving relation. The satisfiable instances of $C_{\tv(\tau)}^u$
+%are not part of the constraint set obtained after improvement of $C$,
+%if this improved constraint set exists.
+
+If the set $\mathbb{S}$ of satisfiable instances of $C_{\tv(\tau)}^u$
+has more than one element, or if it is empty, there is no improved
+constraint (improvement is a partial relation).
+Improvement is defined in Figure \ref{Constraint-set-improvement}
+($\Phi_0$ is as defined in section \ref{Satisfiability}, page
+\pageref{Phi0}).
+
+\begin{figure}
+   \[ \displaystyle \frac{V = \tv(\tau) \hspace*{.2cm} C_V^u \sats {P,\Phi_0} \{ \phi \}}
+                         {C \Rightarrow \tau \improves {P} C_V^r \Rightarrow \tau}  \]
+\caption{Constraint Set Improvement}
+\label{Constraint-set-improvement}
+\end{figure}
+
+\subsection{Context Reduction}
+\label{Context-Reduction}
+
+Context reduction is a process that reduces a constraint $\pi$ into
+constraint set $D$ according to a {\it matching instance\/} for $\pi$
+in the relevant program theory $P$: if there exists
+$(\forall\,\overline{\alpha}.\,C\Rightarrow \pi')\in P$ such that
+$\phi(\pi') = \pi$, for some $\phi$ such that $\phi(C)$ reduces to
+$D$; if there is no matching instance for $\pi$ or no reduction of
+$\phi(C)$ is possible, then $\pi$ reduces to (a constraint set
+containing only) itself.
+
+%(in Haskell-terminology, $P$ is called the context and $\pi$ the head
+%of constrained type $P\Rightarrow \pi$).
+
+As an example of a context reduction, consider an instance declaration
+that introduces $\forall a.\,{\it Eq\/}\, a \Rightarrow \text{\tt {\it
+    Eq\/}[$a$]}$ in program theory $P$; then {\tt {\it Eq\/}[$a$]} is
+reduced to {\it Eq\/} $a$.
+
+Context reduction can also occur due to the presence of superclass
+class declarations, but we only consider the case of instance
+declarations in this paper, which is the more complex process. The
+treatment of reducing constraints due to the existence of superclasses
+is standard; see e.g.~\cite{MarkJones94a,Hall96,Faxen2002}.
+
+Context reduction uses $\matches$, defined as follows:
+  \[ \begin{array}{l}
+        \matches\bigl(\pi,(P,\Phi'), \Delta) \text{ holds if }\\
+          \:\:\:\: \Delta = \left\{ (\phi(C_0), \pi_0, \Phi')\,\,
+          						\begin{array}{|l}
+                             		\,\,(\forall\,\overline{\alpha}.\,C_0\Rightarrow \pi_0) \in P,\\
+                             		\,\,\mgm(\pi_0 = \pi,\phi),\, \Phi' = \Phi[\pi_0,\pi]
+                             	\end{array}\right\}
+     \end{array}
+  \]
+where $\mgm$ is analogous to $\mgu$ but denotes the most general
+matching substitution, instead of the most general unifier.
+
+The third parameter of $\matches$ is either empty or a singleton set,
+since overlapping instances \cite{ghc-users-guide} are not considered.
+
+Context reduction, defined in Figure~\ref{Context-reduction-fig}, uses
+rules of the form $C \contextreduces {P,\Phi} D;\Phi'$, meaning that
+either $C$ reduces to $D$ under program theory $P$ and least
+constraint value function $\Phi$, causing $\Phi$ to be updated to
+$\Phi'$, or $C \contextreduces {P,\Fail} C;\Fail$. Failure is used to
+define a reduction of a constraint set to itself.
+
+The least constraint value function is used as in the definition of
+{\it sats\/} to guarantee that context reduction is a decidable
+relation.
+
+\begin{figure}
+
+  \[ \begin{array}{c}
+       \begin{array}{cc}
+         \displaystyle\frac{}
+                           {\emptyset \contextreduces {P,\Phi} \emptyset;\Phi} (\redo) &
+         \displaystyle\frac{\{ \pi \} \contextreduces {P,\Phi} C;\Phi_1  \:
+                            D \contextreduces {P,\Phi_1} D';\Phi'}
+      	                   {\{ \pi \} \cup D \contextreduces {P,\Phi} C \cup D';\Phi'} (\conj)
+      \end{array}\\[.8cm]
+
+       \displaystyle\frac{\matches\bigl(\pi,(P,\Phi),\{(C,\pi',\Phi')\}\bigr)
+                           \:\:\: C \contextreduces {P,\Phi'} D;\Phi''}
+       	                 {\{ \pi \} \contextreduces {P,\Phi} D;\Phi''}\: (\instum)\\[.8cm]
+       \displaystyle\frac{\matches\bigl(\pi,(P,\Phi),\{(C,\pi',\Phi')\}\bigr) \:\:\:
+                            C \contextreduces {P,\Phi'} D;\Fail}
+       	                 {\{ \pi \} \contextreduces {P,\Phi} \{ \pi \}; \Fail} \: (\stopFail) \\[.8cm]
+       \begin{array}{c}
+       \displaystyle\frac{\matches\bigl(\pi,(P,\Phi),\{(C,\pi',\Fail)\}\bigr)}
+       	                 {\{ \pi \} \cup C \contextreduces {P,\Phi} \{ \pi \}\cup C;\Fail} \: (\stopo)
+       \end{array}
+    \end{array}
+  \]
+\caption{Context Reduction}
+\label{Context-reduction-fig}
+\end{figure}
+
+An empty constraint set reduces to itself ($\redo$).  Rule ($\conj$)
+specifies that constraint set simplification works, unlike constraint
+set satisfiability, by performing a union of the result of
+simplifying separately each constraint in the constraint set.
+To see that a rule similar to ($\conj$) cannot be used in the case of
+constraint set satisfiability, consider a simple example, of
+satisfiability of $C = \{A\:a, B\: a\}$ in $P = \{A\:\Int,A\:
+\Bool,B\: \Int,B\: \Char\}$. Satisfiability of $C$ yields a single
+substitution where $a$ maps to $\Int$, not the union of computing
+satisfiability for $A\:a$ and $B\:a$ separately.
+
+Rule ($\instum$) specifies that if there exists a constraint axiom
+$\forall\,\overline{\alpha}.\,C \Rightarrow A\,\overline{\tau}$, such
+that $A\,\overline{\tau}$ matches with an input constraint $\pi$, then
+$\pi$ reduces to any constraint set $D$ that $C$ reduces to.
+
+Rules ($\stopFail$) and ($\stopo$) deal with failure due to updating
+of the constraint-head-value function.
+
+\section{Type system}
+\label{Type-system}
+
+In this section we present a type system for a core-Haskell language
+that adopts delayed-closure ambiguity.
+
+We use a context-free syntax of core Has\-kell expressions, given in
+Figure \ref{Core-Haskell-context-free-expressions}, where
+meta-variable $x$ represents a variable. Meta-variables $x,y,z$ denote
+variables and $e$ an expression, possibly primed or subscripted. We
+call the language core Has\-kell (not core ML) because expressions are
+considered to be typed in a program theory (as defined in Section
+\ref{sec:intro}), with information about overloaded symbols generated
+from class and instance declarations.
+
+\begin{figure}
+\[ \text{Expressions}\:\:\:\: e ::= x \mid\ \lambda x.\:e \mid\ e\: e
+                                    \mid\ \mlet\ x=e\ \iin\ e
+\]
+\caption{Context-free syntax of core Haskell expressions}
+\label{Core-Haskell-context-free-expressions}
+\end{figure}
+
+A context-free syntax of constrained types is presented in Figure
+\ref{Core-Haskell-types}, where meta-variable usage is also
+indicated. For simplicity and following common practice, kinds are not
+considered in type expressions (and thus type expressions which are
+not simple types are not distinguished from simple types). Also, type
+expression variables are called simply type variables.
+
+\begin{figure}[Types, constraints and meta-variable usage]
+
+\[ \begin{array}[c]{llll}
+\textrm{Class Name}         &\hspace{.1cm}   & A,B      & \\
+\textrm{Type variable}      &                & a, b, \alpha,\beta   & \\
+\textrm{Type constructor}   &                & T                    & \\
+\textrm{Simple Constraint}  &                & \pi                  & ::= A\,\overline{\tau}\\
+\textrm{Unquantified Constraint} &           & \psi                 & ::= C\Rightarrow \pi\\
+\textrm{Constraint}         &                & \theta               & ::= \forall\,\overline{\alpha}.\,\psi\\
+\textrm{Set of Unquantified Constraints} &   & C,D                  & \\
+\textrm{Constrained Type}   &                & \delta               & ::= C\Rightarrow \tau\\
+\textrm{Simple Type}        &                & \tau, \rho, \epsilon & ::= \alpha \mid T \mid \tau\:\tau \\
+\textrm{Type}               &                & \sigma               & ::= \forall\,\overline{\alpha}.\,\delta\\
+\textrm{Program Theory}     &                & P,Q                  &
+  \end{array} \]
+\caption{Types, constraints and meta-variable usage}
+\label{Core-Haskell-types}
+\end{figure}
+
+We assume that a program theory is part of a typing context $\Gamma$,
+and can be denoted by $P_\Gamma$.
+The initial, global typing context under which program expressions are
+considered to be typed contain all assumptions $x:\sigma$, where $x$
+is a member of a type class $A$ (declared as
+  {\tt class $C \Rightarrow\ A\:\overline{\alpha}$ where \ldots $x$ :: $\tau$\ldots})
+and $\sigma = \forall\,\overline{\alpha}.\,A\:
+\overline{a}\Rightarrow\tau$ is the type obtained including in
+$\overline{\alpha}$ type variables in $\tv(\tau)\cup \overline{\alpha}
+\cup \tv(C)$.
+
+We use:
+  \[ \begin{array}{ll}
+       \Gamma(x)        & = \{ \sigma \mid (x:\sigma) \in \Gamma, \text{ for some } \sigma \}\\
+       \Gamma \ominus x & = \Gamma - \{ (x:\sigma) \in \Gamma \}\\
+       \Gamma, x:\sigma & = (\Gamma \ominus x) \cup \{ x:\sigma \}
+     \end{array}
+  \]
+A partial order on types, constraints and typing contexts is defined
+in Figure \ref{Order}.
+
+Note that type ordering disregards constraint set satisfiability.
+Satisfiability is only important when considering whether a constraint
+set $C$ can be removed from a constrained type $C,D \Rightarrow \tau$
+($C$ can be removed if and only if overloading for $C$ has been
+resolved and there exists a single satisfying substitution for $C$;
+see Figure \ref{Constraint-set-simplification}).
+
+\begin{figure}
+   \[ \begin{array}{ccc}
+   	\displaystyle\frac
+          {}
+          {\sigma \leq \phi\,\sigma}
+   	  & \hspace{0.6cm} &
+   	\displaystyle\frac
+   	  {}
+   	  {\pi \leq \phi\,\pi} \\ \\
+        \multicolumn{3}{c}{
+          \displaystyle\frac
+	    {P_\Gamma = P_{\Gamma'} \:\:\:
+	     \Gamma(x) \leq \Gamma'(x) \text{ for all } x\in \dom(\Gamma)}
+	    {\Gamma \leq \Gamma'}
+        }
+  \end{array} \]
+\caption{Partial order on Types, Constraints and Typing Contexts}
+\label{Order}
+\end{figure}
+
+A type system for core Haskell is presented in Figure
+\ref{Type-system-fig}, using rules of the form $\Gamma \vdash e:\psi$,
+which means that $e$ has type $\psi$ in typing context $\Gamma$. The
+rules are similar to those for core ML
+\cite{Damas82,Kanellakis91,Mitchell-Harper93,Kfoury94}, with
+differences in rules (\APP) and (\LET). Rule (\LET) performs
+constraint set simplification before type generalization.
+
+In rule (\APP), the constraints on the type of the result are those
+that occur in the function type plus not all constraints that occur in
+the type of the argument but only those that have variables reachable
+from (the set of variables that occur in) the simple type of the
+result (this has been already defined in
+\cite{Ambiguity-and-context-dependent-overloading}).  This allows, for
+example, not including constraints on the type of the following
+expressions, where $o$ is any expression, with a possibly non-empty
+set of constraints on its type: {\tt \flip\ \const\ $o$} (where
+\const\ has type $\forall a, b.\,a \rightarrow b \rightarrow a$ and
+\flip\ has type $\forall a, b, c.\,(a \rightarrow b \rightarrow c)
+\rightarrow b \rightarrow a\rightarrow c$), which should denote an
+identity function, and \fst\ ($e$, $o$), which should have the same
+denotation as $e$.
+
+$C \oplus_V D$ denotes the constraint set obtained by adding to $C$
+constraints from $D$ that have type variables reachable from $V$:
+  \[ P \oplus_V Q = P \cup \{ \psi \in Q \mid \tv(\psi) \cap \reachableVars(Q,V) \not= \emptyset \} \]
+
+$\gen(\psi,\sigma,V)$ holds if $\sigma =
+\forall\,\overline{\alpha}.\,\psi$, where $\overline{\alpha} =
+\tv(\psi) - V$.
+
+Relation $\simplifies{P}$ is a simplification relation on
+cons\-traints, defined as a composition of improvement and context
+reduction, defined respectively in subsections \ref{Improvement} and
+\ref{Context-Reduction}.
+
+\begin{figure}
+   \[ \displaystyle \frac
+        {C \improves {P} D \hspace*{.4cm} D \contextreduces {P} C'}
+        {C \simplifies {P} C'}
+  \]
+\caption{Constraint set simplification}
+\label{Constraint-set-simplification}
+\end{figure}
+
+\begin{figure}
+\[ \begin{array}{cc}
+      \displaystyle\frac
+        {\begin{array}[t]{ll}
+           (x: \sigma) \in \Gamma & \sigma \leq \psi
+         \end{array}}
+        {\Gamma \vdash x: \psi} \:(\VAR) \\ \\
+
+	\displaystyle\frac
+          {\Gamma,x:\tau \vdash e: C \Rightarrow \tau'}
+	  {\Gamma \vdash \lambda x.\:e: C\Rightarrow \tau \rightarrow \tau'} \:(\ABS)  \\ \\
+
+	\displaystyle\frac
+	  {\begin{array}[t]{cc}
+             \Gamma \vdash e: C \Rightarrow \tau' \rightarrow \tau &
+             \Gamma \vdash e': C' \Rightarrow \tau' \\
+             \multicolumn{2}{c}{(C \oplus_{\tv(\tau)}\, C') \simplifies{P_\Gamma} D}
+           \end{array}}
+	{\Gamma \vdash e\:e': D\Rightarrow \tau} \:(\APP) \\ \\
+
+	\displaystyle\frac
+	 {\begin{array}{ll}
+            \Gamma \vdash e\!:C \Rightarrow \tau & C \simplifies {P_\Gamma} D\\
+             \gen(D\Rightarrow \tau,\sigma,\tv(\Gamma)) & \Gamma,\,x\!:\!\sigma \vdash e'\!:\psi
+          \end{array}}
+	 {\Gamma \vdash \mlet\ x=e\ \iin\ e':\psi} \:(\LET)
+\end{array} \]
+\caption{Type System}
+\label{Type-system-fig}
+\end{figure}
+
+\section{Type inference}
+\label{Type-inference}
+
+In this section we present a type inference algorithm for
+core-Haskell, and discuss soundness and completeness of type inference
+with respect to the type system.
+
+A type inference algorithm for core Haskell is presented in Figure
+\ref{Type-inference-fig}, using rules of the form $\Gamma \ti
+e:(\psi,\phi)$, which means that $\psi$ is the least (principal) type
+of (derivable for) $e$ in typing context $\phi\Gamma$, where
+$\phi\Gamma \leq \Gamma$ and, whenever $\Gamma' \leq \Gamma$ is such
+that $\Gamma' \ti e: (\psi',\phi')$, we have that $\phi\Gamma \leq
+\Gamma'$ and $\psi' \leq \phi\psi$. Furthermore, we have that
+$\phi\,\Gamma \ti e:(\psi,\phi')$ holds whenever $\Gamma \ti
+e:(\psi,\phi)$ holds, where $\phi'\leq \phi$ (cf.~theorem
+\ref{Minimal-type-minimal-typing-context} below).
+
+\begin{Example} {\rm
+Consider expression $x$ and ty\-ping context $\Gamma = \{ f: \Int
+\rightarrow {\it Int}, x:\alpha \}$; we can derive $\Gamma \ti f\: x:
+(\Int, \phi)$, where $\phi = [\alpha \mapsto \Int]$. From
+$\phi\,\Gamma = \{ f: \Int \rightarrow \Int, x:\Int \}$, we can derive
+$\phi\,\Gamma \ti f\: x:(\Int,\id)$.}
+\end{Example}
+
+\begin{Theorem}
+
+If $\Gamma \ti e:(\psi,\phi)$ holds then $\phi\,\Gamma \ti
+e:(\psi,\phi')$ holds, where $\phi'\leq \phi$.
+
+Furthermore, for all typing contexts $\Gamma'$ with the same
+quantified type assumptions as $\Gamma$ --- i.e.~for all $\Gamma'$
+such that $P_\Gamma' = P_\Gamma$ and for which $(x:\forall
+\alpha.\,\sigma)\in \Gamma'$ implies $(x:\forall \alpha.\,\sigma)\in
+\Gamma$ ---, if $\Gamma' \ti e:(\psi',\phi')$ is derivable, for some
+$\psi', \phi'$, we have that $\phi\Gamma \leq \Gamma'$, $\psi \leq
+\psi'$ and $\phi'\leq \phi$.
+
+\label{Minimal-type-minimal-typing-context}
+\end{Theorem}
+
+\begin{figure}
+\[ \begin{array}{cc}
+      \displaystyle\frac
+        {\begin{array}[t]{ll}
+           (x: \forall\,\overline{\alpha}.\,\psi) \in \Gamma & \overline{\beta} \text{ fresh}
+         \end{array}}
+        {\Gamma \ti x: (\psi[\overline{\alpha} \mapsto \overline{\beta}], \id)} (\VARi) \\ \\
+
+	\displaystyle\frac
+          {\begin{array}[t]{lll}
+            \Gamma,x:\alpha \ti e: (C \Rightarrow \tau,\phi) & \alpha \text{ fresh} & \tau' = \phi\,\alpha
+           \end{array}}
+	  {\Gamma \ti \lambda x.\:e: (C\Rightarrow \tau' \rightarrow \tau, \phi)} (\ABSi) \\ \\
+
+	\displaystyle\frac
+	 {\begin{array}[t]{ll}
+             \Gamma \ti e: (C \Rightarrow \tau_1, \phi_1) & \phi_1\Gamma \ti e': (C' \Rightarrow \tau_2, \phi_2)\\
+             \phi' = \mguI(\tau_1 = \tau_2\rightarrow \alpha) & \alpha \text{ fresh}, \:
+                \phi = \phi' \circ \phi_2 \circ \phi_1  \\
+             \tau = \phi\alpha, \: V = \tv(\tau) & (\phi C \oplus_V\,\phi C') \simplifies{P_\Gamma} D
+           \end{array}}
+	  {\Gamma \ti e\:e': (D\Rightarrow \tau,\phi)} (\APPi) \\ \\
+
+	\displaystyle\frac
+	  {\begin{array}{ll}
+             \Gamma \ti e\!:(C\Rightarrow \tau,\phi_1) & C \simplifies {P_\Gamma} C' \\
+             \gen(\sigma,C'\Rightarrow \tau,\tv(\phi_1\Gamma)) & \phi_1\Gamma,\,x\!:\!\sigma \ti e_2\!:(\psi,\phi)
+          \end{array}}
+	 {\Gamma \ti \mlet\ x=e\ \iin\ e':(\psi,\phi)} (\LETi)
+\end{array} \]
+\caption{Type Inference}
+\label{Type-inference-fig}
+\end{figure}
+
+$\mguI$ is a function that gives a most general unifier of a set of
+pairs of simple types (or simple constraints). $\mguI(\tau =
+\tau',\phi)$ is an alternative notation for
+$\mgu\big(\{(\tau,\tau')\},\phi\bigr)$).
+We have:
+
+\begin{Theorem}[Soundness]
+
+If $\Gamma \ti e: (\psi,\phi)$ holds then $\phi\Gamma \vdash e: \psi$ holds.
+
+\end{Theorem}
+
+\begin{Theorem}[Principal type inference]
+
+If $\Gamma \ti e: (\psi,\phi)$ holds then, for all $\psi'$ such that
+$\Gamma \vdash e: \psi'$ holds, we have that $\psi \leq \psi'$.
+
+\label{Principal-type-theorem}
+\end{Theorem}
+
+A completeness theorem does not hold. For example, consider expression
+$e_0$ % (that is, {\tt (\sshow\ $\!\!$.$\!\!$ \rread)})
+of Example \ref{ex0}; we have that there exists $\Gamma$ such that
+$\Gamma \vdash e_0: \String \rightarrow \String$ holds but there is no
+$\psi,\phi$ such that $\Gamma \vdash e_0: (\psi,\phi)$ holds.
+
+In our opinion, the greater simplicity obtained by allowing type
+instantiation to be done (``guessed'') in a context-independent way,
+does not compensate the disadvantages of allowing ambiguous
+expressions to be well-typed and of having several translations for
+expressions, one of them a principal translation. We prefer a
+declarative specification of type inference, that allows a unique type
+to be derivable for each expression, where type instantiation is
+restricted to be done only in a context-dependent way, given by
+considering functions, used in the type inference algorithm, as
+relations. In other words, the type inference algorithm can be
+obtained from a declarative specification of type inference by
+transforming relations used into functions; see
+\cite{Ambiguity-and-context-dependent-overloading}. The fact that
+every element is an element of a unique type is a bonus that agrees
+with everyday spoken language. It is straightforward to define, a
+posteriori, the set of types that are instances of the type of an
+expression.
+
+The fact that only a single type can be derived for each expression
+rules out the possibility of having distinct type derivations. Thus,
+an error message for an expression such as {\tt (\sshow\ $\!\!$.$\!\!$
+  \rread)}, in a context with more than one instance for \SShow\ and
+\RRead, should be that the expression can not be given (there is no
+type that would allow it to have) a well-defined semantics. Distinct
+meanings of {\tt (\sshow\ $\!\!$.$\!\!$ \rread)} would be obtained
+from distinct instance types of \sshow, \rread.
+
+In the next section we give a semantics by induction on the derivation
+of the type of an expression by considering functions used in the type
+inference algorithm ($\mguI$, $\gen$, $\simplifies{P}$) as relations.
+
+\input{semantics}
+
+\section{Related Work}
+\label{Related-work}
+
+% Types like $\forall a,b,c.\,(\NumLit\ a, \Sum\ a\: b\: c)\Rightarrow b
+% \rightarrow c$, of expression {\tt (1+)}, shown in Example
+% \ref{ExPlus1}, are ow-ambiguous. The alleged reason for this is that
+% coherence cannot be obtained, i.e.~a well-defined semantics cannot be
+% given for such expressions
+% \cite{jones:coherence,MarkJones94a,Type-classes-with-FDs-MarkJones00,MarkJonesIatchki2008-FDs,TheoryOfOverloading}.
+% The reasoning behind this is that type variables (like $a$ in this
+% example) that occur in the constraints but do not occur in the simple
+% type component of the constrained type, nor are uniquely determined by
+% an extra mechanism such as a functional dependency, {\em might\/} be
+% instantiated to distinct instances, giving rise to distinct values
+% (dictionaries), corresponding to constraint $\NumLit\ a$, that are
+% part of the semantics of such expressions, with the same instance type
+% (thus yielding distinct semantic values for an expression with a given
+% type). This assertion disregards that there may be only one instance
+% type for $a$ in the context where the expression is used. It
+% disregards also that overloading is still unresolved, and that an
+% error can be reported if the expression is in fact used in a context
+% where overloading is resolved and there is no unique way of
+% determining that expression's unique semantic value. Delayed-closure
+% ambiguity establishes that, when overloading is resolved --- in the
+% example, $b$ is instantiated so that $a$ becomes an unreachable
+% variable ---, the existence of one instance type for $a$ in the
+% context is sufficient to determine $a$'s instantiation.
+
+Blott \cite{BlottPhD} and Jones \cite{MarkJones94a} have presented
+coherent semantics for ow-unambiguous expressions.
+
+Sulzmann et al. \cite{Understanding-FDs-via-CHRs} consider the
+encoding of multi-parameter type classes with functional dependencies
+via constraint handling rules \cite{CHRs}. In their work, as in many
+other related works (e.g.~\cite{Parametric-type-classes}), ambiguity
+means ow-ambiguity. Sulzmann et al.'s definition of ow-ambiguity is
+based on provability of constraints in a program theory, using
+constraint-handling rules (instead of being a definition that the set
+of type variables of a constraint set is not a subset of the set of
+induced functional dependencies of a simple type).
+
+Functional dependencies, introduced in Haskell in order to allow the
+inference of more specific types and to avoid ambiguity errors, also
+allow computations at the type level, because of reductions forced by
+functional dependencies on the type inference algorithm. Type level
+programming based on functional dependencies has been explored for
+example in \cite{hallgren01,McBride02} and has been used for instance
+to define heterogeneous collections and database access libraries for
+Haskell \cite{Kiselyov04,Silva06}. The use of delayed-closure
+ambiguity eliminates the need of functional dependencies to avoid
+ambiguity but does not allow type level programming, which relies on
+the fact that type specialization occurs in types that involve
+reachable type variables.
+
+\input{agda-related-work}
+
+\section{Conclusion}
+\label{Conclusion}
+
+This paper discusses the problem of ambiguity in Haskell-like
+languages. A definition of ambiguity, called {\em delayed-closure}, is
+presented, where the existence of more than one instance (and more
+than one type derivation) for the same type of an expression is
+considered only when there exist unreachable variables in the
+constraints on the type of an expression.  The presence of unreachable
+variables in constraints characterizes the nonexistence of a program
+context in which the expression could be placed that would allow
+instantiation of these variables and overloading resolution.
+
+The paper describes an approach for using default declarations for
+avoiding ambiguity by the addition of new instance declarations, but
+leaves for further work a proposal for allowing the importation and
+exportation of type class instances.
+
+Adopting delayed-closure ambiguity in Haskell would eliminate the need
+of using functional dependencies or type families for the purpose of
+dealing with ambiguity. It would also enable Haskell compilers to
+provide more helpful ambiguity-related error messages. There would be
+no influence on well-typed Haskell programs, but programs which
+currently cause ambiguity errors in Haskell could then become
+well-typed.
+
+The paper presents a type system and a type inference algorithm that
+includes a constraint-set satisfiability function, that determines
+whether a given set of constraints is entailed or not in a given
+context, focusing on issues related to decidability, a constraint-set
+improvement function, for filtering out constraints for which
+overloading has been resolved, and a context-reduction function, for
+reducing constraint sets according to matching instances. A standard
+dictionary-style semantics for core Haskell is also presented.
+
+As future work, we intend to investigate also the use of
+delayed-closure ambiguity in connection with type families.
+
+%  Existe um trabalho recente sobre isso:
+% http://research.microsoft.com/en-us/um/people/simonpj/papers/ext-f/axioms-extended.pdf
+% Inclusive o Sulzmann sugeriu adotar as idéias de delayed closure
+% para este problema de type families, quando esteve aqui para minha
+% defesa. Minha sugestão para este ponto seria dizer que pretendemos,
+% em trabalhos futuros, investigar como esta abordagem pode ser
+% utilizada para type families.
+
+
+
+% A partial scheme of using delayed-closure ambiguity only to check
+% existence of a single satisfying substitution for instantiation of
+% unreachable type variables in constraints could be used, but we
+% think that this is in our view a solution to alleviate problems with
+% the Haskell open-world culture ...
+
+%\appendix
+%\section{Closed world and standard ambiguity}
+%\label{Closed-world-and-standard-ambiguity}
+
+\bibliography{main}
+
+\end{document}
