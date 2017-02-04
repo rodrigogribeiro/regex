@@ -1,0 +1,61 @@
+name:                haskell-regex
+version:             0.1.0.0
+-- synopsis:
+-- description:
+homepage:            https://github.com/githubuser/haskell-regex#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Author name here
+maintainer:          example@example.com
+copyright:           2017 Author name here
+category:            Web
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+library
+  Build-Tools:          happy >= 1.17
+  Build-Depends:        base >= 3 && < 5,
+                        array >= 0.1 && < 0.6
+  HS-Source-Dirs:       src
+  Exposed-Modules:      Text.RegExp,
+                        Text.RegExp.Matching.Leftmost,
+                        Text.RegExp.Matching.Longest,
+                        Text.RegExp.Matching.LeftLong,
+                        Text.RegExp.Internal,
+                        Data.Semiring,
+                        Data.Semiring.Properties
+  Other-Modules:        Text.RegExp.Data,
+                        Text.RegExp.Parser,
+                        Text.RegExp.Matching,
+                        Text.RegExp.Matching.Leftmost.Type,
+                        Text.RegExp.Matching.Longest.Type,
+                        Text.RegExp.Matching.LeftLong.Type
+  Extensions:           RankNTypes,
+                        BangPatterns,
+                        FlexibleContexts,
+                        FlexibleInstances,
+                        MultiParamTypeClasses,
+                        NoMonomorphismRestriction,
+                        GeneralizedNewtypeDeriving
+executable haskell-regex-exe
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base
+                     , array >= 0.1 && < 0.6
+                     , haskell-regex
+  default-language:    Haskell2010
+
+test-suite haskell-regex-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base
+                     , haskell-regex
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/githubuser/haskell-regex
