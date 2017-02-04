@@ -1417,8 +1417,42 @@ In order to validade our tool (named verigrep --- for verified Grep), we
 compare its performance with GNU Grep~\cite{Grep} (grep), Google
 regular expression library~\cite{re2} (re2) and with Haskell RE
 parsing algorithms described in~\cite{Fischer2010} (haskell-regexp).
+We run RE parsing experiments on a machine with a Intel Core I7 1.7
+GHz, 8GB RAM running Mac OS X 10.12.3; the results were collected and
+the median of several test runs was computed.
 
-FALTA FAZER OS EXPERIMENTOS!!!!
+We use the same experiments as~\cite{SulzmannL14} using files formed
+by thousands of occurrences of
+symbol \texttt{a} were parsed, using the RE $(a + b + ab)^\star$; in
+the second, files with thousands of occurrences of \texttt{ab} were
+parsed using the same RE. Results are presented in
+Figures~\ref{fig:graph1} and~\ref{fig:graph2}, respectively.
+
+\begin{figure}[!ht]
+    \includegraphics[width=0.7\textwidth]{as.png}
+   \centering
+   \caption{Results of experiment 1.}
+   \label{fig:graph1}
+\end{figure}
+
+\begin{figure}[!ht]
+    \includegraphics[width=0.7\textwidth]{abs.png}
+   \centering
+   \caption{Results of experiment 2.}
+   \label{fig:graph2}
+\end{figure}
+
+Our tool behaves poorly when compared with all other options
+considered. This inefficiency could be explained: 1) Our algorithm
+relies on the Brzozowski definition of RE parsing, which needs to
+quotient resulting REs. 2) We use lists to represent sets of Antimirov's
+partial derivatives. We believe that usage of better data structures
+to represent sets and using appropriate disambiguation strategies
+like greedy parsing~\cite{FrischC04} and POSIX~\cite{SulzmannL14}
+would be able to improve the efficiency of our algorithm without
+sacrificing its correctness. We leave the formalization of
+disambiguation strategies and the use of more efficient
+data structures for future work.
 
 \section{Related Work}\label{sec:related}
 
@@ -1511,8 +1545,8 @@ for REs in Agda. To the best of our knowledge, this is the first work
 that presents a complete certification and that uses the certified
 program to build a tool for RE-based search.
 
-The developed formalization has 563 lines of code, organized in seven
-modules. We have proven 23 theorems and lemmas to complete the
+The developed formalization has 1145 lines of code, organized in 20
+modules. We have proven 39 theorems and lemmas to complete the
 development. Most of them are immediate pattern matching functions
 over inductive datatypes and were omitted from this text for brevity.
 
