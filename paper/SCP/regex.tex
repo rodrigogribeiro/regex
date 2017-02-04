@@ -476,10 +476,10 @@ intuitionistic type theory~\cite{Lof98}. This means, in particular, that it has
 very few built-in types. In fact, only function types and the type of all types
 are built-in. Everything else is a user-defined type. The type \ensuremath{\D{Set}}, also known
 as \ensuremath{\D{Set}_{\D{0}}}, is the type of all ``small'' types, such as \ensuremath{\D{Bool}}, \ensuremath{\D{String}} and \ensuremath{\D{List}\;\D{Bool}}.
-The type Set1 is the type of Set and ``others like it'', such as \ensuremath{\D{Set}\;\to \;\D{Bool}},
+The type \ensuremath{\D{Set}_{\D{1}}} is the type of \ensuremath{\D{Set}} and ``others like it'', such as \ensuremath{\D{Set}\;\to \;\D{Bool}},
 \ensuremath{\D{String}\;\to \;\D{Set}}, and \ensuremath{\D{Set}\;\to \;\D{Set}}. There is in fact an infinite hierarchy of types of the
-form \ensuremath{\D{Set}\;\V{l}}, where \ensuremath{\V{l}} is a universe level, roughly,a natural integer. This stratification
-of universes is need to keep Agda consistent as a logical theory~\cite{Sorensen2006}.
+form \ensuremath{\D{Set}\;\V{l}}, where \ensuremath{\V{l}} is a level, roughly, a natural integer. This stratification
+of types is need to keep Agda consistent as a logical theory~\cite{Sorensen2006}.
 
 An ordinary (non-dependent) function type is written \ensuremath{\V{A}\;\to \;\V{B}} and a dependent one is written
 \ensuremath{(\V{x}\;\mathbin{:}\;\V{A})\;\to \;\V{B}} or \ensuremath{\V{∀}\;(\V{x}\;\mathbin{:}\;\V{A})\;\to \;\V{B}}. Agda allows the definition of \emph{implicit parameters}, i.e.
@@ -521,7 +521,7 @@ inserts a new element in front of a vector of $n$ elements (of type
 \ensuremath{\D{Vec}} datatype is an example of a dependent type, i.e. a type
 that uses a value (that denotes its length). The usefulness of
 dependent types can be illustrated with the definition of a safe list
-head function: \ensuremath{\V{head}} can be defined to accept only non-empty
+head function: \ensuremath{\F{head}} can be defined to accept only non-empty
 vectors, i.e.~values of type \ensuremath{\D{Vec}\;\V{A}\;(\C{suc}\;\V{n})}.
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -694,7 +694,7 @@ Datatype \ensuremath{\D{Regex}} encodes RE syntax.
 Constructors \ensuremath{\C{\emptyset}} and \ensuremath{\C{\epsilon}} denote respectively the
 empty language ($\emptyset$) and empty string ($\epsilon$). Alphabet
 symbols are constructed using \ensuremath{\C{\$}} constructor. Bigger REs are
-built using concatenation \ensuremath{\C{∙}}, union (\ensuremath{\C{+}}) and
+built using concatenation (\ensuremath{\C{∙}}), union (\ensuremath{\C{+}}) and
 Kleene star (\ensuremath{\C{\star}}).
 
 

@@ -244,10 +244,10 @@ intuitionistic type theory~\cite{Lof98}. This means, in particular, that it has
 very few built-in types. In fact, only function types and the type of all types
 are built-in. Everything else is a user-defined type. The type |Set|, also known
 as |Set0|, is the type of all ``small'' types, such as |Bool|, |String| and |List Bool|.
-The type Set1 is the type of Set and ``others like it'', such as |Set -> Bool|,
+The type |Set1| is the type of |Set| and ``others like it'', such as |Set -> Bool|,
 |String -> Set|, and |Set -> Set|. There is in fact an infinite hierarchy of types of the
-form |Set l|, where |l| is a universe level, roughly,a natural integer. This stratification
-of universes is need to keep Agda consistent as a logical theory~\cite{Sorensen2006}.
+form |Set l|, where |l| is a level, roughly, a natural integer. This stratification
+of types is need to keep Agda consistent as a logical theory~\cite{Sorensen2006}.
 
 An ordinary (non-dependent) function type is written |A -> B| and a dependent one is written
 |(x : A) -> B| or |∀ (x : A) -> B|. Agda allows the definition of \emph{implicit parameters}, i.e.
@@ -268,6 +268,7 @@ length-indexed lists, also known as vectors.
     []  : Vec A zero
     _::_ : ∀ {n} -> A -> Vec A n -> Vec A (succ n)
 \end{code}
+%format head = "\F{head}"
 Constructor |[]| builds empty vectors. The cons-operator (|_::_|)
 inserts a new element in front of a vector of $n$ elements (of type
 |Vec A n| and returns a value of type |Vec A (succ n)|. The
@@ -276,7 +277,6 @@ that uses a value (that denotes its length). The usefulness of
 dependent types can be illustrated with the definition of a safe list
 head function: |head| can be defined to accept only non-empty
 vectors, i.e.~values of type |Vec A (succ n)|.
-%format head = "\F{head}"
 \begin{spec}
   head : Vec A (succ n) -> A
   head (x :: xs) = x
@@ -407,7 +407,7 @@ Datatype |Regex| encodes RE syntax.
 Constructors |∅| and |Eps| denote respectively the
 empty language ($\emptyset$) and empty string ($\epsilon$). Alphabet
 symbols are constructed using |#| constructor. Bigger REs are
-built using concatenation |∙|, union (|+|) and
+built using concatenation (|∙|), union (|+|) and
 Kleene star (|⋆|).
 
 %format _<<-[[_]] = "\D{\_\in\llbracket\_\rrbracket}"
