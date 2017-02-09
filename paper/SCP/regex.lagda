@@ -117,14 +117,14 @@ module regex where
 
 \begin{abstract}
 
-We describe the formalization of a certified algorithms for regular
-expression parsing based on Brzozowski and Antimirov derivatives,
-in the dependently typed language Agda. The formalized algorithms
-produces proofs that an input string matches a given regular expression
-or a proof that no matching exists. A tool for regular expression based
-search in the style of the well known GNU grep has been developed with
-the certified algorithms, and practical experiments were conducted
-with it.
+We describe the formalization of Brzozowski and Antimirov derivative
+based algorithms for regular expression parsing, in the dependently
+typed language Agda. The formalization produces a proof that either an
+input string matches a given regular expression or that no matching
+exists. A tool for regular expression based search in the style of the
+well known GNU grep has been developed with the certified algorithms.
+Results with practical experiments conducted with this tool are
+reported.
 
 \end{abstract}
 
@@ -151,21 +151,22 @@ Certified algorithms, regular expressions; dependent types
 \section{Introduction}\label{sec:intro}
 
 Parsing is the process of analysing if a string of symbols conforms to
-given rules, involving also, in computer science, formally specifying
-the rules in a grammar and also, either the construction of data that
-makes evident the rules that have been used to conclude that the
-string of symbols can be obtained from the grammar rules, or else
-indication of an error, representative of the fact that the string of
-symbols cannot be generated from the grammar rules.
+a given set of rules. It involves in computer science the formal
+specification of the rules in a grammar and, also, either the
+construction of data that makes evident which rules have been used to
+conclude that the string of symbols can be obtained from the grammar
+rules or, otherwise, an indication of an error that represents the
+fact that the string of symbols cannot be generated from the grammar
+rules.
 
-In this work, we are interested in the parsing problem for regular
-languages (RLs)~\cite{Hopcroft2000}, i.e. languages recognized by
-(non-)deterministic finite automata and equivalent formalisms. Regular
-expressions (REs) are an algebraic and compact way of specifying RLs
-that are extensively used in lexical analyser
+In this work we are interested in the parsing problem for regular
+languages (RLs)~\cite{Hopcroft2000}, i.e.~languages that can be
+recognized by (non-)deterministic finite automata and equivalent
+formalisms. Regular expressions (REs) are an algebraic and compact way
+of specifying RLs that are extensively used in lexical analyser
 generators~\cite{Lesk1990} and string search utilities~\cite{Grep}.
 Since such tools are widely used and parsing is pervasive in
-computing, there is a growing interest on correct parsing
+computing, there is a growing interest on certified parsing
 algorithms~\cite{FirsovU13,FirsovU14,Danielsson2010}.  This interest
 is motivated by the recent development of dependently typed
 languages. Such languages are powerful enough to express algorithmic
@@ -177,54 +178,56 @@ finite state machine that is equivalent to a given RE and to perform
 RE-based parsing. According to Owens et. al~\cite{Owens2009},
 ``derivatives have been lost in the sands of time'' until his work on
 functional encoding of RE derivatives have renewed interest on its use
-for parsing~\cite{Might2011,Fischer2010}.
-In this work, we provide a complete formalization of an algorithm for
-RE parsing using derivatives, as presented by~\cite{Owens2009}, and
-describe a RE based search tool that has been developed by us, using
-the dependently typed language Agda~\cite{Norell2009}.
+for parsing~\cite{Might2011,Fischer2010}.  In this work, we provide a
+complete formalization of an algorithm for RE parsing using
+derivatives \cite{Owens2009}, and describe a RE based search tool that
+has been developed by us, using the dependently typed language
+Agda~\cite{Norell2009}.
 
 More specifically, our contributions are:
 \begin{itemize}
-  \item A formalization of Brzozowski derivatives based RE
-    parsing in Agda. The certified algorithm presented produces as
-    a result either a proof term (parse tree) that is evidence that
-    the input string is in the language of the input RE, or a witness
-    that such parse tree does not exist.
+  \item A formalization of Brzozowski derivatives based RE parsing in
+    Agda. The certified algorithm presented produces as a result
+    either a proof term (parse tree) that is evidence that the input
+    string is in the language of the input RE or a witness that such
+    parse tree does not exist.
 
   \item A detailed explanation of the technique used to quotient
-    derivatives with respect to ACUI axioms\footnote{Associativity,
-      Commutativity and Idempotence with Unit elements axioms for
-      REs~\cite{Brzozowski1964}.} in an implementation by Owens et
-    al.~\cite{Owens2009}, called ``smart-constructors'', and its proof
-    of correctness. We give formal proofs that smart constructors
-    indeed preserve the language recognized by REs.
+    derivatives with respect to ACUI axioms\footnote{Axioms, for REs,
+      of Associativity, Commutativity and Idempotence with Unit
+      elements~\cite{Brzozowski1964}.} in an implementation by Owens
+    et al.~\cite{Owens2009}, called ``smart-constructors'', and its
+    proof of correctness. We give formal proofs that smart
+    constructors indeed preserve the language recognized by REs.
 
   \item A formalization of Antimirov's derivatives and its use to
-      construct a RE parsing algorithm. The main difference between
-      partial derivatives and Brzozowski's is that the former computes
-      a set of RE's using set operators instead of ``smart-constructors''.
-      Producing a set of RE's avoids the need of quotienting the resulting
-      REs w.r.t. ACUI axioms.  
+    construct a RE parsing algorithm. The main difference between
+    partial derivatives and Brzozowski's is that the former computes a
+    set of REs using set operators instead of ``smart-constructors''.
+    Producing a set of REs avoids the need of quotienting the
+    resulting REs w.r.t. ACUI axioms.
 \end{itemize}
 
 This paper extends our SBLP 2016 paper~\cite{Lopes2016} by formalizing
-a RE parsing algorithm using Antimirov's partial derivatives~\cite{Antimirov1996}.
-Also our original paper uses Idris~\cite{Brady2013} instead of Agda. This change
-was motivated by a modification in Idris totality checker that refuses some
-(correct and total) proofs that are both accepted by Agda's and Coq totality
-checkers. All source code produced in Idris, Agda and Coq, including the \LaTeX~
-source of this article, instructions on how to build and use it are avaliable
+a RE parsing algorithm using Antimirov's partial
+derivatives~\cite{Antimirov1996}.  Also our original paper uses
+Idris~\cite{Brady2013} instead of Agda. This change was motivated by a
+modification in Idris totality checker that refuses some (correct and
+total) proofs that are both accepted by Agda's and Coq totality
+checkers. All source code produced in Idris, Agda and Coq, including
+the \LaTeX~ source of this article, are avaliable
 on-line~\cite{regex-rep}.
 
-The rest of this paper is organized as
-follows. Section~\ref{sec:agda} presents a brief introduction to
-Agda. Section~\ref{sec:regexp} describes the encoding of REs and its
-parse trees. In Section~\ref{sec:deriv} we define Brzozowski and Antimirov
-derivatives and smart constructors, some of their properties and describe
-how to build a correct parsing algorithm from them. Section~\ref{sec:exp}
-comments on the usage of the certified algorithm to build a tool for RE-based
-search and present some experiments with it. Related work is discussed
-on Section~\ref{sec:related}. Section~\ref{sec:conclusion} concludes.
+The rest of this paper is organized as follows. Section~\ref{sec:agda}
+presents a brief introduction to Agda. Section~\ref{sec:regexp}
+describes the encoding of REs and its parse trees. In
+Section~\ref{sec:deriv} we define Brzozowski and Antimirov derivatives
+and smart constructors, some of their properties and describe how to
+build a correct parsing algorithm from them. Section~\ref{sec:exp}
+comments on the use of the certified algorithm to build a tool for
+RE-based search and present some experiments with this tool. Related
+work is discussed on
+Section~\ref{sec:related}. Section~\ref{sec:conclusion} concludes.
 
 All the source code in this article has been formalized in Agda
 version 2.5.2 using Standard Library 0.13, but
@@ -250,7 +253,7 @@ form |Set l|, where |l| is a level, roughly, a natural integer. This stratificat
 of types is need to keep Agda consistent as a logical theory~\cite{Sorensen2006}.
 
 An ordinary (non-dependent) function type is written |A -> B| and a dependent one is written
-|(x : A) -> B| or |∀ (x : A) -> B|. Agda allows the definition of \emph{implicit parameters}, i.e.
+|(x : A) -> B|, where type |B| depends on |x|, or |∀ (x : A) -> B|. Agda allows the definition of \emph{implicit parameters}, i.e.
 parameters whose value can be infered from the context, by surrounding them in curly
 braces: |∀ {x : A} -> B|. To avoid clutter, we'll omit implicit arguments from the source code
 presentation. The reader can safely assume that every free variable in a type is an implicity
@@ -311,7 +314,7 @@ representation of equality as the following Agda type:
 %format false = "\C{false}"
 %format true = "\C{true}"
 %format + = "\F{+}"
-
+%format Bot = "\D{\bot}" 
 This type is called propositional equality. It defines that there is
 a unique evidence for equality, constructor |refl| (for reflexivity),
 that asserts that the only value equal to |x| is itself. Given a type |P|,
@@ -324,8 +327,11 @@ holds. The decidable proposition type is defined as:
      no  : not P -> Dec p
 \end{spec}
 Constructor |yes| stores a proof that property |P| holds
-and |no| an evidence that such proof is impossible. Some functions
-used in our formalization use this type.
+and constructor |no| an evidence that such proof is impossible. Some functions
+used in our formalization use this type. |no P| is an
+abbreviation for |P -> Bot|, where
+|Bot| is a data type with no constructors (i.e.~a data
+type for which it is not possible to construct a value).
 
 Dependently typed pattern matching is built by using the so-called
 |with| construct, that allows for matching intermediate
@@ -368,8 +374,8 @@ grammar
 \[
 e ::= \emptyset\,\mid\,\epsilon\,\mid\,a\,\mid\,e\,e\,\mid\,e+e\,\mid\,e^{\star}
 \]
-where $a$ is a symbol from the underlying alphabet.
-In our original Idris formalization, we describe symbols of an alphabet as a natural number
+where $a$ is any symbol from the underlying alphabet.
+In our original Idris formalization, we described symbols of an alphabet as a natural number
 in Peano notation (type |Nat|), i.e.~the symbol's numeric
 code. The reason for this design choice is due to the way that Idris
 deals with propositional equality for primitive types, like
@@ -420,16 +426,9 @@ Kleene star (|⋆|).
 %format +L = "\C{+L}"
 %format +R = "\C{+R}"
 
-
-Using the datatype for RE syntax, we can define a relation for RL
-membership. Such relation can be understood as a parse tree (or a
-proof term) that a string, represented by a list of |Char|
-values, belongs to the language of a given
-RE.
-
-The following datatype defines RE semantics inductively, i.e.,
-each of its constructor specifies how to build a parse tree
-for some string and RE.
+The following datatype defines RE semantics inductively, i.e.~each of
+its constructor specifies how to build a parse tree for some string
+and some RE.
 
 \begin{spec}
   data _<<-[[_]] : List Char -> Regex -> Set where
@@ -442,20 +441,24 @@ for some string and RE.
 \end{spec}
 
 Constructor |Eps| states that the empty string (denoted by the empty list |[]|)
-is in the language of RE |Eps|. Parse tree for single characters are built
-with |# a|, which says that the singleton string
-|[ a ]| is in RL for |# a|. Given parse trees for REs
-|l| and |r|; | xs <<-[[ l ]] | and | ys <<-[[ r ]] |, we can use constructor
-| _∙_=>_ | to build a parse tree for the concatenation of these REs. 
-Constructor |_+L_| 
-(|_+R_|) creates a parse tree for |l + r| from a parse
-tree from |l|(|r|). Parse trees for Kleene star are built
-using the following well known equivalence of REs: $e^\star = \epsilon
-+ e\,e^\star$.
+is in the language of RE |Eps|.
 
-Several inversion lemmas about RE parsing relation are necessary to
-formalize derivative based parsing. They consist of pattern-matching
-on proofs of |_<<-[[_]]| and are omitted for brevity.
+For any single character |a|, the singleton
+string |[ a ]| is in the RL
+for |$ a|. Given parse trees for REs
+|l| and |r|, |xs <<-[[ l ]]| and |ys <<-[[ r ]]|, constructor
+|_∙_=>_| can be used to build a parse tree
+for the concatenation of these REs.  Constructor
+|_+L_| (|_+R_|) creates a parse tree
+for |l + r| from a parse tree from |l| (|r|). Parse trees for Kleene star
+are built using the following well known equivalence of REs: $e^\star
+= \epsilon + e\,e^\star$.
+
+Several inversion lemmas about RE parsing relation are necessary for
+derivative-based parsing formalization. They consist of
+pattern-matching on proofs of
+\ensuremath{\D{\_\in\llbracket\_\rrbracket}} and are omitted for
+brevity.
 
 
 \section{Derivatives, Smart Constructors and Parsing}\label{sec:deriv}
@@ -464,10 +467,10 @@ Formally, the derivative of a formal language $L\subseteq
 \Sigma^\star$ with respect to a symbol $a\in\Sigma$ is the language
 formed by suffixes of $L$ words without the prefix $a$.
 
-An algorithm for computing the derivative of a language represented as
-a RE as another RE is due to Brzozowski~\cite{Brzozowski1964} and it
+An algorithm for computing the derivative of a language represented by
+a RE as another RE is due to Brzozowski~\cite{Brzozowski1964}. It
 relies on a function (called $\nu$) that determines if some RE accepts
-or not the empty string:
+or not the empty string (by return |Eps| or |∅|, respectively):
 \[
     \begin{array}{lcl}
          \nu(\emptyset) & = & \emptyset \\
@@ -578,11 +581,10 @@ parameter denotes the empty language RE (|∅|):
   e `+ ∅  = e
   e `+ e' = e + e'
 \end{spec}
-In concatenation, we need to deal with the possibility of
-parameters being the empty RE or the empty string RE. If one is the
-empty language (∅) the result is also the empty
-language. Since empty string RE is identity for concatenation, we
-return, as a result, the other parameter.
+In concatenation, we need to deal with the possibility of parameters
+being empty (denoting the empty language) or the empty string. If one
+of them is empty (|∅|) the result is also empty. Since the empty string
+is the identity for concatenation, the other parameter is returned.
 \begin{spec}
   _`∙_ : (e e' : Regex) -> Regex
   ∅ `∙ e' = ∅
@@ -599,10 +601,9 @@ For Kleene star both |∅| and |Eps| are replaced by |Eps|.
   e `⋆ = e ⋆
 \end{spec}
 Since all smart constructors produce equivalent REs, they preserve the
-parsing relation. This property is stated as a soundness and
-completeness lemma, stated below, of each smart constructor with
-respect to RE membership proofs.
-
+parsing relation. This property is stated below as a soundness and
+completeness lemma of each smart constructor with respect to RE
+membership proofs.
 \begin{Lemma}[Soundness of union]
 For all REs |e|, |e'| and all strings |xs|, if
 |xs <<-[[ e `+ e' ]] | holds then |xs <<-[[ e + e' ]] | also holds.
@@ -719,7 +720,7 @@ string |xs| is in |∂[ e , x ]> |'s language, then
 |(x :: xs) <<-[[ e ]]| holds. Completeness ensures that the
 other direction of implication holds.
 
-\begin{Theorem}[Soundness of derivative operation]\label{derivsound}
+\begin{Theorem}[Derivative operation soundness]\label{derivsound}
 For all RE |e|, string |xs| and symbol |x|, if
 | xs <<-[[ ∂[ e , x ]> ]] | then |(x :: xs) <<-[[ e ]] | holds.
 \end{Theorem}
@@ -729,7 +730,7 @@ For all RE |e|, string |xs| and symbol |x|, if
   test.
 \end{proof}
 
-\begin{Theorem}[Completeness of derivative operation]\label{derivcomplete}
+\begin{Theorem}[Derivative operation completeness]\label{derivcomplete}
 For all RE |e|, string |xs| and symbol |x|, if
 |(x :: xs) <<-[[ e ]] | then | xs <<-[[ ∂[ e , x ]> ]] |.
 \end{Theorem}
@@ -748,7 +749,7 @@ repository~\cite{regex-rep}.
 RE derivatives were introduced by Brzozowski to construct a DFA (deterministic
 finite automata) from a given RE. Partial derivatives were introduced by
 Antimirov as a method to construct a NFA (non-deterministic finite automata).
-The main insight of partial derivatives for building NFA's is building a set
+The main insight of partial derivatives for building NFAs is building a set
 of RE's which, collectively accepts the same strings as Brzozowski derivatives.
 Algebraic properties of set operations ensures that ACUI equations holds.
 Below, we present function $\nabla_a(e)$ which computes the set of partial
@@ -810,7 +811,7 @@ translation of mathematical notation to Agda code:
   naa[ e ⋆ , c ]> = (e ⋆) ** naa[ e , c ]>
 \end{spec}
 
-In order to prove relevant properties about partial derivatives, we define a relation that stablish
+In order to prove relevant properties about partial derivatives, we define a relation that specifies
 when a string is accepted by some set of RE's.
 %format _<<-<[_]]> = "\D{\_\in\langle\langle\_\rangle\rangle}"
 %format <<-<[ = "\D{\in\langle\langle}"
@@ -869,14 +870,14 @@ of partial derivatives. Let |e| be an arbitrary RE and |a| an arbitrary symbol. 
 string |s| is accepted by some RE in |naa[ e , a ]| then |(a :: s) <<-[[ e ]]|. Completeness theorems shows
 that the other direction of the soundness implication also holds.
 
-\begin{Theorem}[Soundness of partial derivative operation]
+\begin{Theorem}[Partial derivative operation soundness]
 For all symbol |a|, string |s| and RE |e|, if |s <<-<[ naa[ e , a ] ]]> | then |(a :: s) <<-[[ e ]]|.
 \end{Theorem}
 \begin{proof}
   Induction on |e|'s structure using Lemmas \ref{wapp} and \ref{wopeq}.
 \end{proof}
 
-\begin{Theorem}[Completeness of partial derivative operation]
+\begin{Theorem}[Partial derivative operation completeness]
 For all symbol |a|, string |s| and RE |e|, if |(a :: s) <<-[[ e ]]| then |s <<-<[ naa[ e , a ] ]]> |.
 \end{Theorem}
 \begin{proof}
