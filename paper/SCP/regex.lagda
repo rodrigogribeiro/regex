@@ -341,8 +341,8 @@ value of $n$ is specialized accordingly, using information ``learned''
 by the type-checker.
 \begin{spec}
 data Parity : Nat -> Set where
-   Even : Parity (n + n)
-   Odd  : Parity (S (n + n))
+   Even : ∀ {n : Nat} -> Parity (n + n)
+   Odd  : ∀ {n : Nat} -> Parity (S (n + n))
 
 parity : (n : Nat) -> Parity n
 parity = -- definition omitted
@@ -354,8 +354,7 @@ natToBin k with (parity k)
    natToBin (succ (j + j)) | Odd  = true  :: natToBin j
 \end{spec}
 
-A detailed discussion about the Agda language is out of the scope of
-this paper. A tutorial on Agda is avaliable~\cite{Norell2009}.
+For further information about Agda, see~\cite{Norell2009,Stump16}.
 
 
 \section{Regular Expressions}\label{sec:regexp}
@@ -813,9 +812,9 @@ translation of mathematical notation to Agda code:
 
 In order to prove relevant properties about partial derivatives, we define a relation that stablish
 when a string is accepted by some set of RE's.
-%format _<<-<[_]]> = "\D{\_\in\{\_\}}"
-%format <<-<[ = "\D{\in\{}"
-%format ]]> = "\D{\}}"
+%format _<<-<[_]]> = "\D{\_\in\langle\langle\_\rangle\rangle}"
+%format <<-<[ = "\D{\in\langle\langle}"
+%format ]]> = "\D{\rangle\rangle}"
 %format Here = "\C{here}"
 %format There = "\C{there}"
 \begin{spec}

@@ -604,11 +604,11 @@ by the type-checker.
 \>[B]{}\mathkw{data}\;\D{Parity}\;\mathbin{:}\;\D{\mathbb{N}}\;\to \;\D{Set}\;\mathkw{where}{}\<[E]%
 \\
 \>[B]{}\hsindent{4}{}\<[4]%
-\>[4]{}\C{Even}\;\mathbin{:}\;\D{Parity}\;(\V{n}\;\F{+}\;\V{n}){}\<[E]%
+\>[4]{}\C{Even}\;\mathbin{:}\;\V{∀}\;\{\mskip1.5mu \V{n}\;\mathbin{:}\;\D{\mathbb{N}}\mskip1.5mu\}\;\to \;\D{Parity}\;(\V{n}\;\F{+}\;\V{n}){}\<[E]%
 \\
 \>[B]{}\hsindent{4}{}\<[4]%
 \>[4]{}\C{Odd}\;{}\<[9]%
-\>[9]{}\mathbin{:}\;\D{Parity}\;(\V{S}\;(\V{n}\;\F{+}\;\V{n})){}\<[E]%
+\>[9]{}\mathbin{:}\;\V{∀}\;\{\mskip1.5mu \V{n}\;\mathbin{:}\;\D{\mathbb{N}}\mskip1.5mu\}\;\to \;\D{Parity}\;(\V{S}\;(\V{n}\;\F{+}\;\V{n})){}\<[E]%
 \\[\blanklineskip]%
 \>[B]{}\F{parity}\;\mathbin{:}\;(\V{n}\;\mathbin{:}\;\D{\mathbb{N}})\;\to \;\D{Parity}\;\V{n}{}\<[E]%
 \\
@@ -631,8 +631,7 @@ by the type-checker.
 \ColumnHook
 \end{hscode}\resethooks
 
-A detailed discussion about the Agda language is out of the scope of
-this paper. A tutorial on Agda is avaliable~\cite{Norell2009}.
+For further information about Agda, see~\cite{Norell2009,Stump16}.
 
 
 \section{Regular Expressions}\label{sec:regexp}
@@ -1176,72 +1175,72 @@ when a string is accepted by some set of RE's.
 \column{5}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{11}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[3]{}\mathkw{data}\;\D{\_\in\{\_\}}\;\mathbin{:}\;\D{List}\;\D{Char}\;\to \;\D{Regexes}\;\to \;\D{Set}\;\mathkw{where}{}\<[E]%
+\>[3]{}\mathkw{data}\;\D{\_\in\langle\langle\_\rangle\rangle}\;\mathbin{:}\;\D{List}\;\D{Char}\;\to \;\D{Regexes}\;\to \;\D{Set}\;\mathkw{where}{}\<[E]%
 \\
 \>[3]{}\hsindent{2}{}\<[5]%
 \>[5]{}\C{here}\;{}\<[11]%
-\>[11]{}\mathbin{:}\;\V{s}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}\;\to \;\V{s}\;\D{\in\{}\;\V{e}\;\V{::}\;\V{es}\;\D{\}}{}\<[E]%
+\>[11]{}\mathbin{:}\;\V{s}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}\;\to \;\V{s}\;\D{\in\langle\langle}\;\V{e}\;\V{::}\;\V{es}\;\D{\rangle\rangle}{}\<[E]%
 \\
 \>[3]{}\hsindent{2}{}\<[5]%
-\>[5]{}\C{there}\;\mathbin{:}\;\V{s}\;\D{\in\{}\;\V{es}\;\D{\}}\;\to \;\V{s}\;\D{\in\{}\;\V{e}\;\V{::}\;\V{es}\;\D{\}}{}\<[E]%
+\>[5]{}\C{there}\;\mathbin{:}\;\V{s}\;\D{\in\langle\langle}\;\V{es}\;\D{\rangle\rangle}\;\to \;\V{s}\;\D{\in\langle\langle}\;\V{e}\;\V{::}\;\V{es}\;\D{\rangle\rangle}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-Essentially, a value of type \ensuremath{\V{s}\;\D{\in\{}\;\V{S}\;\D{\}}} represents that \ensuremath{\V{s}} is accepted by some RE
-in \ensuremath{\V{S}}. The next lemmas present the relation of \ensuremath{\V{s}\;\D{\in\{}\;\V{S}\;\D{\}}} and list concatenation.
+Essentially, a value of type \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}} represents that \ensuremath{\V{s}} is accepted by some RE
+in \ensuremath{\V{S}}. The next lemmas present the relation of \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}} and list concatenation.
 
 \begin{Lemma}[Weakening left]\label{wl}
-  For all sets of RE's \ensuremath{\V{S}}, \ensuremath{\V{S'}} and string \ensuremath{\V{s}}, if \ensuremath{\V{s}\;\D{\in\{}\;\V{S}\;\D{\}}} then \ensuremath{\V{s}\;\D{\in\{}\;\V{S}\;\F{++}\;\V{S'}\;\D{\}}}.
+  For all sets of RE's \ensuremath{\V{S}}, \ensuremath{\V{S'}} and string \ensuremath{\V{s}}, if \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}} then \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\F{++}\;\V{S'}\;\D{\rangle\rangle}}.
 \end{Lemma}
 \begin{proof}
-  Straightforward induction on the derivation of \ensuremath{\V{s}\;\D{\in\{}\;\V{S}\;\D{\}}}.
+  Straightforward induction on the derivation of \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}}.
 \end{proof}
 
 \begin{Lemma}[Weakening right]\label{wr}
-  For all sets of RE's \ensuremath{\V{S}}, \ensuremath{\V{S'}} and string \ensuremath{\V{s}}, if \ensuremath{\V{s}\;\D{\in\{}\;\V{S'}\;\D{\}}} then \ensuremath{\V{s}\;\D{\in\{}\;\V{S}\;\F{++}\;\V{S'}\;\D{\}}}.
+  For all sets of RE's \ensuremath{\V{S}}, \ensuremath{\V{S'}} and string \ensuremath{\V{s}}, if \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S'}\;\D{\rangle\rangle}} then \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\F{++}\;\V{S'}\;\D{\rangle\rangle}}.
 \end{Lemma}
 \begin{proof}
-  Straightforward induction on the derivation of \ensuremath{\V{s}\;\D{\in\{}\;\V{S'}\;\D{\}}}.
+  Straightforward induction on the derivation of \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S'}\;\D{\rangle\rangle}}.
 \end{proof}
 
 \begin{Lemma}\label{wapp}
-For all sets of RE's \ensuremath{\V{S}}, \ensuremath{\V{S'}} and string \ensuremath{\V{s}}, if \ensuremath{\V{s}\;\D{\in\{}\;\V{S}\;\F{++}\;\V{S'}\;\D{\}}} then \ensuremath{\V{s}\;\D{\in\{}\;\V{S}\;\D{\}}} or
-\ensuremath{\V{s}\;\D{\in\{}\;\V{S'}\;\D{\}}}.
+For all sets of RE's \ensuremath{\V{S}}, \ensuremath{\V{S'}} and string \ensuremath{\V{s}}, if \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\F{++}\;\V{S'}\;\D{\rangle\rangle}} then \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}} or
+\ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S'}\;\D{\rangle\rangle}}.
 \end{Lemma}
 \begin{proof}
-  Induction on the derivation of \ensuremath{\V{s}\;\D{\in\{}\;\V{S}\;\F{++}\;\V{S'}\;\D{\}}} and case analysis on the
+  Induction on the derivation of \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\F{++}\;\V{S'}\;\D{\rangle\rangle}} and case analysis on the
   structure of \ensuremath{\V{S}} and \ensuremath{\V{S'}}.
 \end{proof}
 
 \begin{Lemma}\label{wop}
-  For all set of RE's \ensuremath{\V{S}}, RE \ensuremath{\V{e}} and strings \ensuremath{\V{s}}, \ensuremath{\V{s'}}; if \ensuremath{\V{s}\;\D{\in\{}\;\V{S}\;\D{\}}} and \ensuremath{\V{s'}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} then
-  \ensuremath{\V{s}\;\F{++}\;\V{s'}\;\D{\in\{}\;\V{e}\;\F{\odot}\;\V{S}\;\D{\}}}.
+  For all set of RE's \ensuremath{\V{S}}, RE \ensuremath{\V{e}} and strings \ensuremath{\V{s}}, \ensuremath{\V{s'}}; if \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}} and \ensuremath{\V{s'}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} then
+  \ensuremath{\V{s}\;\F{++}\;\V{s'}\;\D{\in\langle\langle}\;\V{e}\;\F{\odot}\;\V{S}\;\D{\rangle\rangle}}.
 \end{Lemma}
 \begin{proof}
-  Induction on the derivation of \ensuremath{\V{s}\;\D{\in\{}\;\V{S}\;\D{\}}}.
+  Induction on the derivation of \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}}.
 \end{proof}
 
 \begin{Lemma}\label{wopeq}
-  For all set of RE's \ensuremath{\V{S}}, RE \ensuremath{\V{e}} and string \ensuremath{\V{s}}, if \ensuremath{\V{s}\;\D{\in\{}\;\V{e}\;\F{\odot}\;\V{S}\;\D{\}}} then exists \ensuremath{\V{s₁}} and \ensuremath{\V{s₂}} s.t.
-  \ensuremath{\V{s}\;\D{\equiv}\;\V{s₁}\;\F{++}\;\V{s₂}}, \ensuremath{\V{s₁}\;\D{\in\{}\;\V{S}\;\D{\}}} and \ensuremath{\V{s₂}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}.
+  For all set of RE's \ensuremath{\V{S}}, RE \ensuremath{\V{e}} and string \ensuremath{\V{s}}, if \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{e}\;\F{\odot}\;\V{S}\;\D{\rangle\rangle}} then exists \ensuremath{\V{s₁}} and \ensuremath{\V{s₂}} s.t.
+  \ensuremath{\V{s}\;\D{\equiv}\;\V{s₁}\;\F{++}\;\V{s₂}}, \ensuremath{\V{s₁}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}} and \ensuremath{\V{s₂}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}.
 \end{Lemma}
 \begin{proof}
-  Induction on the derivation of \ensuremath{\V{s}\;\D{\in\{}\;\V{e}\;\F{\odot}\;\V{S}\;\D{\}}}.
+  Induction on the derivation of \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{e}\;\F{\odot}\;\V{S}\;\D{\rangle\rangle}}.
 \end{proof}
 
-Using these previous results about \ensuremath{\D{\_\in\{\_\}}}, we can enunciate the soundness and completeness theorems
+Using these previous results about \ensuremath{\D{\_\in\langle\langle\_\rangle\rangle}}, we can enunciate the soundness and completeness theorems
 of partial derivatives. Let \ensuremath{\V{e}} be an arbitrary RE and \ensuremath{\V{a}} an arbitrary symbol. Soundness means that if a
 string \ensuremath{\V{s}} is accepted by some RE in \ensuremath{\F{\nabla[}\;\V{e}\;\red{,}\,\;\V{a}\;\mskip1.5mu]} then \ensuremath{(\V{a}\;\V{::}\;\V{s})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}. Completeness theorems shows
 that the other direction of the soundness implication also holds.
 
 \begin{Theorem}[Soundness of partial derivative operation]
-For all symbol \ensuremath{\V{a}}, string \ensuremath{\V{s}} and RE \ensuremath{\V{e}}, if \ensuremath{\V{s}\;\D{\in\{}\;\F{\nabla[}\;\V{e}\;\red{,}\,\;\V{a}\;\mskip1.5mu]\;\D{\}}} then \ensuremath{(\V{a}\;\V{::}\;\V{s})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}.
+For all symbol \ensuremath{\V{a}}, string \ensuremath{\V{s}} and RE \ensuremath{\V{e}}, if \ensuremath{\V{s}\;\D{\in\langle\langle}\;\F{\nabla[}\;\V{e}\;\red{,}\,\;\V{a}\;\mskip1.5mu]\;\D{\rangle\rangle}} then \ensuremath{(\V{a}\;\V{::}\;\V{s})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}.
 \end{Theorem}
 \begin{proof}
   Induction on \ensuremath{\V{e}}'s structure using Lemmas \ref{wapp} and \ref{wopeq}.
 \end{proof}
 
 \begin{Theorem}[Completeness of partial derivative operation]
-For all symbol \ensuremath{\V{a}}, string \ensuremath{\V{s}} and RE \ensuremath{\V{e}}, if \ensuremath{(\V{a}\;\V{::}\;\V{s})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} then \ensuremath{\V{s}\;\D{\in\{}\;\F{\nabla[}\;\V{e}\;\red{,}\,\;\V{a}\;\mskip1.5mu]\;\D{\}}}.
+For all symbol \ensuremath{\V{a}}, string \ensuremath{\V{s}} and RE \ensuremath{\V{e}}, if \ensuremath{(\V{a}\;\V{::}\;\V{s})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} then \ensuremath{\V{s}\;\D{\in\langle\langle}\;\F{\nabla[}\;\V{e}\;\red{,}\,\;\V{a}\;\mskip1.5mu]\;\D{\rangle\rangle}}.
 \end{Theorem}
 \begin{proof}
   Induction on \ensuremath{\V{e}}'s structure using Lemmas \ref{wl}, \ref{wr} and \ref{wop}.
@@ -1400,7 +1399,7 @@ partial derivatives are similar to Brzozowski derivative based ones.
 The main differences between them are in the necessary lemmas used to prove
 decidability of prefix and substring relation. Such lemmas are slighly modified
 versions of Lemmas \ref{pref1} and \ref{pref2} that consider the relation
-\ensuremath{\D{\_\in\{\_\}}}  and are omitted for brevity.
+\ensuremath{\D{\_\in\langle\langle\_\rangle\rangle}}  and are omitted for brevity.
 
 Definitions and properties of functions for prefix and substring computation
 are given in folders \texttt{Prefix} and \texttt{Substring}, in the project's on-line
