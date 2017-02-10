@@ -370,8 +370,7 @@ typed language Agda. The formalization produces a proof that either an
 input string matches a given regular expression or that no matching
 exists. A tool for regular expression based search in the style of the
 well known GNU grep has been developed with the certified algorithms.
-Results with practical experiments conducted with this tool are
-reported.
+Practical experiments conducted with this tool are reported.
 
 \end{abstract}
 
@@ -474,22 +473,25 @@ out where all details can be found in the source code.
 \section{An Overview of Agda}\label{sec:agda}
 
 
-Agda is dependently-typed functional programming language based on Martin-L\"oef
-intuitionistic type theory~\cite{Lof98}. This means, in particular, that it has
-very few built-in types. In fact, only function types and the type of all types
-are built-in. Everything else is a user-defined type. The type \ensuremath{\D{Set}}, also known
-as \ensuremath{\D{Set}_{\D{0}}}, is the type of all ``small'' types, such as \ensuremath{\D{Bool}}, \ensuremath{\D{String}} and \ensuremath{\D{List}\;\D{Bool}}.
-The type \ensuremath{\D{Set}_{\D{1}}} is the type of \ensuremath{\D{Set}} and ``others like it'', such as \ensuremath{\D{Set}\;\to \;\D{Bool}},
-\ensuremath{\D{String}\;\to \;\D{Set}}, and \ensuremath{\D{Set}\;\to \;\D{Set}}. There is in fact an infinite hierarchy of types of the
-form \ensuremath{\D{Set}\;\V{l}}, where \ensuremath{\V{l}} is a level, roughly, a natural integer. This stratification
-of types is need to keep Agda consistent as a logical theory~\cite{Sorensen2006}.
+Agda is a dependently-typed functional programming language based on
+Martin-L\"oef intuitionistic type theory~\cite{Lof98}.  Function types
+and an infinite hierarchy of types of types, \ensuremath{\D{Set}\;\V{l}}, where \ensuremath{\V{l}} is a
+natural number, are built-in. Everything else is a user-defined
+type. The type \ensuremath{\D{Set}}, also known as \ensuremath{\D{Set}_{\D{0}}}, is the type of all
+``small'' types, such as \ensuremath{\D{Bool}}, \ensuremath{\D{String}} and \ensuremath{\D{List}\;\D{Bool}}.  The type
+\ensuremath{\D{Set}_{\D{1}}} is the type of \ensuremath{\D{Set}} and ``others like it'', such as \ensuremath{\D{Set}\;\to \;\D{Bool}}, \ensuremath{\D{String}\;\to \;\D{Set}}, and \ensuremath{\D{Set}\;\to \;\D{Set}}. We have that \ensuremath{\D{Set}\;\V{l}} is an
+element of the type \ensuremath{\D{Set}\;(\V{l+1})}, for every $l≥0$. This
+stratification of types is used to keep Agda consistent as a logical
+theory~\cite{Sorensen2006}.
 
-An ordinary (non-dependent) function type is written \ensuremath{\V{A}\;\to \;\V{B}} and a dependent one is written
-\ensuremath{(\V{x}\;\mathbin{:}\;\V{A})\;\to \;\V{B}}, where type \ensuremath{\V{B}} depends on \ensuremath{\V{x}}, or \ensuremath{\V{∀}\;(\V{x}\;\mathbin{:}\;\V{A})\;\to \;\V{B}}. Agda allows the definition of \emph{implicit parameters}, i.e.
-parameters whose value can be infered from the context, by surrounding them in curly
-braces: \ensuremath{\V{∀}\;\{\mskip1.5mu \V{x}\;\mathbin{:}\;\V{A}\mskip1.5mu\}\;\to \;\V{B}}. To avoid clutter, we'll omit implicit arguments from the source code
-presentation. The reader can safely assume that every free variable in a type is an implicity
-parameter.
+An ordinary (non-dependent) function type is written \ensuremath{\V{A}\;\to \;\V{B}} and a
+dependent one is written \ensuremath{(\V{x}\;\mathbin{:}\;\V{A})\;\to \;\V{B}}, where type \ensuremath{\V{B}} depends on
+\ensuremath{\V{x}}, or \ensuremath{\V{∀}\;(\V{x}\;\mathbin{:}\;\V{A})\;\to \;\V{B}}. Agda allows the definition of \emph{implicit
+parameters}, i.e.  parameters whose value can be infered from the
+context, by surrounding them in curly braces: \ensuremath{\V{∀}\;\{\mskip1.5mu \V{x}\;\mathbin{:}\;\V{A}\mskip1.5mu\}\;\to \;\V{B}}. To
+avoid clutter, we'll omit implicit arguments from the source code
+presentation. The reader can safely assume that every free variable in
+a type is an implicity parameter.
 
 As an example of Agda code, consider the the following data type of
 length-indexed lists, also known as vectors.
@@ -520,7 +522,7 @@ length-indexed lists, also known as vectors.
 \end{hscode}\resethooks
 Constructor \ensuremath{\C{\lbrack\:\rbrack}} builds empty vectors. The cons-operator (\ensuremath{\V{\char95 ::\char95 }})
 inserts a new element in front of a vector of $n$ elements (of type
-\ensuremath{\D{Vec}\;\V{A}\;\V{n}} and returns a value of type \ensuremath{\D{Vec}\;\V{A}\;(\C{suc}\;\V{n})}. The
+\ensuremath{\D{Vec}\;\V{A}\;\V{n}}) and returns a value of type \ensuremath{\D{Vec}\;\V{A}\;(\C{suc}\;\V{n})}. The
 \ensuremath{\D{Vec}} datatype is an example of a dependent type, i.e. a type
 that uses a value (that denotes its length). The usefulness of
 dependent types can be illustrated with the definition of a safe list
@@ -656,9 +658,9 @@ code. The reason for this design choice is due to the way that Idris
 deals with propositional equality for primitive types, like
 \ensuremath{\D{Char}}. Equalities of values of these types only reduce on
 concrete primitive values; this causes computation of proofs to stop
-under variables whose type is a primitive one. Thus, we decide to use
+under variables whose type is a primitive one. Thus, we decided to use
 the inductive type \ensuremath{\D{\mathbb{N}}} to represent the codes of alphabet
-symbols. In our Agda formalization, we represent alphabet symbols using \ensuremath{\D{Char}} type.
+symbols. In our Agda formalization, we represent alphabet symbols using type \ensuremath{\D{Char}}.
 
 
 
@@ -696,8 +698,8 @@ Datatype \ensuremath{\D{Regex}} encodes RE syntax.
 \ColumnHook
 \end{hscode}\resethooks
 Constructors \ensuremath{\C{\emptyset}} and \ensuremath{\C{\epsilon}} denote respectively the
-empty language ($\emptyset$) and empty string ($\epsilon$). Alphabet
-symbols are constructed using \ensuremath{\C{\$}} constructor. Bigger REs are
+empty language ($\emptyset$) and the empty string ($\epsilon$). Alphabet
+symbols are constructed by using the \ensuremath{\C{\$}} constructor. Bigger REs are
 built using concatenation (\ensuremath{\C{∙}}), union (\ensuremath{\C{+}}) and
 Kleene star (\ensuremath{\C{\star}}).
 
@@ -766,10 +768,10 @@ Formally, the derivative of a formal language $L\subseteq
 \Sigma^\star$ with respect to a symbol $a\in\Sigma$ is the language
 formed by suffixes of $L$ words without the prefix $a$.
 
-An algorithm for computing the derivative of a language represented as
-a RE as another RE is due to Brzozowski~\cite{Brzozowski1964} and it
+An algorithm for computing the derivative of a language represented by
+a RE as another RE is due to Brzozowski~\cite{Brzozowski1964}. It
 relies on a function (called $\nu$) that determines if some RE accepts
-or not the empty string:
+or not the empty string (by returning \ensuremath{\C{\epsilon}} or \ensuremath{\C{\emptyset}}, respectively):
 \[
     \begin{array}{lcl}
          \nu(\emptyset) & = & \emptyset \\
@@ -838,7 +840,7 @@ not, using Agda type of decidable propositions, \ensuremath{\D{Dec}\;\V{P}}.
 \>[3]{}\F{\nu[ }\;\V{e}\;\C{\star}\;\F{]}\;\mathrel{=}\;\C{yes}\;((\V{e}\;\C{∙}\;\V{e}\;\C{\star}\;\C{+L}\;\C{\epsilon})\;\C{\star}){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-The \ensuremath{\F{\nu[\_]}} definition uses several inversion lemmas about
+The definition of \ensuremath{\F{\nu[\_]}} uses several inversion lemmas about
 RE semantics. Lemma \ensuremath{\F{[]∈∙-invert}} states that if the empty string
 is in the language of \ensuremath{\V{l}\;\C{∙}\;\V{r}} (where \ensuremath{\V{l}} and \ensuremath{\V{r}} are arbitrary RE's)
 then the empty string belongs to \ensuremath{\V{l}} and \ensuremath{\V{r}}'s languages.
@@ -876,7 +878,7 @@ The equivalence axioms maintained by smart constructors are:
 
 These axioms are kept as invariants using functions that preserve them
 while building REs. For union, we just need to worry when one
-parameter denotes the empty language RE (\ensuremath{\C{\emptyset}}):
+parameter denotes the empty language:
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{3}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -892,11 +894,10 @@ parameter denotes the empty language RE (\ensuremath{\C{\emptyset}}):
 \>[3]{}\V{e}\;\F{`+}\;\V{e'}\;\mathrel{=}\;\V{e}\;\C{+}\;\V{e'}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-In concatenation, we need to deal with the possibility of
-parameters being the empty RE or the empty string RE. If one is the
-empty language (∅) the result is also the empty
-language. Since empty string RE is identity for concatenation, we
-return, as a result, the other parameter.
+In concatenation, we need to deal with the possibility of parameters
+being empty (denoting the empty language) or the empty string. If one
+of them is empty (\ensuremath{\C{\emptyset}}) the result is also empty. Since the empty string
+is the identity for concatenation, the other parameter is returned.
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{3}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -929,10 +930,9 @@ For Kleene star both \ensuremath{\C{\emptyset}} and \ensuremath{\C{\epsilon}} ar
 \ColumnHook
 \end{hscode}\resethooks
 Since all smart constructors produce equivalent REs, they preserve the
-parsing relation. This property is stated as a soundness and
-completeness lemma, stated below, of each smart constructor with
-respect to RE membership proofs.
-
+parsing relation. This property is stated below as a soundness and
+completeness lemma of each smart constructor with respect to RE
+membership proofs.
 \begin{Lemma}[Soundness of union]
 For all REs \ensuremath{\V{e}}, \ensuremath{\V{e'}} and all strings \ensuremath{\V{xs}}, if
 \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\F{`+}\;\V{e'}\;\D{\rrbracket}} holds then \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\C{+}\;\V{e'}\;\D{\rrbracket}} also holds.
@@ -1054,14 +1054,14 @@ produces an evidence for equality of two \ensuremath{\D{Char}} values.
 \ColumnHook
 \end{hscode}\resethooks
 From this definition we prove the following important properties of
-derivative operation. Soundness of \ensuremath{\F{∂[\_,\_]}} ensures that if a
-string \ensuremath{\V{xs}} is in \ensuremath{\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\F{]}}'s language, then
+the derivative operation. Soundness of \ensuremath{\F{∂[\_,\_]}} ensures that if a
+string \ensuremath{\V{xs}} is in the language of \ensuremath{\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\F{]}}, then
 \ensuremath{(\V{x}\;\V{::}\;\V{xs})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} holds. Completeness ensures that the
 other direction of implication holds.
 
-\begin{Theorem}[Soundness of derivative operation]\label{derivsound}
-For all RE \ensuremath{\V{e}}, string \ensuremath{\V{xs}} and symbol \ensuremath{\V{x}}, if
-\ensuremath{\V{xs}\;\D{\in\llbracket}\;\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\F{]}\;\D{\rrbracket}} then \ensuremath{(\V{x}\;\V{::}\;\V{xs})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} holds.
+\begin{Theorem}[Derivative operation soundness]\label{derivsound}
+For all REs \ensuremath{\V{e}}, all strings \ensuremath{\V{xs}} and all symbols \ensuremath{\V{x}}, if
+\ensuremath{\V{xs}\;\D{\in\llbracket}\;\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\F{]}\;\D{\rrbracket}} holds then \ensuremath{(\V{x}\;\V{::}\;\V{xs})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} holds.
 \end{Theorem}
 \begin{proof}
   By induction on the structure of \ensuremath{\V{e}}, using the soundness
@@ -1069,9 +1069,9 @@ For all RE \ensuremath{\V{e}}, string \ensuremath{\V{xs}} and symbol \ensuremath
   test.
 \end{proof}
 
-\begin{Theorem}[Completeness of derivative operation]\label{derivcomplete}
-For all RE \ensuremath{\V{e}}, string \ensuremath{\V{xs}} and symbol \ensuremath{\V{x}}, if
-\ensuremath{(\V{x}\;\V{::}\;\V{xs})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} then \ensuremath{\V{xs}\;\D{\in\llbracket}\;\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\F{]}\;\D{\rrbracket}}.
+\begin{Theorem}[Derivative operation completeness]\label{derivcomplete}
+For all REs \ensuremath{\V{e}}, all strings \ensuremath{\V{xs}} and all symbols \ensuremath{\V{x}}, if
+\ensuremath{(\V{x}\;\V{::}\;\V{xs})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} holds then \ensuremath{\V{xs}\;\D{\in\llbracket}\;\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\F{]}\;\D{\rrbracket}} holds.
 \end{Theorem}
 \begin{proof}
   By induction on the structure of \ensuremath{\V{e}} using the completeness
@@ -1088,8 +1088,8 @@ repository~\cite{regex-rep}.
 RE derivatives were introduced by Brzozowski to construct a DFA (deterministic
 finite automata) from a given RE. Partial derivatives were introduced by
 Antimirov as a method to construct a NFA (non-deterministic finite automata).
-The main insight of partial derivatives for building NFA's is building a set
-of RE's which, collectively accepts the same strings as Brzozowski derivatives.
+The main insight of partial derivatives for building NFAs is building a set
+of REs which collectively accepts the same strings as Brzozowski derivatives.
 Algebraic properties of set operations ensures that ACUI equations holds.
 Below, we present function $\nabla_a(e)$ which computes the set of partial
 derivatives from a given RE \ensuremath{\V{e}} and a symbol \ensuremath{\V{a}}.
@@ -1114,7 +1114,7 @@ derivatives from a given RE \ensuremath{\V{e}} and a symbol \ensuremath{\V{a}}.
 \end{array}
 \]
 
-Function $\nabla_a(e)$ uses the operator $S \odot e'$ which concatenates RE \ensuremath{\V{e'}} at right of every $e \in S$:
+Function $\nabla_a(e)$ uses the operator $S \odot e'$ which concatenates RE \ensuremath{\V{e'}} at the right of every $e \in S$:
 
 \[
   S \odot e' = \{e ∙ e'\,\mid\, e \in S\}
@@ -1127,7 +1127,7 @@ Our agda implementation models sets as lists of regular expressions.
 \>[3]{}\D{Regexes}\;\mathrel{=}\;\D{List}\;\D{Regex}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-The operator that concatenates a RE at right of every $e \in S$ is defined by induction on $S$:
+The operator that concatenates a RE at the right of every $e \in S$ is defined by induction on $S$:
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{3}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -1169,8 +1169,8 @@ translation of mathematical notation to Agda code:
 \ColumnHook
 \end{hscode}\resethooks
 
-In order to prove relevant properties about partial derivatives, we define a relation that stablish
-when a string is accepted by some set of RE's.
+In order to prove relevant properties about partial derivatives, we define a relation that specifies
+when a string is accepted by some set of REs.
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{3}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -1187,26 +1187,27 @@ when a string is accepted by some set of RE's.
 \>[5]{}\C{there}\;\mathbin{:}\;\V{s}\;\D{\in\langle\langle}\;\V{es}\;\D{\rangle\rangle}\;\to \;\V{s}\;\D{\in\langle\langle}\;\V{e}\;\V{::}\;\V{es}\;\D{\rangle\rangle}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-Essentially, a value of type \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}} represents that \ensuremath{\V{s}} is accepted by some RE
-in \ensuremath{\V{S}}. The next lemmas present the relation of \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}} and list concatenation.
+Essentially, a value of type \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}} indicates that \ensuremath{\V{s}} is accepted by some RE
+in \ensuremath{\V{S}}. The next lemmas on the membership relation \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}} and list concatenation
+are used to prove soundness and completeness of partial derivatives.
 
 \begin{Lemma}[Weakening left]\label{wl}
-  For all sets of RE's \ensuremath{\V{S}}, \ensuremath{\V{S'}} and string \ensuremath{\V{s}}, if \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}} then \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\F{++}\;\V{S'}\;\D{\rangle\rangle}}.
+  For all sets of REs \ensuremath{\V{S}}, \ensuremath{\V{S'}} and all strings \ensuremath{\V{s}}, if \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}} holds then \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\F{++}\;\V{S'}\;\D{\rangle\rangle}} holds.
 \end{Lemma}
 \begin{proof}
   Straightforward induction on the derivation of \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}}.
 \end{proof}
 
 \begin{Lemma}[Weakening right]\label{wr}
-  For all sets of RE's \ensuremath{\V{S}}, \ensuremath{\V{S'}} and string \ensuremath{\V{s}}, if \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S'}\;\D{\rangle\rangle}} then \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\F{++}\;\V{S'}\;\D{\rangle\rangle}}.
+  For all sets of REs \ensuremath{\V{S}}, \ensuremath{\V{S'}} and all strings \ensuremath{\V{s}}, if \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S'}\;\D{\rangle\rangle}} holds then \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\F{++}\;\V{S'}\;\D{\rangle\rangle}} holds.
 \end{Lemma}
 \begin{proof}
   Straightforward induction on the derivation of \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S'}\;\D{\rangle\rangle}}.
 \end{proof}
 
 \begin{Lemma}\label{wapp}
-For all sets of RE's \ensuremath{\V{S}}, \ensuremath{\V{S'}} and string \ensuremath{\V{s}}, if \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\F{++}\;\V{S'}\;\D{\rangle\rangle}} then \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}} or
-\ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S'}\;\D{\rangle\rangle}}.
+For all sets of REs \ensuremath{\V{S}}, \ensuremath{\V{S'}} and all strings \ensuremath{\V{s}}, if \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\F{++}\;\V{S'}\;\D{\rangle\rangle}} holds then \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}} or
+\ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S'}\;\D{\rangle\rangle}} holds.
 \end{Lemma}
 \begin{proof}
   Induction on the derivation of \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\F{++}\;\V{S'}\;\D{\rangle\rangle}} and case analysis on the
@@ -1214,16 +1215,16 @@ For all sets of RE's \ensuremath{\V{S}}, \ensuremath{\V{S'}} and string \ensurem
 \end{proof}
 
 \begin{Lemma}\label{wop}
-  For all set of RE's \ensuremath{\V{S}}, RE \ensuremath{\V{e}} and strings \ensuremath{\V{s}}, \ensuremath{\V{s'}}; if \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}} and \ensuremath{\V{s'}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} then
-  \ensuremath{\V{s}\;\F{++}\;\V{s'}\;\D{\in\langle\langle}\;\V{e}\;\F{\odot}\;\V{S}\;\D{\rangle\rangle}}.
+  For all sets of REs \ensuremath{\V{S}}, all REs \ensuremath{\V{e}} and all strings \ensuremath{\V{s}}, \ensuremath{\V{s'}}; if \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}} and \ensuremath{\V{s'}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} holds then
+  \ensuremath{\V{s}\;\F{++}\;\V{s'}\;\D{\in\langle\langle}\;\V{e}\;\F{\odot}\;\V{S}\;\D{\rangle\rangle}} holds.
 \end{Lemma}
 \begin{proof}
   Induction on the derivation of \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}}.
 \end{proof}
 
 \begin{Lemma}\label{wopeq}
-  For all set of RE's \ensuremath{\V{S}}, RE \ensuremath{\V{e}} and string \ensuremath{\V{s}}, if \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{e}\;\F{\odot}\;\V{S}\;\D{\rangle\rangle}} then exists \ensuremath{\V{s₁}} and \ensuremath{\V{s₂}} s.t.
-  \ensuremath{\V{s}\;\D{\equiv}\;\V{s₁}\;\F{++}\;\V{s₂}}, \ensuremath{\V{s₁}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}} and \ensuremath{\V{s₂}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}.
+  For all sets of REs \ensuremath{\V{S}}, all REs \ensuremath{\V{e}} and all strings \ensuremath{\V{s}}, if \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{e}\;\F{\odot}\;\V{S}\;\D{\rangle\rangle}} holds then there exist \ensuremath{\V{s₁}} and \ensuremath{\V{s₂}} such that
+  \ensuremath{\V{s}\;\D{\equiv}\;\V{s₁}\;\F{++}\;\V{s₂}}, \ensuremath{\V{s₁}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}} and \ensuremath{\V{s₂}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} holds.
 \end{Lemma}
 \begin{proof}
   Induction on the derivation of \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{e}\;\F{\odot}\;\V{S}\;\D{\rangle\rangle}}.
@@ -1234,18 +1235,18 @@ of partial derivatives. Let \ensuremath{\V{e}} be an arbitrary RE and \ensuremat
 string \ensuremath{\V{s}} is accepted by some RE in \ensuremath{\F{\nabla[}\;\V{e}\;\red{,}\,\;\V{a}\;\mskip1.5mu]} then \ensuremath{(\V{a}\;\V{::}\;\V{s})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}. Completeness theorems shows
 that the other direction of the soundness implication also holds.
 
-\begin{Theorem}[Soundness of partial derivative operation]
-For all symbol \ensuremath{\V{a}}, string \ensuremath{\V{s}} and RE \ensuremath{\V{e}}, if \ensuremath{\V{s}\;\D{\in\langle\langle}\;\F{\nabla[}\;\V{e}\;\red{,}\,\;\V{a}\;\mskip1.5mu]\;\D{\rangle\rangle}} then \ensuremath{(\V{a}\;\V{::}\;\V{s})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}.
+\begin{Theorem}[Partial derivative operation soundness]
+For all symbols \ensuremath{\V{a}}, all strings \ensuremath{\V{s}} and all REs \ensuremath{\V{e}}, if \ensuremath{\V{s}\;\D{\in\langle\langle}\;\F{\nabla[}\;\V{e}\;\red{,}\,\;\V{a}\;\mskip1.5mu]\;\D{\rangle\rangle}} holds then \ensuremath{(\V{a}\;\V{::}\;\V{s})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} holds.
 \end{Theorem}
 \begin{proof}
-  Induction on \ensuremath{\V{e}}'s structure using Lemmas \ref{wapp} and \ref{wopeq}.
+  Induction on the structure of \ensuremath{\V{e}}, using Lemmas \ref{wapp} and \ref{wopeq}.
 \end{proof}
 
-\begin{Theorem}[Completeness of partial derivative operation]
-For all symbol \ensuremath{\V{a}}, string \ensuremath{\V{s}} and RE \ensuremath{\V{e}}, if \ensuremath{(\V{a}\;\V{::}\;\V{s})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} then \ensuremath{\V{s}\;\D{\in\langle\langle}\;\F{\nabla[}\;\V{e}\;\red{,}\,\;\V{a}\;\mskip1.5mu]\;\D{\rangle\rangle}}.
+\begin{Theorem}[Partial derivative operation completeness]
+For all symbols \ensuremath{\V{a}}, all strings \ensuremath{\V{s}} and all REs \ensuremath{\V{e}}, if \ensuremath{(\V{a}\;\V{::}\;\V{s})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} holds then \ensuremath{\V{s}\;\D{\in\langle\langle}\;\F{\nabla[}\;\V{e}\;\red{,}\,\;\V{a}\;\mskip1.5mu]\;\D{\rangle\rangle}} holds.
 \end{Theorem}
 \begin{proof}
-  Induction on \ensuremath{\V{e}}'s structure using Lemmas \ref{wl}, \ref{wr} and \ref{wop}.
+  Induction on the structure  of \ensuremath{\V{e}}, using Lemmas \ref{wl}, \ref{wr} and \ref{wop}.
 \end{proof}
 
 Definitions and properties of Antimirov's partial derivatives are given in
@@ -1254,17 +1255,16 @@ repository~\cite{regex-rep}.
 
 \subsection{Parsing}
 
-When parsing a string using a given RE we are interested in discover what parts of
-input string are matched. Basically, RE parsing involves determine what prefixes and
-substring's of input match a given RE. For this, we define datatypes for representing
-when a RE \ensuremath{\V{e}} matches a prefix or a substring of \ensuremath{\V{xs}}.
+RE parsing involves determining which prefixes and substrings of the
+input string match a given RE. For this, we define datatypes that
+represent the fact that a given RE matches a prefix or a substring of
+a given string.
 
 
-We say that RE \ensuremath{\V{e}} matches a prefix of string \ensuremath{\V{xs}} if there's exists strings \ensuremath{\V{ys}} and
-\ensuremath{\V{zs}} s.t. \ensuremath{\V{xs}\;\D{\equiv}\;\V{ys}\;\F{++}\;\V{zs}} and \ensuremath{\V{ys}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}. Definition of \ensuremath{\D{IsPrefix}} datatype encode
-this concept. Datatype \ensuremath{\D{IsSubstring}} specifies when a RE \ensuremath{\V{e}} matches a substring in \ensuremath{\V{xs}},
-i.e. there's must exists strings \ensuremath{\V{ys}}, \ensuremath{\V{zs}} and \ensuremath{\V{ws}} s.t. \ensuremath{\V{xs}\;\D{\equiv}\;\V{ys}\;\F{++}\;\V{zs}\;\F{++}\;\V{ws}} and
-\ensuremath{\V{zs}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}.
+We say that RE \ensuremath{\V{e}} matches a prefix of string \ensuremath{\V{xs}} if there exist
+strings \ensuremath{\V{ys}} and \ensuremath{\V{zs}} such that \ensuremath{\V{xs}\;\D{\equiv}\;\V{ys}\;\F{++}\;\V{zs}} and \ensuremath{\V{ys}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}. Definition of \ensuremath{\D{IsPrefix}} datatype encode this concept. Datatype
+\ensuremath{\D{IsSubstring}} specifies when a RE \ensuremath{\V{e}} matches a substring in \ensuremath{\V{xs}}:
+there must exist strings \ensuremath{\V{ys}}, \ensuremath{\V{zs}} and \ensuremath{\V{ws}} such that \ensuremath{\V{xs}\;\D{\equiv}\;\V{ys}\;\F{++}\;\V{zs}\;\F{++}\;\V{ws}} and \ensuremath{\V{zs}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} hold.
 
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -1284,48 +1284,51 @@ i.e. there's must exists strings \ensuremath{\V{ys}}, \ensuremath{\V{zs}} and \e
 \>[18]{}\V{xs}\;\D{\equiv}\;\V{ys}\;\F{++}\;\V{zs}\;\F{++}\;\V{ws}\;\to \;\V{zs}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}\;\to \;\D{IsSubstring}\;\V{xs}\;\V{e}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-Using these datatypes we can define some relevant properties of prefixes and substrings that
-are used in certified functions to compute them.
+Using these datatypes we can define the following relevant properties
+of prefixes and substrings.
 
 \begin{Lemma}[Lemma \ensuremath{\F{¬IsPrefix}}]\label{pref1}
-  For all RE \ensuremath{\V{e}}, if \ensuremath{\C{\lbrack\:\rbrack}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} is false then \ensuremath{\D{IsPrefix}\;\C{\lbrack\:\rbrack}\;\V{e}} is false. 
+  For all REs \ensuremath{\V{e}}, if \ensuremath{\C{\lbrack\:\rbrack}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} does not hold then neither does \ensuremath{\D{IsPrefix}\;\C{\lbrack\:\rbrack}\;\V{e}}. 
 \end{Lemma}
 \begin{proof}
-  Immediate from \ensuremath{\D{IsPrefix}} definition and properties of list concatenation.
+  Immediate from the definition of \ensuremath{\D{IsPrefix}} and properties of list concatenation.
 \end{proof}
 
 \begin{Lemma}[Lemma \ensuremath{\F{¬IsPrefix-::}}]\label{pref2}
-  For all RE \ensuremath{\V{e}} and string \ensuremath{\V{xs}}, if \ensuremath{\C{\lbrack\:\rbrack}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} is false and \ensuremath{\D{IsPrefix}\;\V{xs}\;\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\F{]}} is false then
-  \ensuremath{\D{IsPrefix}\;(\V{x}\;\V{::}\;\V{xs})\;\V{e}} is false.
+  For all REs \ensuremath{\V{e}} and all strings \ensuremath{\V{xs}}, if \ensuremath{\C{\lbrack\:\rbrack}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} and \ensuremath{\D{IsPrefix}\;\V{xs}\;\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\F{]}} do not hold then
+  neither does \ensuremath{\D{IsPrefix}\;(\V{x}\;\V{::}\;\V{xs})\;\V{e}}.
 \end{Lemma}
 \begin{proof}
-  Immediate from \ensuremath{\D{IsPrefix}} definition and Theorem \ref{derivcomplete}.
+  Immediate from the definition of \ensuremath{\D{IsPrefix}} and Theorem \ref{derivcomplete}.
 \end{proof}
 
 \begin{Lemma}[Lemma \ensuremath{\F{¬IsSubstring}}]\label{sub1}
-  For all RE \ensuremath{\V{e}}, if \ensuremath{\D{IsPrefix}\;\C{\lbrack\:\rbrack}\;\V{e}} is false then \ensuremath{\D{IsSubstring}\;\C{\lbrack\:\rbrack}\;\V{e}} is false.
+  For all REs \ensuremath{\V{e}}, if \ensuremath{\D{IsPrefix}\;\C{\lbrack\:\rbrack}\;\V{e}} does not hold then neither does \ensuremath{\D{IsSubstring}\;\C{\lbrack\:\rbrack}\;\V{e}}.
 \end{Lemma}
 \begin{proof}
-  Immediate from \ensuremath{\D{IsPrefix}} and \ensuremath{\D{IsSubstring}} definitions.
+  Immediate from the definitions of \ensuremath{\D{IsPrefix}} and \ensuremath{\D{IsSubstring}}.
 \end{proof}
 
 \begin{Lemma}[Lemma \ensuremath{\F{¬IsSubstring-::}}]
-  For all strings \ensuremath{\V{xs}}, symbol \ensuremath{\V{x}} and RE \ensuremath{\V{e}}, if \ensuremath{\D{IsPrefix}\;(\V{x}\;\V{::}\;\V{xs})\;\V{e}} is false
-  and \ensuremath{\D{IsSubstring}\;\V{xs}\;\V{e}} is false
-  then \ensuremath{\D{IsSubstring}\;(\V{x}\;\V{::}\;\V{xs})\;\V{e}} is false.
+  For all strings \ensuremath{\V{xs}}, all symbols \ensuremath{\V{x}} and all REs \ensuremath{\V{e}}, if \ensuremath{\D{IsPrefix}\;(\V{x}\;\V{::}\;\V{xs})\;\V{e}} 
+  and \ensuremath{\D{IsSubstring}\;\V{xs}\;\V{e}} do not hold
+  then neither does \ensuremath{\D{IsSubstring}\;(\V{x}\;\V{::}\;\V{xs})\;\V{e}}.
 \end{Lemma}
 \begin{proof}
-  Immediate from \ensuremath{\D{IsPrefix}} and \ensuremath{\D{IsSubstring}} definitions.
+  Immediate from the definitions of \ensuremath{\D{IsPrefix}} and \ensuremath{\D{IsSubstring}}.
 \end{proof}
 
 
-Function \ensuremath{\F{IsPrefixDec}} decides if a given RE \ensuremath{\V{e}} matches a prefix in \ensuremath{\V{xs}} by
-induction on \ensuremath{\V{xs}} structure using Lemmas \ref{pref1}, \ref{pref2}, decidable emptyness test \ensuremath{\F{\nu[\_]}}
-and Theorem \ref{derivsound}. Intuitively, \ensuremath{\F{IsPrefixDec}} first checks if current RE \ensuremath{\V{e}} accepts the
-empty string. In this case, \ensuremath{\C{\lbrack\:\rbrack}} is returned as a prefix. Otherwise, it verifies for each symbol \ensuremath{\V{x}}
-if RE \ensuremath{\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\F{]}} matches a prefix of the input string. If it is the case, a prefix including \ensuremath{\V{x}} is
-built from a recursive call to \ensuremath{\F{IsPrefixDec}} or if no prefix is matched a proof of such impossibility
-is constructed using lemma \ensuremath{\F{¬IsPrefix-::}}. 
+Function \ensuremath{\F{IsPrefixDec}} decides if a given RE \ensuremath{\V{e}} matches a prefix in
+\ensuremath{\V{xs}} by induction on the structure of \ensuremath{\V{xs}}, using Lemmas \ref{pref1},
+\ref{pref2}, decidable emptyness test \ensuremath{\F{\nu[\_]}} and Theorem
+\ref{derivsound}. Intuitively, \ensuremath{\F{IsPrefixDec}} first checks if current
+RE \ensuremath{\V{e}} accepts the empty string. In this case, \ensuremath{\C{\lbrack\:\rbrack}} is returned as a
+prefix. Otherwise, it verifies, for each symbol \ensuremath{\V{x}}, whether RE \ensuremath{\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\F{]}}
+matches a prefix of the input string. If this is the case, a prefix
+including \ensuremath{\V{x}} is built from a recursive call to \ensuremath{\F{IsPrefixDec}} or if no
+prefix is matched a proof of such impossibility is constructed using
+lemma \ensuremath{\F{¬IsPrefix-::}}.
 
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -1356,10 +1359,12 @@ is constructed using lemma \ensuremath{\F{¬IsPrefix-::}}.
 \end{hscode}\resethooks
 
 
-Function \ensuremath{\F{IsSubstringDec}} is also defined by induction on input strings structure using
-\ensuremath{\F{IsPrefixDec}} to check if it is possible to match a prefix of input using \ensuremath{\V{e}}. In this case,
-a substring is built from this prefix. If there's no such prefix, a recursive call is made to
-check if there's a substring match, returning such substring or a proof that it does not exist.
+Function \ensuremath{\F{IsSubstringDec}} is also defined by induction on the
+structure of the input string \ensuremath{\V{e}}, using \ensuremath{\F{IsPrefixDec}} to check
+whether it is possible to match a prefix of \ensuremath{\V{e}}. In this case, a
+substring is built from this prefix. If there's no such prefix, a
+recursive call is made to check if there is a substring match,
+returning such substring or a proof that it does not exist.
 
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -1409,25 +1414,26 @@ repository~\cite{regex-rep}.
 
 \section{Implementation Details and Experiments}\label{sec:exp}
 
-From the algorithm formalized we built a tool for RE parsing in the
-style of GNU Grep~\cite{Grep}. We have built a simple parser combinator
-library, for parsing RE syntax and use Agda Standard Library and its
-support for calling Haskell functions throught foreign function interface.
+From the formalized algorithm we built a tool for RE parsing in the
+style of GNU Grep~\cite{Grep}. We have built a simple parser
+combinator library for parsing RE syntax, using the Agda Standard
+Library and its support for calling Haskell functions through its
+foreign function interface.
 
-In order to validade our tool (named verigrep --- for verified Grep), we
-compare its performance with GNU Grep~\cite{Grep} (grep), Google
-regular expression library~\cite{re2} (re2) and with Haskell RE
-parsing algorithms described in~\cite{Fischer2010} (haskell-regexp).
-We run RE parsing experiments on a machine with a Intel Core I7 1.7
-GHz, 8GB RAM running Mac OS X 10.12.3; the results were collected and
-the median of several test runs was computed.
+Experimentation with our tool, named verigrep, involved a comparison
+of its performance with GNU Grep~\cite{Grep} (grep), Google regular
+expression library re2~\cite{re2} and Haskell RE parsing algorithms
+haskell-regexp, described in~\cite{Fischer2010}. We run RE parsing
+experiments on a machine with a Intel Core I7 1.7 GHz, 8GB RAM running
+Mac OS X 10.12.3; the results were collected and the median of several
+test runs was computed.
 
-We use the same experiments as~\cite{SulzmannL14} using files formed
-by thousands of occurrences of
-symbol \texttt{a} were parsed, using the RE $(a + b + ab)^\star$; in
-the second, files with thousands of occurrences of \texttt{ab} were
-parsed using the same RE. Results are presented in
-Figures~\ref{fig:graph1} and~\ref{fig:graph2}, respectively.
+We use the same experiments as those used in ~\cite{SulzmannL14};
+these consist of parsing files containing thousands of occurrences of
+symbol \texttt{a}, using the RE $(a + b + ab)^\star$; and parsing
+files containing thousands of occurrences of \texttt{ab}, using the
+same RE. Results are presented in Figures~\ref{fig:graph1}
+and~\ref{fig:graph2}, respectively.
 
 \begin{figure}[!ht]
     \includegraphics[width=0.7\textwidth]{as.png}
@@ -1444,25 +1450,26 @@ Figures~\ref{fig:graph1} and~\ref{fig:graph2}, respectively.
 \end{figure}
 
 Our tool behaves poorly when compared with all other options
-considered. This inefficiency could be explained: 1) Our algorithm
-relies on the Brzozowski definition of RE parsing, which needs to
-quotient resulting REs. 2) We use lists to represent sets of Antimirov's
-partial derivatives. We believe that usage of better data structures
-to represent sets and using appropriate disambiguation strategies
-like greedy parsing~\cite{FrischC04} and POSIX~\cite{SulzmannL14}
-would be able to improve the efficiency of our algorithm without
-sacrificing its correctness. We leave the formalization of
-disambiguation strategies and the use of more efficient
-data structures for future work.
+considered. The cause of this inefficiency needs further
+investigation, but we envisaged that it can be be due to the
+following: 1) Our algorithm relies on the Brzozowski definition for RE
+parsing, which needs to quotient resulting REs. 2) We use lists to
+represent sets of Antimirov's partial derivatives. We believe that
+usage of better data structures to represent sets and using
+appropriate disambiguation strategies like greedy
+parsing~\cite{FrischC04} and POSIX~\cite{SulzmannL14} would be able to
+improve the efficiency of our algorithm without sacrificing
+correctness. We leave the formalization of disambiguation strategies
+and the use of more efficient data structures for future work.
 
 \section{Related Work}\label{sec:related}
 
-\paragraph{Parsing with derivatives}: recently, derivative-based parsing has
-received a lot of attention. Owens et al. were the first to present a
-functional encoding of RE derivatives and use it to parsing and DFA
-building. They use derivatives to build scanner generators for ML and
-Scheme~\cite{Owens2009} and no formal proof of correctness were
-presented.
+\paragraph{Parsing with derivatives} Recently, derivative-based
+parsing has received a lot of attention. Owens et al. were the first
+to present a functional encoding of RE derivatives and use it to
+parsing and DFA building. They use derivatives to build scanner
+generators for ML and Scheme~\cite{Owens2009}; no formal proof of
+correctness was presented.
 
 Might et al.~\cite{Might2011} report on
 the use of derivatives for parsing not only RLs but also context-free
@@ -1473,7 +1480,7 @@ are described by using the Racket programming
 language~\cite{Felleisen2013}. However, Might et al. do not present
 formal proofs related to the use of derivatives for CFGs.
 
-Fischer et al. describes an algorithm for RE-based parsing based on
+Fischer et al.~describe an algorithm for RE-based parsing based on
 weighted automata in Haskell~\cite{Fischer2010}.  The paper describes
 the design evolution of such algorithm as a dialog between three
 persons. Their implementation has a competitive performance when
@@ -1488,16 +1495,15 @@ efficiency of the proposed algorithm, Sulzmann et al. use a bit
 encoded representation of RE parse trees. Textual proofs of
 correctness of the proposed algorithm are presented in an appendix.
 
-\paragraph{Certified parsing algorithms}: certified algorithms for
+\paragraph{Certified parsing algorithms}. Certified algorithms for
 parsing also received attention recently. Firsov et al.~describe a
 certified algorithm for RE parsing by converting an input RE to an
-equivalent non-deterministic finite automata (NFA) represented as a
-boolean matrix~\cite{FirsovU13}. A matrix library based on some
-``block'' operations~\cite{MacedoO13} is developed and used Agda
-formalization of NFA-based parsing in Agda~\cite{Norell2009}. Compared
-to our work, a NFA-based formalization requires a lot more
-infrastructure (such as a Matrix library). No experiments with the
-certified algorithm were reported.
+equivalent NFA represented as a boolean matrix~\cite{FirsovU13}. A
+matrix library based on some ``block'' operations~\cite{MacedoO13} is
+developed and used Agda formalization of NFA-based parsing
+{Norell2009}. Compared to our work, a NFA-based formalization requires
+a lot more infrastructure (such as a Matrix library). No experiments
+with the certified algorithm were reported.
 
 Firsov describes an Agda formalization of a parsing algorithm that
 deals with any CFG (CYK algorithm)~\cite{Firsov2014}. Bernardy
@@ -1507,35 +1513,38 @@ reduces CFG parsing to boolean matrix multiplication. In both works,
 no experiment with formalized parsing algorithms were reported.
 
 A certified LR(1) CFG validator is described
-in~\cite{Jourdan2012}. The formalized checking procedure
-verifies if CFG and a automaton match. They proved soundness and
-completeness of the validator in Coq proof
-assistant~\cite{Bertot2010}. Termination of LR(1) automaton
-interpreter is ensured by imposing a natural number bound.
+in~\cite{Jourdan2012}. The formalized checking procedure verifies if
+CFG and an automaton match. They proved soundness and completeness of
+the validator in the Coq proof
+assistant~\cite{Bertot2010}. Termination of the LR(1) automaton
+interpreter is ensured by imposing a natural number bound on
+allowed recursive calls.
 
 Formalization of a parser combinator library was the subject of
 Danielsson's work~\cite{Danielsson2010}. He built a library of parser
 combinators using coinduction and provide correctness proofs of such
 combinators.
 
-Almeida et al.~\cite{AlmeidaMPS10} describes a Coq formalization of
+Almeida et al.~\cite{AlmeidaMPS10} describe a Coq formalization of
 partial derivatives and its equivalence with automata. Partial
-derivatives were introduced by Antimirov~\cite{Antimirov91} as
-an alternative to Brzozowski derivatives, since it avoids quotient
+derivatives were introduced by Antimirov~\cite{Antimirov91} as an
+alternative to Brzozowski derivatives, since it avoids quotient
 resulting REs with respect to ACUI axioms. Almeida et al. motivation
 is to use such formalization as a basis for a decision procedure for
 RE equivalence.
 
-Ridge~\cite{Ridge2011} describes a formalization, in HOL4 theorem prover, of
-combinator parsing library. A parser generator for such combinators is described
-and a proof that generated parsers are sound and complete is presented.
-According to Ridge, preliminary results shows that parsers built using his
-generator are faster than those created by Happy parser generator~\cite{Happy}.
+Ridge~\cite{Ridge2011} describes a formalization, in the HOL4 theorem
+prover, of a combinator parsing library. A parser generator for such
+combinators is described and a proof that generated parsers are sound
+and complete is presented.  According to Ridge, preliminary results
+shows that parsers built using his generator are faster than those
+created by Happy parser generator~\cite{Happy}.
 
-Ausaf et.al.~\cite{AusafDU16} describes a formalization, in Isabelle/HOL~\cite{Nipkow02},
-of POSIX matching algorithm proposed by Sulzmann et.al.~\cite{SulzmannL14}. They
-give a constructive characterization of what a POSIX matching is and prove that
-such matching is unique for a given RE and string. No experiments with the
+Ausaf et. al.~\cite{AusafDU16} describe a formalization, in
+Isabelle/HOL~\cite{Nipkow02}, of the POSIX matching algorithm proposed
+by Sulzmann et.al.~\cite{SulzmannL14}. They give a constructive
+characterization of what a POSIX matching is and prove that such
+matching is unique for a given RE and string. No experiments with the
 verified algorithm are reported.
 
 
@@ -1553,8 +1562,8 @@ over inductive datatypes and were omitted from this text for brevity.
 
 As future work, we intend to work on the development of a certified
 program of greedy and POSIX RE parsing using Brzozowski
-derivatives~\cite{SulzmannL14,FrischC04} and investigate on
-ways to obtain a formalized but simple and efficient RE parsing tool.
+derivatives~\cite{SulzmannL14,FrischC04} and investigate ways to
+obtain a formalized but simple and efficient RE parsing tool.
 
 \paragraph{Acknowledgements:} The first author thanks CNPq for financial
 support. Second author thanks Fundação de Amparo a
