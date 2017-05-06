@@ -13,6 +13,7 @@ module Tool.Parser.Arguments.Options where
   data Deriv : Set where
     Antimirov  : Deriv
     Brzozowski : Deriv
+    BitCodes   : Deriv
 
 
   -- a type for options
@@ -41,6 +42,7 @@ module Tool.Parser.Arguments.Options where
       cons : Options → String → Options
       cons opt "-B"  = record opt { algorithm = Brzozowski }
       cons opt "-A"  = record opt { algorithm = Antimirov  }
+      cons opt "-C"  = record opt { algorithm = BitCodes   }
       cons opt "-v"  = record opt { version   = true }
       cons opt "-h"  = record opt { help      = true }
       cons opt str   =

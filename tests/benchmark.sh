@@ -27,7 +27,7 @@ do
     ./nc/nc $(($N/2)) ab > $(($i*10))kab.txt
 done
 
-PROGS=(re2 haskell-regexp grep Brzozowski Antimirov)
+PROGS=(re2 haskell-regexp grep Brzozowski Antimirov BitCodes)
 
 if ! which gtime &> /dev/null ; then
     GTIME=/usr/bin/time
@@ -41,6 +41,7 @@ declare -a COMMANDS=(
     "$GTIME -f \"%e\" grep -x -E \"(a|b|ab)*\" \$N"
     "$GTIME -f \"%e\" ./verigrep/verigrep -B \"(a + b + ab)*\" \$N"
     "$GTIME -f \"%e\" ./verigrep/verigrep -A \"(a + b + ab)*\" \$N"
+    "$GTIME -f \"%e\" ./verigrep/verigrep -C \"(a + b + ab)*\" \$N"    
 )
 for c in a ab
 do
@@ -68,7 +69,6 @@ do
 
 done
 gnuplot plot_png.gp
-gnuplot plot_latex.gp
 
 rm as.dat abs.dat
 rm *ka.txt

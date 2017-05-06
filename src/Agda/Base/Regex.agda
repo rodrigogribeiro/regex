@@ -69,6 +69,9 @@ module Base.Regex where
   ∅∈-invert : ∀ {xs} → ¬ (xs ∈[ ∅ ])
   ∅∈-invert ()
 
+  #-∈-invert : ∀ {x y xs} → x ∷ xs ∈[ # y ] → x ≡ y × xs ≡ []
+  #-∈-invert (# c) = refl , refl
+
   -- more lemmas
 
   ∙-dist-+-right : ∀ {e e1 e' s} → s ∈[ e ∙ e' ] → s ∈[ (e + e1) ∙ e' ]

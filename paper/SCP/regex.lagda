@@ -96,24 +96,23 @@ module regex where
 \title{Certified Derivative-Based Parsing of\\ Regular Expressions}
 
 %% Group authors per affiliation:
+
 \author[rgr]{Rodrigo Ribeiro}
 \cortext[rgr]{Corresponding author}
-\address[rgr]{Dep. de Computa\c{c}\~ao e Sistemas, Universidade
-  Federal de Ouro Preto, ICEA, Jo\~ao Monlevade, Minas Gerais, Brasil}
-\ead[rgr]{rodrigo@@decsi.ufop.br}  
+\address{Dep. de Computa\c{c}\~ao e Sistemas, Universidade
+  Federal de Ouro Preto, \newline ICEA, Jo\~ao Monlevade, Minas Gerais, Brasil}
+\ead{rodrigo@@decsi.ufop.br}
 
 \author{Raul Lopes}
 \address{Dep. de Computa\c{c}\~ao, Universidade
-  Federal de Ouro Preto, ICEB, Campus Universit\'ario Morro do
+  Federal de Ouro Preto, ICEB, \newline Campus Universit\'ario Morro do
   Cruzeiro, Ouro Preto, Minas Gerais, Brasil}
 \ead{raulfpl@@gmail.com}
 
-
 \author{Carlos Camar\~ao}
 \address{Dep. de Ci\^encia da Computa\c{c}\~ao, Universidade Federal
-  de Minas Gerais, Av. Ant\^onio Carlos 6627, Belo Horizonte, Minas Gerais, Brasil}
+  de Minas Gerais, \newline Av. Ant\^onio Carlos 6627, Belo Horizonte, Minas Gerais, Brasil}
 \ead{camarao@@dcc.ufmg.br}
-
 
 \begin{abstract}
 
@@ -331,10 +330,11 @@ holds. The decidable proposition type is defined as:
 \end{spec}
 Constructor |yes| stores a proof that property |P| holds
 and constructor |no| an evidence that such proof is impossible. Some functions
-used in our formalization use this type. |no P| is an
+used in our formalization use this type. The type |¬ P| is an
 abbreviation for |P -> Bot|, where
 |Bot| is a data type with no constructors (i.e.~a data
-type for which it is not possible to construct a value).
+type for which it is not possible to construct a value, which corresponds to
+a false proposition).
 
 Dependently typed pattern matching is built by using the so-called
 |with| construct, that allows for matching intermediate
@@ -448,7 +448,7 @@ is in the language of RE |Eps|.
 
 For any single character |a|, the singleton
 string |[ a ]| is in the RL
-for |$ a|. Given parse trees for REs
+for |# a|. Given parse trees for REs
 |l| and |r|, |xs <<-[[ l ]]| and |ys <<-[[ r ]]|, constructor
 |_∙_=>_| can be used to build a parse tree
 for the concatenation of these REs.  Constructor
@@ -1177,7 +1177,7 @@ obtain a formalized but simple and efficient RE parsing tool.
 support. Second author thanks Fundação de Amparo a
 Pesquisa de Minas Gerais (FAPEMIG) for financial support.
 
-\section*{References}
+% \section*{References}
 
 \bibliography{main}
 

@@ -19,10 +19,12 @@ open import Relation.Nullary.Decidable
 module Tool.Main where
 
   open import Base.Regex
+  open import BitCoded.BitRegex
 
   open import Substring.SubstringDef
   open import Substring.SubstringAntimirov as Ant
   open import Substring.SubstringBrzozowski as Br
+  open import Substring.BitSubstring as Bt
 
   open import Tool.Bindings.Arguments
   open import Tool.Parser.Arguments.Options
@@ -32,6 +34,7 @@ module Tool.Main where
   usage = "Usage: verigrep [OPTIONS] [REGEXP] [FILELIST]" Str.++
           "\n\nwhere\nOPTIONS\n-B: parse with Brzozowski derivatives\n" Str.++
           "-A: parse with Antimirov derivatives\n" Str.++
+          "-C: parse with Bit codes derivatives\n" Str.++
           "-v: Show version information" Str.++
           "-h: help message"
 
@@ -56,6 +59,7 @@ module Tool.Main where
   choose opt e with algorithm opt
   ...| Antimirov  = flip Ant.IsSubstringDec e
   ...| Brzozowski = flip Br.IsSubstringDec e
+  ...| BitCodes   = flip Bt.IsSubstringDec e
 
   showResult : ∀ {xs e} → IsSubstring xs e → IO ⊤
   showResult (Substring ys zs ws _ _)

@@ -342,25 +342,6 @@
 
 \title{Certified Derivative-Based Parsing of\\ Regular Expressions}
 
-%% Group authors per affiliation:
-\author[rgr]{Rodrigo Ribeiro}
-\cortext[rgr]{Corresponding author}
-\address[rgr]{Dep. de Computa\c{c}\~ao e Sistemas, Universidade
-  Federal de Ouro Preto, ICEA, Jo\~ao Monlevade, Minas Gerais, Brasil}
-\ead[rgr]{rodrigo@decsi.ufop.br}  
-
-\author{Raul Lopes}
-\address{Dep. de Computa\c{c}\~ao, Universidade
-  Federal de Ouro Preto, ICEB, Campus Universit\'ario Morro do
-  Cruzeiro, Ouro Preto, Minas Gerais, Brasil}
-\ead{raulfpl@gmail.com}
-
-
-\author{Carlos Camar\~ao}
-\address{Dep. de Ci\^encia da Computa\c{c}\~ao, Universidade Federal
-  de Minas Gerais, Av. Ant\^onio Carlos 6627, Belo Horizonte, Minas Gerais, Brasil}
-\ead{camarao@dcc.ufmg.br}
-
 
 \begin{abstract}
 
@@ -583,10 +564,11 @@ holds. The decidable proposition type is defined as:
 \end{hscode}\resethooks
 Constructor \ensuremath{\C{yes}} stores a proof that property \ensuremath{\V{P}} holds
 and constructor \ensuremath{\C{no}} an evidence that such proof is impossible. Some functions
-used in our formalization use this type. \ensuremath{\C{no}\;\V{P}} is an
+used in our formalization use this type. The type \ensuremath{\V{¬}\;\V{P}} is an
 abbreviation for \ensuremath{\V{P}\;\to \;\D{\bot}}, where
 \ensuremath{\D{\bot}} is a data type with no constructors (i.e.~a data
-type for which it is not possible to construct a value).
+type for which it is not possible to construct a value, which corresponds to
+a false proposition).
 
 Dependently typed pattern matching is built by using the so-called
 \ensuremath{\mathkw{with}} construct, that allows for matching intermediate
@@ -746,7 +728,7 @@ is in the language of RE \ensuremath{\C{\epsilon}}.
 
 For any single character \ensuremath{\V{a}}, the singleton
 string \ensuremath{[\mskip1.5mu \;\V{a}\;\mskip1.5mu]} is in the RL
-for \ensuremath{\mathbin{\$}\;\V{a}}. Given parse trees for REs
+for \ensuremath{\C{\$}\;\V{a}}. Given parse trees for REs
 \ensuremath{\V{l}} and \ensuremath{\V{r}}, \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{l}\;\D{\rrbracket}} and \ensuremath{\V{ys}\;\D{\in\llbracket}\;\V{r}\;\D{\rrbracket}}, constructor
 \ensuremath{\C{\_∙\_\Rightarrow\_}} can be used to build a parse tree
 for the concatenation of these REs.  Constructor
@@ -1569,7 +1551,7 @@ obtain a formalized but simple and efficient RE parsing tool.
 support. Second author thanks Fundação de Amparo a
 Pesquisa de Minas Gerais (FAPEMIG) for financial support.
 
-\section*{References}
+% \section*{References}
 
 \bibliography{main}
 
