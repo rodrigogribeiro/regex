@@ -38,8 +38,7 @@ module paper where
 %\acmISBN{123-4567-24-567/08/06}
 
 %Conference
-%\acmConference[HASKELL'17]{ACM Haskell Symposium}{July 2017}{El
- % Paso, Texas USA} 
+%\acmConference[HASKELL'17]{ACM Haskell Symposium}{July 2017}{El Paso, Texas USA} 
 \acmYear{2017}
 \copyrightyear{2017}
 
@@ -151,9 +150,9 @@ in the dependently typed language Agda. The algorithm computes
 bit-codes using Brzozowski derivatives and we prove that 
 produced codes are equivalent to parse trees ensuring the 
 soundness and completeness w.r.t an inductive RE semantics.
-We include the certified algorithm in a tool, developed by us,
-for regular expression based search in the style of the well 
-known GNU grep. Practical experiments conducted with this tool 
+We include the certified algorithm in a tool developed by us, 
+named verigrep, for regular expression based search in the style 
+of the well known GNU grep. Practical experiments conducted with this tool 
 are reported.
 \end{abstract}
 %
@@ -186,10 +185,10 @@ are reported.
 </ccs2012>  
 \end{CCSXML}
 
-\ccsdesc[500]{Computer systems organization~Embedded systems}
-\ccsdesc[300]{Computer systems organization~Redundancy}
-\ccsdesc{Computer systems organization~Robotics}
-\ccsdesc[100]{Networks~Network reliability}
+%\ccsdesc[500]{Computer systems organization~Embedded systems}
+%\ccsdesc[300]{Computer systems organization~Redundancy}
+%\ccsdesc{Computer systems organization~Robotics}
+%\ccsdesc[100]{Networks~Network reliability}
 
 % We no longer use \terms command
 %\terms{Theory}
@@ -213,6 +212,7 @@ are reported.
 %format Vec = "\D{Vec}"
 %format :: = "\C{::}"
 %format _::_ = "\C{\_::\_}"
+
 \section{Introduction}\label{sec:intro}
 
 Parsing is one of the most studied problems in computer science. 
@@ -226,7 +226,7 @@ fact that the string of symbols cannot be generated.
 
 In this work we are interested in the parsing problem for regular
 languages (RLs)~\cite{Hopcroft2000}, i.e.~languages that can be
-recognized by (non-)deterministic finite automata and equivalent
+recognized by non-deterministic finite automata and equivalent
 formalisms. Regular expressions (REs) are an algebraic and compact way
 of specifying RLs that are extensively used in lexical analyser
 generators~\cite{Lesk1990} and string search utilities~\cite{Grep}.
@@ -247,7 +247,7 @@ since ``derivatives have been lost in the sands of time'' until his work on
 functional encoding of RE derivatives have renewed interest on its use
 for parsing~\cite{Might2011,Fischer2010}. 
 
-Nielsen et. al.~\cite{Nielsen2011} introduce algorithms to build compact representation of
+Nielsen et. al.~\cite{Nielsen2011} introduce algorithms to build a compact representation of
 RE parse trees as a sequence of bits, without explicitly constructing the parse tree first
 and describe algorithms that simulate a finite state machine that output the required bit list. 
 Sulzmann et. al.~\cite{SulzmannL14} designed a RE derivative-based algorithm
@@ -262,7 +262,7 @@ Agda~\cite{Norell2009}.
 More specifically, our contributions are:
 \begin{itemize}
   \item A formalization of bit-codes for RE parse trees, as presented in~\cite{Nielsen2011},
-        and machine checkable proof ofs their properties.
+        and machine checkable proof of their properties.
   \item A formalization of bit-annotated regular expressions (BRE), its semantics 
         and its soundness and completeness theorems w.r.t. standard RE semantics. 
         We also relate produced bit sequences and RE semantics proving how they 
@@ -413,12 +413,12 @@ data Sig {a b}(A : Set a)(B : A -> Set b) : Set (a lmax b) where
   _,_ : (x : A) -> B x -> Sig A B
 \end{spec}
 A value of type |Sig A B| corresponds to a pair formed by a value |x| of type |A| and 
-a value of type |B x|. Note that second component type depends on the value of first 
+a value of type |B x|. Note that second component type depends on the value of the first 
 component. Under proposition-as-types interpretation, dependent products are equivalent
 to existential quantification, since values of dependent products are formed by a value |x : A|,
 which can be understood as a witness of existential quantification, and a value |B x|, which
 represents the proof that |x| holds for |B|. Agda standard library represents existential
-quantification a dependent product in which the first component is an implicit parameter:
+quantification as a dependent product in which the first component is an implicit parameter:
 \begin{spec}
 exts : forall {a b} {A : Set a} -> (A -> Set b) -> Set (a lmax b)
 exts = Sig _
@@ -578,7 +578,7 @@ The relation between RE semantics and its parse trees are formalized by
 functions |flat| and |unflat|. The |flat| function builds a membership proof from a given parse tree by
 recursion on its structure. At each step, |flat| returns a pair formed
 by a string and its RE membership proof. Matched strings can be recovered from parse trees
-by concatenating values in its leafs (that would be the empty string or a single character).
+by concatenating values in their leafs (that would be the empty string or a single character).
 \begin{spec}
   flat : Tree e -> exts (\ xs -> xs <<-[[ e ]])
   flat Eps = [] , Eps
@@ -597,7 +597,7 @@ Note that our definition of |flat| ensures, by construction, that the string pro
 by a parse tree is in its RE language. Such property is stated in Nielsen et. al. paper
 as a theorem (cf. Theorem 2.1~\cite{Nielsen2011}).
 
-Function |unflat| builds parse trees from RE membership proofs straightforwardly.
+Function |unflat| builds parse trees from RE membership proofs straightforwardly:
 \begin{spec}
   unflat : xs <<-[[ e ]] -> Tree e
   unflat Eps = Eps
@@ -619,7 +619,7 @@ Let |e| be a RE and |t : Tree e| a parse tree. Then |unflat (proj₂ (flat t)) =
 Let |xs| be a string and |e| a RE s.t. |xs <<-[[ e ]]|. Then |flat (unflat prf) == (xs , prf)|.
 \end{Lemma}
 \begin{proof}
-  Structurural induction on the derivation of |xs <<-[[ e ]]|.
+  Structural induction on the derivation of |xs <<-[[ e ]]|.
 \end{proof}
 
 \subsection{Bit-codes for RE Parse Trees}\label{sec:bitregex}
@@ -633,8 +633,8 @@ Let |xs| be a string and |e| a RE s.t. |xs <<-[[ e ]]|. Then |flat (unflat prf) 
 %format inr = "\C{inr}"
 %format star[] = "\C{star[]}"
 %format star-:: = "\C{star-::}"
-We follow the encoding of Nielsen et. al.~\cite{Nielsen2011} that use bit marks to
-register which branch was chose in a parse tree for a union operator, |+|, and the beginning 
+We follow the encoding of Nielsen et. al.~\cite{Nielsen2011} that uses bit marks to
+register which branch was chosen in a parse tree for a union operator, |+|, and the beginning 
 and end of matchs done by a Kleene star. We represent bit sequences using lists whose elements 
 are of type |Bit|. 
 \begin{spec}
@@ -657,7 +657,7 @@ RE |e|.
 \end{spec}
 The empty string and single character RE are both represented by empty bit lists. 
 Codes for RE |l * r| are built by concatenating codes of |l| and |r|. In RE union operator, |+|, 
-the bit |zero| marks that parse tree for |l + r| is built from |l|'s and bit |one| that it is
+the bit |zero| marks that the parse tree for |l + r| is built from |l|'s and bit |one| that it is
 built from |r|'s. For Kleene star, we use bit |one| to denote the parse tree for the empty string and
 bit |zero| to begin matchings of |l| in a parse tree for |l **|.
  
@@ -681,7 +681,7 @@ tree representation.
   code (star-:: t ts) with code t | code ts
   ...| xs , pr | xss , prs = (zero :: xs ++ xss) , star-:: pr prs
 \end{spec}
-Next we present function |decode'| which generate a parse tree
+Next we present function |decode'| which generates a parse tree
 from its correspondent bit code.
 \begin{spec}
   decode' : exts (\ bs -> bs IsBitCodeOf e) -> Tree e
@@ -696,14 +696,14 @@ from its correspondent bit code.
   ...| pr1 | pr2 =  (_ +R (pr1 * pr2)) **
 \end{spec}
 
-As one might expect, decoding a bit sequence produced by |code| function 
+As one might expect, decoding a bit sequence produced by the |code| function 
 will produce the original parse tree.
 
 \begin{Theorem}
    Let |t : Tree e| for some RE |e|. Then, |decode' (code t) == t|.
 \end{Theorem}
 \begin{proof}
-   Structurual induction over |t|. 
+   Structural induction over |t|. 
 \end{proof}
 
 \begin{Example}
@@ -745,7 +745,7 @@ variable $bs$ denotes an arbitrary sequence of bits.
 ri ::= \emptyset\,\mid\,bs\rhd\epsilon\,\mid\,bs\rhd a\,\mid\,bs\rhd ri\,ri\,\mid\,bs\rhd ri+ri\,\mid\,bs\rhd ri^{\star}   
 \]
 Intuitively, BRE just attach a list of bits $bs$ to every non-empty regular expression. 
-Type |BitRegex| define the syntax of BRE, which has an obvious interpretation.
+Type |BitRegex| defines the syntax of BRE, which has an obvious interpretation.
 \begin{spec}
 data BitRegex : Set where
   empty  : BitRegex
@@ -755,7 +755,7 @@ data BitRegex : Set where
   cat    : List Bit -> BitRegex -> BitRegex -> BitRegex
   star   : List Bit -> BitRegex -> BitRegex
 \end{spec}
-Conversion between |Regex| and |BitRegex| types are made by functions |internalize| and |erase|.  
+Conversion between |Regex| and |BitRegex| types is done by functions |internalize| and |erase|.  
 First, we define an auxiliar function, |fuse|, which  attachs a bit code to top-most position of an BRE.
 \begin{spec}
     fuse : List Bit -> BitRegex -> BitRegex
@@ -773,8 +773,8 @@ Function |internalize| converts a standard RE into BRE by inserting empty bit li
     internalize Eps = eps [] 
     internalize (# x) = char [] x
     internalize (e * e') = cat [] (internalize e) (internalize e')
-    internalize (e + e') = choice [] (fuse [ zero ] (internalize e)) 
-                                     (fuse [ one ] (internalize e'))
+    internalize (e + e') 
+      = choice [] (fuse [ zero ] (internalize e)) (fuse [ one ] (internalize e'))
     internalize (e **) = star [] (internalize e)
 \end{spec}
 Function |erase| is straightforwardly defined by recursion.
@@ -908,7 +908,7 @@ is in the language of |cat bs l r| (where |l| and |r| are arbitrary BRE's)
 then the empty string belongs to |l| and |r|'s languages.
 Lemma |∈+-invert| is defined similarly for choice.
 
-\subsection{Derivatives for Bit-annotated REs its Properties}
+\subsection{Derivatives for Bit-annotated REs and its Properties}
 
 %format ∂[_,_] = "\F{∂[\_,\_]}"
 %format ∂[ = "\F{∂[}"
@@ -930,7 +930,7 @@ nullable BRE, (i.e. a BRE s.t. |[] <<-<< e >>|).
 Next we define the derivative operation on BRE in Agda. The difference betwen this definition 
 and standard Brzozowski derivatives~\cite{Brzozowski1964} is that the former inserts parse tree
 information in terms of bit annotations. For example, consider |cat bs l r| where |[] <<-<< l >>|, additional
-parse information is built from nullability test result using functions |mkEps| and |fuse|.
+parse information is built from a nullability test result using functions |mkEps| and |fuse|.
 For Kleene star operation we record the start of a new iteration fusing |[ zero ]| and we mark a start of a
 new matching interation by attaching the empty list in |star [] e|.
 
@@ -951,10 +951,10 @@ new matching interation by attaching the empty list in |star [] e|.
 \end{spec}
 
 From this definition we prove the following important properties of
-the derivative operation. Soundness of |∂[_,_]| ensures that if a
+the derivative operation: soundness of |∂[_,_]| ensures that if a
 string |xs| is in the language of |∂[ e , x ]> |, then
 |(x :: xs) <<-<< e >>| holds. Completeness ensures that the
-other direction of implication holds.
+other direction of the implication holds.
 
 \begin{Theorem}[Derivative operation soundness]\label{derivsound}
 For all BREs |e|, all strings |xs| and all symbols |x|, if
@@ -1096,16 +1096,20 @@ repository~\cite{regex-rep}.
 
 \section{Implementation Details and Experiments}\label{sec:exp}
 
-We include the formalized algorithm in a tool for RE parsing, developed by us, in the
+We include the formalized algorithm in a tool for RE parsing 
+developed by us, named verigrep, in the
 style of GNU Grep~\cite{Grep}. We have built a simple parser
 combinator library for parsing RE syntax, using the Agda Standard
 Library and its support for calling Haskell functions through its
 foreign function interface.
 
-Experimentation with our tool, named verigrep, involved a comparison
+Experimentation with our tool, involved a comparison
 of its performance with GNU Grep~\cite{Grep} (grep), Google regular
 expression library re2~\cite{re2} and Haskell RE parsing algorithms
-haskell-regexp, described in~\cite{Fischer2010}. We run RE parsing
+haskell-regexp, described in~\cite{Fischer2010}. The experiments consider
+three distinct algorithms implemented in verigrep: RE parsing using Brzozowski 
+derivatives, Antimirov partial derivatives and bit-coded parsing as described 
+in this work. We run RE parsing
 experiments on a machine with a Intel Core I7 1.7 GHz, 8GB RAM running
 Mac OS X 10.12.3; the results were collected and the median of several
 test runs was computed.
@@ -1136,13 +1140,16 @@ Our tool behaves poorly when compared with all other options
 considered. The cause of this inefficiency needs further
 investigation, since the algorithm formalized uses POSIX 
 disambiguation strategy, which avoid quotienting the result of derivative
-operations w.r.t. ACUI axioms, as usual Brzozowski derivatives. We leave 
+operations w.r.t. ACUI axioms, as usual Brzozowski derivatives. 
+The main reason behind POSIX and greedy disambiguation strategies in 
+derivative based parsing is to improve efficiency by eliminating 
+simplification steps on derivatives result~\cite{SulzmannL14}. We leave 
 the proof that the formalized algorithm indeed produces POSIX parse trees 
 for future work.
 
 \section{Related Work}\label{sec:related}
 
-\paragraph{Parsing with derivatives} Recently, derivative-based
+\paragraph{Parsing with derivatives.} Recently, derivative-based
 parsing has received a lot of attention. Owens et al. were the first
 to present a functional encoding of RE derivatives and use it to
 parsing and DFA building. They use derivatives to build scanner
@@ -1173,13 +1180,13 @@ efficiency of the proposed algorithm, Sulzmann et al. use a bit
 encoded representation of RE parse trees. Textual proofs of
 correctness of the proposed algorithm are presented in an appendix.
 
-\paragraph{Certified parsing algorithms}. Certified algorithms for
+\paragraph{Certified parsing algorithms.} Certified algorithms for
 parsing also received attention recently. Firsov et al.~describe a
 certified algorithm for RE parsing by converting an input RE to an
 equivalent NFA represented as a boolean matrix~\cite{FirsovU13}. A
 matrix library based on some ``block'' operations~\cite{MacedoO13} is
-developed and used Agda formalization of NFA-based parsing
-{Norell2009}. Compared to our work, a NFA-based formalization requires
+developed and used Agda formalization of NFA-based parsing. Compared 
+to our work, a NFA-based formalization requires
 a lot more infrastructure (such as a Matrix library). No experiments
 with the certified algorithm were reported.
 
@@ -1200,7 +1207,7 @@ allowed recursive calls.
 
 Formalization of a parser combinator library was the subject of
 Danielsson's work~\cite{Danielsson2010}. He built a library of parser
-combinators using coinduction and provide correctness proofs of such
+combinators using coinduction and provides correctness proofs of such
 combinators.
 
 Almeida et al.~\cite{AlmeidaMPS10} describe a Coq formalization of
@@ -1230,8 +1237,8 @@ verified algorithm are reported.
 
 We have given a complete formalization of a Bit-coded derivative-based 
 parsing for REs in Agda. To the best of our knowledge, this is the first work
-that presents a complete certification and that uses the certified
-program to build a tool for RE-based search.
+that presents a complete verification of a bit-code based parsing algorithm 
+and that uses it to in a tool for RE-based search.
 
 The formalized algorithm has 381 lines of code, organized in 2
 modules. We have proven 18 theorems and lemmas to complete the
