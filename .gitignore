@@ -290,3 +290,6 @@ cabal.project.local
 .HTF/
 
 *.dat
+
+*.txt
+*.cut

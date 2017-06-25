@@ -1,11 +1,12 @@
-Certified Derivative-based Parsing of Regular Expressions
-=====================================
+Certified Parsing of Regular Expressions - The verigrep tool
+=========================================
 
 This repository contains verified implemenations of regular expression search algorithms
-based on Brzozowski derivatives and Antivirov partial derivatives.
+based on Brzozowski derivatives and Antivirov partial
+derivatives. Also a formalization of bit-code base representations for
+parse trees.
 
-A certified tool for regular expression search, using both types of derivatives
-(Brzozowski and Antimirov) are developed in Agda.
+A certified tool for regular expression search is developed in Agda.
 
 Proofs of soundness and completeness for Brzozowski derivatives are developed in Coq.
 

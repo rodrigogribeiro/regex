@@ -1,4 +1,4 @@
-\documentclass[sigplan, anonymous, review]{acmart}
+\documentclass[sigconf]{acmart}
 
 \usepackage{booktabs} % For formal tables
 \usepackage[utf8x]{inputenc}
@@ -26,21 +26,10 @@
 %\setcopyright{cagovmixed}
 
 
-% DOI
-%\acmDOI{10.475/123_4}
-
-% ISBN
-%\acmISBN{123-4567-24-567/08/06}
-
 %Conference
-%\acmConference[HASKELL'17]{ACM Haskell Symposium}{July 2017}{El Paso, Texas USA} 
+\acmConference[SBLP'17]{Brazilian Symposium on Programming Languages}{September 2017}{Fortaleza, Ceará Brazil} 
 \acmYear{2017}
 \copyrightyear{2017}
-
-%\acmPrice{15.00}
-
-%\acmBadgeL[http://ctuning.org/ae/ppopp2016.html]{ae-logo}
-%\acmBadgeR[http://ctuning.org/ae/ppopp2016.html]{ae-logo}
 
 
 %% ODER: format ==         = "\mathrel{==}"
@@ -305,15 +294,10 @@
 
 \DeclareMathAlphabet{\mathkw}{OT1}{cmss}{bx}{n}
 
-
-\newcommand{\EvalCtxTran}[1]{\ensuremath{\mathbb{T}[#1]}}
-\newcommand{\EvalCtxProc}[1]{\ensuremath{\mathbb{P}[#1]}}
-
 \newtheorem{Lemma}{Lemma}
 \newtheorem{Theorem}{Theorem}
 \theoremstyle{definition}
 \newtheorem{Example}{Example}
-
 
 \usepackage{color}
 \newcommand{\redFG}[1]{\textcolor[rgb]{0.6,0,0}{#1}}
@@ -360,24 +344,26 @@
 \newcommand{\V}[1]{\purple{\mathit{#1}}}
 
 
-\newcommand{\TStep}[9]{\ensuremath{\langle  #2, #3, #4 \rangle
-    \mapsto_{T_{#5}} \langle  #7, #8, #9 \rangle}}
-
-
 \begin{document}
 
 
 \title{Certified Bit-Coded Regular Expression Parsing}
 
 \author{Rodrigo Ribeiro}
-\affiliation{%
+\affiliation{
   \institution{Universidade Federal de Ouro Preto}
-%  \streetaddress{P.O. Box 1212}
   \city{Ouro Preto} 
   \state{Minas Gerais --- Brazil} 
-%  \postcode{43017-6221}
 }
-\email{rodrigo\text{\tt decsi\char46{}ufop\char46{}br\char125{}~~\char92{}author\char123{}André~Du~Bois\char125{}~\char92{}affiliation\char123{}\char37{}~~~\char92{}institution\char123{}Universidade~Federal~de~Pelotas\char125{}~\char37{}~~\char92{}streetaddress\char123{}P\char46{}O\char46{}~Box~1212\char125{}~~~\char92{}city\char123{}Pelotas\char125{}~~~~\char92{}state\char123{}Rio~Grande~do~Sul~\char45{}\char45{}\char45{}~Brazil\char125{}~~\char37{}~~\char92{}postcode\char123{}43017\char45{}6221\char125{}~\char125{}~\char92{}email\char123{}dubois}inf.ufpel.br}
+\email{rodrigo@decsi.ufop.br}
+
+\author{André Du Bois}
+\affiliation{%
+  \institution{Universidade Federal de Pelotas}
+  \city{Pelotas} 
+  \state{Rio Grande do Sul --- Brazil} 
+}
+\email{dubois@inf.ufpel.br}
 
 \begin{abstract}
 We describe the formalization of a regular expression (RE) parsing
@@ -481,12 +467,14 @@ RE parse trees as a sequence of bits, without explicitly constructing the parse 
 and describe algorithms that simulate a finite state machine that output the required bit list. 
 Sulzmann et. al.~\cite{SulzmannL14} designed a RE derivative-based algorithm
 that incrementally builds a list of bits instead of a tree as parsing result. In both works
-no machine checked proof was provided and some results claimed had counter-examples
-found~\cite{AusafDU16}. This work aims to fill this gap. We provide fully 
-certified proofs of Sulzmann et. al. derivative based parsing algorithm that 
+no machine checked proof was provided and Sulzmann et. al. informal proof ``has some unfillable gaps'', 
+as pointed by Ausaf et. al. which proved that Sulzmann et. al. algorithm produces POSIX parse trees 
+in Isabelle/HOL~\cite{AusafDU16}. In this work we are interested in provide fully 
+certified correctness proofs of Sulzmann et. al. derivative based parsing algorithm that 
 produces a bit sequence equivalent to traditional parse trees and we use it 
 in a RE based search tool that has been developed by us, using the dependently typed language
-Agda~\cite{Norell2009}.
+Agda~\cite{Norell2009}. Unlike Ausaf et. al., we do not provide mechanized proofs which ensure
+that our formalization produces POSIX parse trees. We leave such proof for further work.
 
 More specifically, our contributions are:
 \begin{itemize}
@@ -498,19 +486,19 @@ More specifically, our contributions are:
         are related to each other.
   \item A formalization of Brzozowski derivatives for BRE and its soundness and
         completeness theorem w.r.t to BRE semantics.
-  \item We build certified decision procedures for matching prefixes and subtrings
+  \item We build certified decision procedures for matching prefixes and substrings
         of BRE.
 \end{itemize}
 
 The rest of this paper is organized as follows. Section~\ref{sec:agda}
 presents a brief introduction to Agda. Section~\ref{sec:regexp}
 describes the encoding of REs, its parse trees and their representation as 
-bit-codes. In Section~\ref{sec:bitregex} we present bit-annotated REs, 
+bit-codes. In Section~\ref{sec:bitregex} we present BREs, 
 its semantics and their relation with REs. In Section~\ref{sec:deriv} 
-we formalize a variant of Brzozowski derivatives for bit-annotated REs, its 
+we formalize a variant of Brzozowski derivatives for BREs, its 
 properties and describe how to build a correct parsing algorithm from them. 
 Section~\ref{sec:exp} comments on the use of the certified algorithm to build a tool for
-RE-based search and present some experiments with this tool. Related
+RE-based search and presents some experiments with this tool. Related
 work is discussed on Section~\ref{sec:related}. Section~\ref{sec:conclusion} concludes.
 
 All the source code in this article has been formalized in Agda
@@ -521,7 +509,7 @@ the reader from understanding the high-level structure of the
 formalization. In such situations we give just proof sketches and point
 out where all details can be found in the source code.
 
-All source code produced including
+All source code produced, including
 the \LaTeX~ source of this article, are avaliable
 on-line~\cite{regex-rep}.
 
@@ -548,7 +536,7 @@ avoid clutter, we'll omit implicit arguments from the source code
 presentation. The reader can safely assume that every free variable in
 a type is an implicity parameter.
 
-As an example of Agda code, consider the the following data type of
+As an example of Agda code, consider the following data type of
 length-indexed lists, also known as vectors.
 
 \begin{hscode}\SaveRestoreHook
@@ -633,7 +621,7 @@ holds. The decidable proposition type is defined as:
 \\
 \>[3]{}\hsindent{3}{}\<[6]%
 \>[6]{}\C{no}\;{}\<[10]%
-\>[10]{}\mathbin{:}\;\F{\neg}\;\V{P}\;\to \;\D{Dec}\;\V{p}{}\<[E]%
+\>[10]{}\mathbin{:}\;\F{\neg}\;\V{P}\;\to \;\D{Dec}\;\V{P}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
 Constructor \ensuremath{\C{yes}} stores a proof that property \ensuremath{\V{P}} holds
@@ -673,7 +661,7 @@ quantification as a dependent product in which the first component is an implici
 \ColumnHook
 \end{hscode}\resethooks
 In some functions involving dependent products we use wilcards ``\_'' to avoid the need to
-explicitly write their values, since Agda type checker can infer them.
+explicitly write their values or even completely omit, since Agda type checker can infer them. 
 Finally, we represent projections on dependent products as \ensuremath{\F{\pi_1}} and \ensuremath{\F{\pi_2}} which recover the first
 and second component of product types, repectively.
 
@@ -802,7 +790,7 @@ The following datatype defines RE semantics inductively.
 \\
 \>[3]{}\hsindent{2}{}\<[5]%
 \>[5]{}\C{\$\_}\;{}\<[9]%
-\>[9]{}\mathbin{:}\;(\V{c}\;\mathbin{:}\;\D{Char})\;\to \;\C{\$}\;\V{c}\;\D{\in\llbracket}\;\C{\$}\;\V{c}\;\D{\rrbracket}{}\<[E]%
+\>[9]{}\mathbin{:}\;(\V{c}\;\mathbin{:}\;\D{Char})\;\to \;[\mskip1.5mu \;\V{c}\;\mskip1.5mu]\;\D{\in\llbracket}\;\C{\$}\;\V{c}\;\D{\rrbracket}{}\<[E]%
 \\
 \>[3]{}\hsindent{2}{}\<[5]%
 \>[5]{}\C{\_\bullet\_}\;\mathbin{:}\;\V{xs}\;\D{\in\llbracket}\;\V{l}\;\D{\rrbracket}\;{}\<[26]%
@@ -833,7 +821,7 @@ for the concatenation of these REs.  Constructor
 for \ensuremath{\V{l}\;\C{+}\;\V{r}} from a proof from \ensuremath{\V{l}} (\ensuremath{\V{r}}). Semantics for Kleene star
 is built using the following well known equivalence of REs: $e^\star
 = \epsilon + e\,e^\star$. Notice that we use the same constructor names both in RE syntax and 
-in its semantics. Agda allows the overloading of data-constructors names.
+in its semantics. Agda also allows overloading of data-constructors names.
 
 Several inversion lemmas about RE parsing relation are necessary for
 derivative-based parsing formalization. They consist of
@@ -842,8 +830,8 @@ pattern-matching on proofs of
 brevity.
 
 
-One way to look at RE parsing is to intepret its parse trees as terms
-whose type is an RE~\cite{Nielsen2011,FrischC04}. To ensure the consistency 
+One way to look at RE parsing is to intepret parse trees as terms
+whose type is a RE~\cite{Nielsen2011,FrischC04}. To ensure the consistency 
 between a tree and its RE type, we use an indexed data-type, an usual approach 
 in dependently typed languages~\cite{Norell2009}.
 \begin{hscode}\SaveRestoreHook
@@ -876,14 +864,14 @@ in dependently typed languages~\cite{Norell2009}.
 \ColumnHook
 \end{hscode}\resethooks
 Each constructor of \ensuremath{\D{Tree}} specifies how to build a parse tree
-for an RE. As an example, value \ensuremath{\C{inl}\;\C{\epsilon}\;((\C{\$}\;\text{\tt 'a'})\;\C{\bullet}\;(\C{\$}\;\text{\tt 'b'})} denotes
-a parse tree for RE $ab + \epsilon$ and string \ensuremath{\text{\tt \char34 ab\char34}}.
+for a RE. As an example, value \ensuremath{\C{inl}\;\C{\epsilon}\;((\C{\$}\;\text{\tt 'a'})\;\C{\bullet}\;(\C{\$}\;\text{\tt 'b'})} denotes
+a parse tree for RE $ab + \epsilon$.
 
 The relation between RE semantics and its parse trees are formalized by
 functions \ensuremath{\F{flat}} and \ensuremath{\F{unflat}}. The \ensuremath{\F{flat}} function builds a membership proof from a given parse tree by
 recursion on its structure. At each step, \ensuremath{\F{flat}} returns a pair formed
 by a string and its RE membership proof. Matched strings can be recovered from parse trees
-by concatenating values in their leafs (that would be the empty string or a single character).
+by concatenating values in their leaves (that would be the empty string or a single character).
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{3}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -941,26 +929,30 @@ Function \ensuremath{\F{unflat}} builds parse trees from RE membership proofs st
 \>[3]{}\F{unflat}\;((\anonymous \;\C{+R}\;(\V{prf}\;\C{\bullet}\;\V{prf'}))\;\C{\star})\;\mathrel{=}\;\C{star-::}\;(\F{unflat}\;\V{prf})\;(\F{unflat}\;\V{prf'}){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-The next lemmas state that functions \ensuremath{\F{flat}} and \ensuremath{\F{unflat}} are inverses.
+The next lemmas state that functions \ensuremath{\F{flat}} and \ensuremath{\F{unflat}} are inverses and they are proved 
+by induction on \ensuremath{\V{t}} and \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}, respectively.
 \begin{Lemma}
 Let \ensuremath{\V{e}} be a RE and \ensuremath{\V{t}\;\mathbin{:}\;\D{Tree}\;\V{e}} a parse tree. Then \ensuremath{\F{unflat}\;(\F{\pi_2}\;(\F{flat}\;\V{t}))\;\D{\equiv}\;\V{t}}.
 \end{Lemma}
-\begin{proof}
-  Structural induction on \ensuremath{\V{t}}.
-\end{proof}
+%\begin{proof}
+%  Structural induction on |t|.
+%\end{proof}
 \begin{Lemma}
 Let \ensuremath{\V{xs}} be a string and \ensuremath{\V{e}} a RE s.t. \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}. Then \ensuremath{\F{flat}\;(\F{unflat}\;\V{prf})\;\D{\equiv}\;(\V{xs}\;\red{,}\,\;\V{prf})}.
 \end{Lemma}
-\begin{proof}
-  Structural induction on the derivation of \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}.
-\end{proof}
+%\begin{proof}
+%  Structural induction on the derivation of |xs <<-[[ e ]]|.
+%\end{proof}
 
 \subsection{Bit-codes for RE Parse Trees}\label{sec:bitregex}
 
 We follow the encoding of Nielsen et. al.~\cite{Nielsen2011} that uses bit marks to
 register which branch was chosen in a parse tree for a union operator, \ensuremath{\C{+}}, and the beginning 
-and end of matchs done by a Kleene star. We represent bit sequences using lists whose elements 
-are of type \ensuremath{\D{Bit}}. 
+and end of matches that corresponds to a Kleene star. Note that no marking is needed
+for concatenation and single character since coding and decoding of bit sequences are directed 
+by the underlining RE. 
+
+We represent bit sequences using lists whose elements are of type \ensuremath{\D{Bit}}. 
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{3}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -1080,37 +1072,26 @@ As one might expect, decoding a bit sequence produced by the \ensuremath{\F{code
 will produce the original parse tree.
 
 \begin{Theorem}
-   Let \ensuremath{\V{t}\;\mathbin{:}\;\D{Tree}\;\V{e}} for some RE \ensuremath{\V{e}}. Then, \ensuremath{\F{decode}\;(\F{code}\;\V{t})\;\D{\equiv}\;\V{t}}.
+   Let \ensuremath{\V{t}\;\mathbin{:}\;\D{Tree}\;\V{e}} for some RE \ensuremath{\V{e}}. Then, it holds that \ensuremath{\F{decode}\;(\F{code}\;\V{t})\;\D{\equiv}\;\V{t}}.
 \end{Theorem}
-\begin{proof}
-   Structural induction over \ensuremath{\V{t}}. 
-\end{proof}
+%\begin{proof}
+%   Structural induction over |t|. 
+%\end{proof}
 
-\begin{Example}
-As an example of bit coded parse tree, consider the string \ensuremath{\text{\tt \char34 ab\char34}} which is in
-$(a + b)^\star$ language. The parse tree for \ensuremath{\text{\tt \char34 ab\char34}} is:
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{11}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{20}{@{}>{\hspre}c<{\hspost}@{}}%
-\column{20E}{@{}l@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[3]{}\C{star-::}\;(\C{inl}\;\anonymous \;(\C{\$}\;\text{\tt 'a'}))\;{}\<[E]%
-\\
-\>[3]{}\hsindent{8}{}\<[11]%
-\>[11]{}(\C{star-::}\;(\C{inr}\;\anonymous \;(\C{\$}\;\text{\tt 'b'}))\;{}\<[E]%
-\\
-\>[11]{}\hsindent{9}{}\<[20]%
-\>[20]{}\C{star[]}){}\<[20E]%
-\ColumnHook
-\end{hscode}\resethooks
-and its bit code is \ensuremath{[\mskip1.5mu \;\C{0_b}\;\red{,}\,\;\C{0_b}\;\red{,}\,\;\C{0_b}\;\red{,}\,\;\C{1_b}\;\red{,}\,\;\C{1_b}\;\mskip1.5mu]}. The first occurrence of \ensuremath{\C{0_b}}
-starts a bit sequence for \ensuremath{\C{star-::}} constructor. Second occurrence of \ensuremath{\C{0_b}} represents
-the parse tree for left component of $a + b$ and next occurrence of \ensuremath{\C{0_b}} also denotes
-\ensuremath{\C{star-::}}. The first occurrence of \ensuremath{\C{1_b}} marks a parse tree for right component of $a + b$ 
-and the last symbol \ensuremath{\C{1_b}} finishes the bit code for Kleene star operator.
-\end{Example}
+%\begin{Example}
+%As an example of bit coded parse tree, consider the string |"ab"| which is in
+%$(a + b)^\star$ language. The parse tree for |"ab"| is:
+%\begin{spec}
+%  star-:: (inl _ (# 'a')) 
+%          (star-:: (inr _ (# 'b'))
+%                   star[])
+%\end{spec}
+%and its bit code is |[ zero , zero , zero , one , one ]|. The first occurrence of |zero|
+%starts a bit sequence for |star-::| constructor. Second occurrence of |zero| represents
+%the parse tree for left component of $a + b$ and next occurrence of |zero| also denotes
+%|star-::|. The first occurrence of |one| marks a parse tree for right component of $a + b$ 
+%and the last symbol |one| finishes the bit code for Kleene star operator.
+%\end{Example}
 
 Building bit codes from parse trees does not present any advantage, since after building parse trees
 we will need to traverse them in order to generate codes. A better strategy is to incrementally build
@@ -1119,14 +1100,13 @@ Sulzmann et. al.~\cite{SulzmannL14}.
 
 \subsection{Bit-annotated Regular Expressions}
 
-Bit-annotated regular expressions are defined by the following grammar, where
-variable $bs$ denotes an arbitrary sequence of bits.
-
-\[
-ri ::= \emptyset\,\mid\,bs\rhd\epsilon\,\mid\,bs\rhd a\,\mid\,bs\rhd ri\,ri\,\mid\,bs\rhd ri+ri\,\mid\,bs\rhd ri^{\star}   
-\]
+%Bit-annotated regular expressions are defined by the following grammar, where
+%variable $bs$ denotes an arbitrary sequence of bits.
+%\[
+%ri ::= \emptyset\,\mid\,bs\rhd\epsilon\,\mid\,bs\rhd a\,\mid\,bs\rhd ri\,ri\,\mid\,bs\rhd ri+ri\,\mid\,bs\rhd ri^{\star}   
+%\]
 Intuitively, BRE just attach a list of bits $bs$ to every non-empty regular expression. 
-Type \ensuremath{\D{BitRegex}} defines the syntax of BRE, which has an obvious interpretation.
+Type \ensuremath{\D{BitRegex}} defines the syntax of BRE, which just associates a list of bits to a BRE.
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{3}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -1159,7 +1139,7 @@ Type \ensuremath{\D{BitRegex}} defines the syntax of BRE, which has an obvious i
 \ColumnHook
 \end{hscode}\resethooks
 Conversion between \ensuremath{\D{Regex}} and \ensuremath{\D{BitRegex}} types is done by functions \ensuremath{\F{internalize}} and \ensuremath{\F{erase}}.  
-First, we define an auxiliar function, \ensuremath{\F{fuse}}, which  attachs a bit code to top-most position of an BRE.
+First, we define an auxiliary function, \ensuremath{\F{fuse}}, which  attachs a bit code to the top-most position of a BRE.
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{5}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -1184,6 +1164,7 @@ Function \ensuremath{\F{internalize}} converts a standard RE into BRE by inserti
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{5}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{7}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{26}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
 \>[5]{}\F{internalize}\;\mathbin{:}\;\D{Regex}\;\to \;\D{BitRegex}{}\<[E]%
 \\
@@ -1198,7 +1179,10 @@ Function \ensuremath{\F{internalize}} converts a standard RE into BRE by inserti
 \>[5]{}\F{internalize}\;(\V{e}\;\C{+}\;\V{e'})\;{}\<[E]%
 \\
 \>[5]{}\hsindent{2}{}\<[7]%
-\>[7]{}\mathrel{=}\;\C{choice}\;\C{\lbrack\:\rbrack}\;(\F{fuse}\;[\mskip1.5mu \;\C{0_b}\;\mskip1.5mu]\;(\F{internalize}\;\V{e}))\;(\F{fuse}\;[\mskip1.5mu \;\C{1_b}\;\mskip1.5mu]\;(\F{internalize}\;\V{e'})){}\<[E]%
+\>[7]{}\mathrel{=}\;\C{choice}\;\C{\lbrack\:\rbrack}\;(\F{fuse}\;[\mskip1.5mu \;\C{0_b}\;\mskip1.5mu]\;(\F{internalize}\;\V{e}))\;{}\<[E]%
+\\
+\>[7]{}\hsindent{19}{}\<[26]%
+\>[26]{}(\F{fuse}\;[\mskip1.5mu \;\C{1_b}\;\mskip1.5mu]\;(\F{internalize}\;\V{e'})){}\<[E]%
 \\
 \>[5]{}\F{internalize}\;(\V{e}\;\C{\star})\;\mathrel{=}\;\C{star}\;\C{\lbrack\:\rbrack}\;(\F{internalize}\;\V{e}){}\<[E]%
 \ColumnHook
@@ -1223,19 +1207,20 @@ Function \ensuremath{\F{erase}} is straightforwardly defined by recursion.
 \>[5]{}\F{erase}\;(\C{star}\;\V{x}\;\V{e})\;\mathrel{=}\;(\F{erase}\;\V{e})\;\C{\star}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-The relation between these functions is expressed by the following lemmas.
+The relation between these functions is expressed by the following lemmas, 
+which are proved by induction on the structure of \ensuremath{\V{e}}.
 \begin{Lemma}\label{erase-fuse-lemma}
-Let \ensuremath{\V{e}\;\mathbin{:}\;\D{Regex}} and \ensuremath{\V{bs}\;\mathbin{:}\;\D{List}\;\D{Bit}}. Then:\\  \ensuremath{\F{erase}\;(\F{fuse}\;\V{bs}\;(\F{internalize}\;\V{e}))\;\D{\equiv}\;\V{e}}.
+For all \ensuremath{\V{e}} and \ensuremath{\V{bs}}, \ensuremath{\F{erase}\;(\F{fuse}\;\V{bs}\;(\F{internalize}\;\V{e}))\;\D{\equiv}\;\V{e}}.
 \end{Lemma}
-\begin{proof}
-   Structural induction on \ensuremath{\V{e}}.
-\end{proof}
+%\begin{proof}
+%   Structural induction on |e|.
+%\end{proof}
 \begin{Lemma}
 Let \ensuremath{\V{e}\;\mathbin{:}\;\D{Regex}}. Then, \ensuremath{\F{erase}\;(\F{internalize}\;\V{e})\;\D{\equiv}\;\V{e}}
 \end{Lemma}
-\begin{proof}
-  Structural induction on \ensuremath{\V{e}} using Lemma~\ref{erase-fuse-lemma}.
-\end{proof}
+%\begin{proof}
+%  Structural induction on |e| using Lemma~\ref{erase-fuse-lemma}.
+%\end{proof}
 Next, we define an alternative inductive semantics for BRE and show that it is 
 sound and complete w.r.t. standard RE semantics. A value of type \ensuremath{\V{xs}\;\D{\in\langle}\;\V{e}\;\D{\rangle}} states
 that string \ensuremath{\V{xs}} is in the language denoted by \ensuremath{\D{BitRegex}} \ensuremath{\V{e}}.
@@ -1283,16 +1268,15 @@ that string \ensuremath{\V{xs}} is in the language denoted by \ensuremath{\D{Bit
 \>[13]{}(\V{x}\;\C{::}\;\V{xs}\;\F{++}\;\V{xss})\;\D{\in\langle}\;\C{star}\;\V{bs}\;\V{l}\;\D{\rangle}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-Relation between \ensuremath{\D{BitRegex}} and \ensuremath{\D{Regex}} semantic are specified by
-the following theorem.
+The relation between \ensuremath{\D{BitRegex}} and \ensuremath{\D{Regex}} semantic is specified by
+the following theorem, proved by induction on the derivation of \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}.
 \begin{Theorem}
 Let \ensuremath{\V{e}\;\mathbin{:}\;\D{Regex}} and \ensuremath{\V{xs}\;\mathbin{:}\;\D{List}\;\D{Char}}. Then, \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}, if and only if,
 \ensuremath{\V{xs}\;\D{\in\langle}\;\F{internalize}\;\V{e}\;\D{\rangle}}.
 \end{Theorem}
-\begin{proof}$\,$\\
-$(\to)$: Structural induction on \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}.\\
-$(\leftarrow)$: Structural induction on \ensuremath{\V{e}}.
-\end{proof}
+%\begin{proof}
+%$(\to)$: Structural induction on |xs <<-[[ e ]]|. $(\leftarrow)$: Structural induction on |e|.
+%\end{proof}
 
 \section{Derivatives and Parsing}\label{sec:deriv}
 
@@ -1385,7 +1369,7 @@ not, using Agda type of decidable propositions, \ensuremath{\D{Dec}\;\V{P}}.
 \>[3]{}\F{\nu[ }\;\C{star}\;\V{bs}\;\V{e}\;\F{]}\;\mathrel{=}\;\C{yes}\;\C{star[]}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-Function \ensuremath{\F{\nu[ }\;\V{e}\;\mskip1.5mu]} is an immediate transalation of $\nu(e)$, as
+Function \ensuremath{\F{\nu[ }\;\V{e}\;\mskip1.5mu]} is an immediate translation of $\nu(e)$, as
 defined by Brzozowski, to Agda code and it 
 uses several inversion lemmas about
 BRE semantics. Lemma \ensuremath{\F{[]∈∙-invert}} states that if the empty string
@@ -1418,12 +1402,12 @@ nullable BRE, (i.e. a BRE s.t. \ensuremath{\C{\lbrack\:\rbrack}\;\D{\in\langle}\
 \>[5]{}\F{mkEps}\;(\C{star-::}\;\V{bs}\;\V{pr}\;\V{pr'}\;\V{x})\;\mathrel{=}\;\V{bs}\;\F{++}\;[\mskip1.5mu \;\C{1_b}\;\mskip1.5mu]{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-Next we define the derivative operation on BRE in Agda. The difference betwen this definition 
+Next we define the derivative operation on BREs in Agda. The difference betwen this definition 
 and standard Brzozowski derivatives~\cite{Brzozowski1964} is that the former inserts parse tree
 information in terms of bit annotations. For example, consider \ensuremath{\C{cat}\;\V{bs}\;\V{l}\;\V{r}} where \ensuremath{\C{\lbrack\:\rbrack}\;\D{\in\langle}\;\V{l}\;\D{\rangle}}, additional
 parse information is built from a nullability test result using functions \ensuremath{\F{mkEps}} and \ensuremath{\F{fuse}}.
 For Kleene star operation we record the start of a new iteration fusing \ensuremath{[\mskip1.5mu \;\C{0_b}\;\mskip1.5mu]} and we mark a start of a
-new matching interation by attaching the empty list in \ensuremath{\C{star}\;\C{\lbrack\:\rbrack}\;\V{e}}.
+new matching iteration by attaching the empty list in \ensuremath{\C{star}\;\C{\lbrack\:\rbrack}\;\V{e}}.
 
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -1465,23 +1449,18 @@ From this definition we prove the following important properties of
 the derivative operation: soundness of \ensuremath{\F{∂[\_,\_]}} ensures that if a
 string \ensuremath{\V{xs}} is in the language of \ensuremath{\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\F{]}}, then
 \ensuremath{(\V{x}\;\C{::}\;\V{xs})\;\D{\in\langle}\;\V{e}\;\D{\rangle}} holds. Completeness ensures that the
-other direction of the implication holds.
+other direction of the implication holds. Both are proved by induction 
+on the structure of \ensuremath{\V{e}}.
 
 \begin{Theorem}[Derivative operation soundness]\label{derivsound}
 For all BREs \ensuremath{\V{e}}, all strings \ensuremath{\V{xs}} and all symbols \ensuremath{\V{x}}, if
 \ensuremath{\V{xs}\;\D{\in\langle}\;\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\F{]}\;\D{\rangle}} holds then \ensuremath{(\V{x}\;\C{::}\;\V{xs})\;\D{\in\langle}\;\V{e}\;\D{\rangle}} holds.
 \end{Theorem}
-\begin{proof}
-  By induction on the structure of \ensuremath{\V{e}}.
-\end{proof}
 
 \begin{Theorem}[Derivative operation completeness]\label{derivcomplete}
 For all BREs \ensuremath{\V{e}}, all strings \ensuremath{\V{xs}} and all symbols \ensuremath{\V{x}}, if
 \ensuremath{(\V{x}\;\C{::}\;\V{xs})\;\D{\in\langle}\;\V{e}\;\D{\rangle}} holds then \ensuremath{\V{xs}\;\D{\in\langle}\;\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\F{]}\;\D{\rangle}} holds.
 \end{Theorem}
-\begin{proof}
-  By induction on the structure of \ensuremath{\V{e}}.
-\end{proof}
 
 \subsection{Parsing}
 
@@ -1496,7 +1475,6 @@ strings \ensuremath{\V{ys}} and \ensuremath{\V{zs}} such that \ensuremath{\V{xs}
 Definition of \ensuremath{\D{IsPrefix}} datatype encode this concept. Datatype
 \ensuremath{\D{IsSubstr}} specifies when a BRE \ensuremath{\V{e}} matches a substring in \ensuremath{\V{xs}}:
 there must exist strings \ensuremath{\V{ys}}, \ensuremath{\V{zs}} and \ensuremath{\V{ws}} such that \ensuremath{\V{xs}\;\D{\equiv}\;\V{ys}\;\F{++}\;\V{zs}\;\F{++}\;\V{ws}} and \ensuremath{\V{zs}\;\D{\in\langle}\;\V{e}\;\D{\rangle}} hold.
-
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{3}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -1516,38 +1494,35 @@ there must exist strings \ensuremath{\V{ys}}, \ensuremath{\V{zs}} and \ensuremat
 \ColumnHook
 \end{hscode}\resethooks
 Using these datatypes we can define the following relevant properties
-of prefixes and substrings.
-
+of prefixes and substrings that are used to fill proof obligations present in 
+decidability tests. All these lemmas are direct consequences of prefix and substring definitions.
 \begin{Lemma}[Lemma \ensuremath{\F{¬IsPrefix}}]\label{pref1}
   For all BREs \ensuremath{\V{e}}, if \ensuremath{\C{\lbrack\:\rbrack}\;\D{\in\langle}\;\V{e}\;\D{\rangle}} does not hold then neither does \ensuremath{\D{IsPrefix}\;\C{\lbrack\:\rbrack}\;\V{e}}. 
 \end{Lemma}
-\begin{proof}
-  Immediate from the definition of \ensuremath{\D{IsPrefix}} and properties of list concatenation.
-\end{proof}
-
+%\begin{proof}
+%  Immediate from the definition of |IsPrefix| and properties of list concatenation.
+%\end{proof}
 \begin{Lemma}[Lemma \ensuremath{\F{¬IsPrefix-::}}]\label{pref2}
   For all BREs \ensuremath{\V{e}} and all strings \ensuremath{\V{xs}}, if \ensuremath{\C{\lbrack\:\rbrack}\;\D{\in\langle}\;\V{e}\;\D{\rangle}} and \ensuremath{\D{IsPrefix}\;\V{xs}\;\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\F{]}} do not hold then
   neither does \ensuremath{\D{IsPrefix}\;(\V{x}\;\C{::}\;\V{xs})\;\V{e}}.
 \end{Lemma}
-\begin{proof}
-  Immediate from the definition of \ensuremath{\D{IsPrefix}} and Theorem \ref{derivcomplete}.
-\end{proof}
-
+%\begin{proof}
+%  Immediate from the definition of |IsPrefix| and Theorem \ref{derivcomplete}.
+%\end{proof}
 \begin{Lemma}[Lemma \ensuremath{\F{¬IsSubstring}}]\label{sub1}
   For all BREs \ensuremath{\V{e}}, if \ensuremath{\D{IsPrefix}\;\C{\lbrack\:\rbrack}\;\V{e}} does not hold then neither does \ensuremath{\D{IsSubstr}\;\C{\lbrack\:\rbrack}\;\V{e}}.
 \end{Lemma}
-\begin{proof}
-  Immediate from the definitions of \ensuremath{\D{IsPrefix}} and \ensuremath{\D{IsSubstr}}.
-\end{proof}
-
+%\begin{proof}
+%  Immediate from the definitions of |IsPrefix| and |IsSubstring|.
+%\end{proof}
 \begin{Lemma}[Lemma \ensuremath{\F{¬IsSubstring-::}}]
   For all strings \ensuremath{\V{xs}}, all symbols \ensuremath{\V{x}} and all BREs \ensuremath{\V{e}}, if \ensuremath{\D{IsPrefix}\;(\V{x}\;\C{::}\;\V{xs})\;\V{e}} 
   and \ensuremath{\D{IsSubstr}\;\V{xs}\;\V{e}} do not hold
   then neither does \ensuremath{\D{IsSubstr}\;(\V{x}\;\C{::}\;\V{xs})\;\V{e}}.
 \end{Lemma}
-\begin{proof}
-  Immediate from the definitions of \ensuremath{\D{IsPrefix}} and \ensuremath{\D{IsSubstr}}.
-\end{proof}
+%\begin{proof}
+%  Immediate from the definitions of |IsPrefix| and |IsSubstring|.
+%\end{proof}
 
 
 Function \ensuremath{\F{IsPrefixDec}} decides if a given BRE \ensuremath{\V{e}} matches a prefix in
@@ -1634,10 +1609,10 @@ returning such substring or a proof that it does not exist.
 \ColumnHook
 \end{hscode}\resethooks
 
-Previously defined functions for computing prefixes and substrings use BRE
-derivatives. Definitions and properties of functions for prefix and substring computation
-are given in folders \texttt{Prefix} and \texttt{Substring}, in the project's on-line
-repository~\cite{regex-rep}.
+%Previously defined functions for computing prefixes and substrings use BRE
+%derivatives. Definitions and properties of functions for prefix and substring computation
+%are given in folders \texttt{Prefix} and \texttt{Substring}, in the project's on-line
+%repository~\cite{regex-rep}.
 
 \section{Implementation Details and Experiments}\label{sec:exp}
 
@@ -1648,7 +1623,7 @@ combinator library for parsing RE syntax, using the Agda Standard
 Library and its support for calling Haskell functions through its
 foreign function interface.
 
-Experimentation with our tool, involved a comparison
+Experimentation with our tool involved a comparison
 of its performance with GNU Grep~\cite{Grep} (grep), Google regular
 expression library re2~\cite{re2} and Haskell RE parsing algorithms
 haskell-regexp, described in~\cite{Fischer2010}. The experiments consider
@@ -1684,7 +1659,7 @@ and~\ref{fig:graph2}, respectively.
 Our tool behaves poorly when compared with all other options
 considered. The cause of this inefficiency needs further
 investigation, since the algorithm formalized uses POSIX 
-disambiguation strategy, which avoid quotienting the result of derivative
+disambiguation strategy, which avoids quotienting the result of derivative
 operations w.r.t. ACUI axioms, as usual Brzozowski derivatives. 
 The main reason behind POSIX and greedy disambiguation strategies in 
 derivative based parsing is to improve efficiency by eliminating 
@@ -1768,7 +1743,7 @@ prover, of a combinator parsing library. A parser generator for such
 combinators is described and a proof that generated parsers are sound
 and complete is presented.  According to Ridge, preliminary results
 shows that parsers built using his generator are faster than those
-created by Happy parser generator~\cite{Happy}.
+created by the Happy parser generator~\cite{Happy}.
 
 Ausaf et. al.~\cite{AusafDU16} describe a formalization, in
 Isabelle/HOL~\cite{Nipkow02}, of the POSIX matching algorithm proposed
@@ -1785,16 +1760,24 @@ parsing for REs in Agda. To the best of our knowledge, this is the first work
 that presents a complete verification of a bit-code based parsing algorithm 
 and that uses it to in a tool for RE-based search.
 
-The formalized algorithm has 381 lines of code, organized in 2
-modules. We have proven 18 theorems and lemmas to complete the
-development. Most of them are immediate pattern matching functions
-over inductive datatypes and were omitted from this text for brevity.
-The verigrep tool has 3 parsing algorithms formalized in 1526 lines of code, 
-distributed in 22 modules.
+%The formalized algorithm has 381 lines of code, organized in 2
+%modules. We have proven 18 theorems and lemmas to complete the
+%development. Most of them are immediate pattern matching functions
+%over inductive datatypes and were omitted from this text for brevity.
+%The verigrep tool has 3 parsing algorithms formalized in 1526 lines of code, 
+%distributed in 22 modules.
 
 As future work, we intend to continue the development of verigrep by
 certifying greedy and POSIX disambiguation strategies and finite state machine
 based algorithms for parsing RE.
+
+\begin{acks}
+We thank the anonymous reviewers for their comments. 
+This work was conducted during a scholarship supported by PNPD at 
+Universidade Federal de Pelotas, RS - Brazil. Financed by CAPES, Brazilian 
+Federal Agency for Support and Evaluation of Graduate Education within the 
+Ministry of Education of Brazil.
+\end{acks}
 
 % \section*{References}
 \bibliographystyle{ACM-Reference-Format}
