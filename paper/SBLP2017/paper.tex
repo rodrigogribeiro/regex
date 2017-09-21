@@ -370,7 +370,7 @@ We describe the formalization of a regular expression (RE) parsing
 algorithm that produces a bit representation of its parse tree
 in the dependently typed language Agda. The algorithm computes
 bit-codes using Brzozowski derivatives and we prove that 
-produced codes are equivalent to parse trees ensuring the 
+produced codes are equivalent to parse trees ensuring  
 soundness and completeness w.r.t an inductive RE semantics.
 We include the certified algorithm in a tool developed by us, 
 named verigrep, for regular expression based search in the style 
@@ -469,9 +469,9 @@ Sulzmann et. al.~\cite{SulzmannL14} designed a RE derivative-based algorithm
 that incrementally builds a list of bits instead of a tree as parsing result. In both works
 no machine checked proof was provided and Sulzmann et. al. informal proof ``has some unfillable gaps'', 
 as pointed by Ausaf et. al. which proved that Sulzmann et. al. algorithm produces POSIX parse trees 
-in Isabelle/HOL~\cite{AusafDU16}. In this work we are interested in provide fully 
-certified correctness proofs of Sulzmann et. al. derivative based parsing algorithm that 
-produces a bit sequence equivalent to traditional parse trees and we use it 
+in Isabelle/HOL~\cite{AusafDU16}. In this work we are interested in providing fully 
+certified correctness proofs of Sulzmann et. al. derivative based parsing algorithm. The certified 
+algorithm produces a bit sequence equivalent to traditional parse trees and we use it 
 in a RE based search tool that has been developed by us, using the dependently typed language
 Agda~\cite{Norell2009}. Unlike Ausaf et. al., we do not provide mechanized proofs which ensure
 that our formalization produces POSIX parse trees. We leave such proof for further work.
@@ -530,7 +530,7 @@ theory~\cite{Sorensen2006}.
 An ordinary (non-dependent) function type is written \ensuremath{\V{A}\;\to \;\V{B}} and a
 dependent one is written \ensuremath{(\V{x}\;\mathbin{:}\;\V{A})\;\to \;\V{B}}, where type \ensuremath{\V{B}} depends on
 \ensuremath{\V{x}}, or \ensuremath{\D{\forall}\;(\V{x}\;\mathbin{:}\;\V{A})\;\to \;\V{B}}. Agda allows the definition of \emph{implicit
-parameters}, i.e.  parameters whose value can be infered from the
+parameters}, i.e.  parameters whose values can be infered from the
 context, by surrounding them in curly braces: \ensuremath{\D{\forall}\;\{\mskip1.5mu \V{x}\;\mathbin{:}\;\V{A}\mskip1.5mu\}\;\to \;\V{B}}. To
 avoid clutter, we'll omit implicit arguments from the source code
 presentation. The reader can safely assume that every free variable in
@@ -646,7 +646,7 @@ in Agda is as follows:
 \ColumnHook
 \end{hscode}\resethooks
 A value of type \ensuremath{\D{\Sigma}\;\V{A}\;\V{B}} corresponds to a pair formed by a value \ensuremath{\V{x}} of type \ensuremath{\V{A}} and 
-a value of type \ensuremath{\V{B}\;\V{x}}. Note that second component type depends on the value of the first 
+a value of type \ensuremath{\V{B}\;\V{x}}. Note that the second component type depends on the value of the first 
 component. Under proposition-as-types interpretation, dependent products are equivalent
 to existential quantification, since values of dependent products are formed by a value \ensuremath{\V{x}\;\mathbin{:}\;\V{A}},
 which can be understood as a witness of existential quantification, and a value \ensuremath{\V{B}\;\V{x}}, which
@@ -948,7 +948,7 @@ Let \ensuremath{\V{xs}} be a string and \ensuremath{\V{e}} a RE s.t. \ensuremath
 
 We follow the encoding of Nielsen et. al.~\cite{Nielsen2011} that uses bit marks to
 register which branch was chosen in a parse tree for a union operator, \ensuremath{\C{+}}, and the beginning 
-and end of matches that corresponds to a Kleene star. Note that no marking is needed
+and end of matches that correspond to a Kleene star. Note that no marking is needed
 for concatenation and single character since coding and decoding of bit sequences are directed 
 by the underlining RE. 
 
@@ -1002,7 +1002,7 @@ RE \ensuremath{\V{e}}.
 The empty string and single character RE are both represented by empty bit lists. 
 Codes for RE \ensuremath{\V{l}\;\C{\bullet}\;\V{r}} are built by concatenating codes of \ensuremath{\V{l}} and \ensuremath{\V{r}}. In RE union operator, \ensuremath{\C{+}}, 
 the bit \ensuremath{\C{0_b}} marks that the parse tree for \ensuremath{\V{l}\;\C{+}\;\V{r}} is built from \ensuremath{\V{l}}'s and bit \ensuremath{\C{1_b}} that it is
-built from \ensuremath{\V{r}}'s. For Kleene star, we use bit \ensuremath{\C{1_b}} to denote the parse tree for the empty string and
+built from \ensuremath{\V{r}}'s. For the Kleene star, we use bit \ensuremath{\C{1_b}} to denote the parse tree for the empty string and
 bit \ensuremath{\C{0_b}} to begin matchings of \ensuremath{\V{l}} in a parse tree for \ensuremath{\V{l}\;\C{\star}}.
  
 
@@ -1406,7 +1406,7 @@ Next we define the derivative operation on BREs in Agda. The difference betwen t
 and standard Brzozowski derivatives~\cite{Brzozowski1964} is that the former inserts parse tree
 information in terms of bit annotations. For example, consider \ensuremath{\C{cat}\;\V{bs}\;\V{l}\;\V{r}} where \ensuremath{\C{\lbrack\:\rbrack}\;\D{\in\langle}\;\V{l}\;\D{\rangle}}, additional
 parse information is built from a nullability test result using functions \ensuremath{\F{mkEps}} and \ensuremath{\F{fuse}}.
-For Kleene star operation we record the start of a new iteration fusing \ensuremath{[\mskip1.5mu \;\C{0_b}\;\mskip1.5mu]} and we mark a start of a
+For the Kleene star operation we record the start of a new iteration fusing \ensuremath{[\mskip1.5mu \;\C{0_b}\;\mskip1.5mu]} and we mark a start of a
 new matching iteration by attaching the empty list in \ensuremath{\C{star}\;\C{\lbrack\:\rbrack}\;\V{e}}.
 
 \begin{hscode}\SaveRestoreHook
@@ -1658,9 +1658,9 @@ and~\ref{fig:graph2}, respectively.
 
 Our tool behaves poorly when compared with all other options
 considered. The cause of this inefficiency needs further
-investigation, since the algorithm formalized uses POSIX 
+investigation, since the algorithm formalized uses the POSIX 
 disambiguation strategy, which avoids quotienting the result of derivative
-operations w.r.t. ACUI axioms, as usual Brzozowski derivatives. 
+operations w.r.t. ACUI axioms as usual Brzozowski derivatives. 
 The main reason behind POSIX and greedy disambiguation strategies in 
 derivative based parsing is to improve efficiency by eliminating 
 simplification steps on derivatives result~\cite{SulzmannL14}. We leave 
@@ -1755,10 +1755,10 @@ verified algorithm are reported.
 
 \section{Conclusion}\label{sec:conclusion}
 
-We have given a complete formalization of a Bit-coded derivative-based 
+We have given a complete formalization of a bit-coded derivative-based 
 parsing for REs in Agda. To the best of our knowledge, this is the first work
 that presents a complete verification of a bit-code based parsing algorithm 
-and that uses it to in a tool for RE-based search.
+and uses it in a tool for RE-based search.
 
 %The formalized algorithm has 381 lines of code, organized in 2
 %modules. We have proven 18 theorems and lemmas to complete the

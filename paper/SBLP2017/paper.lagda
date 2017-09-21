@@ -124,7 +124,7 @@ We describe the formalization of a regular expression (RE) parsing
 algorithm that produces a bit representation of its parse tree
 in the dependently typed language Agda. The algorithm computes
 bit-codes using Brzozowski derivatives and we prove that 
-produced codes are equivalent to parse trees ensuring the 
+produced codes are equivalent to parse trees ensuring  
 soundness and completeness w.r.t an inductive RE semantics.
 We include the certified algorithm in a tool developed by us, 
 named verigrep, for regular expression based search in the style 
@@ -230,9 +230,9 @@ Sulzmann et. al.~\cite{SulzmannL14} designed a RE derivative-based algorithm
 that incrementally builds a list of bits instead of a tree as parsing result. In both works
 no machine checked proof was provided and Sulzmann et. al. informal proof ``has some unfillable gaps'', 
 as pointed by Ausaf et. al. which proved that Sulzmann et. al. algorithm produces POSIX parse trees 
-in Isabelle/HOL~\cite{AusafDU16}. In this work we are interested in provide fully 
-certified correctness proofs of Sulzmann et. al. derivative based parsing algorithm that 
-produces a bit sequence equivalent to traditional parse trees and we use it 
+in Isabelle/HOL~\cite{AusafDU16}. In this work we are interested in providing fully 
+certified correctness proofs of Sulzmann et. al. derivative based parsing algorithm. The certified 
+algorithm produces a bit sequence equivalent to traditional parse trees and we use it 
 in a RE based search tool that has been developed by us, using the dependently typed language
 Agda~\cite{Norell2009}. Unlike Ausaf et. al., we do not provide mechanized proofs which ensure
 that our formalization produces POSIX parse trees. We leave such proof for further work.
@@ -295,7 +295,7 @@ theory~\cite{Sorensen2006}.
 An ordinary (non-dependent) function type is written |A -> B| and a
 dependent one is written |(x : A) -> B|, where type |B| depends on
 |x|, or |forall (x : A) -> B|. Agda allows the definition of \emph{implicit
-parameters}, i.e.  parameters whose value can be infered from the
+parameters}, i.e.  parameters whose values can be infered from the
 context, by surrounding them in curly braces: |forall {x : A} -> B|. To
 avoid clutter, we'll omit implicit arguments from the source code
 presentation. The reader can safely assume that every free variable in
@@ -391,7 +391,7 @@ data Sig {a b}(A : Set a)(B : A -> Set b) : Set (a lmax b) where
   _,_ : (x : A) -> B x -> Sig A B
 \end{spec}
 A value of type |Sig A B| corresponds to a pair formed by a value |x| of type |A| and 
-a value of type |B x|. Note that second component type depends on the value of the first 
+a value of type |B x|. Note that the second component type depends on the value of the first 
 component. Under proposition-as-types interpretation, dependent products are equivalent
 to existential quantification, since values of dependent products are formed by a value |x : A|,
 which can be understood as a witness of existential quantification, and a value |B x|, which
@@ -614,7 +614,7 @@ Let |xs| be a string and |e| a RE s.t. |xs <<-[[ e ]]|. Then |flat (unflat prf) 
 %format star-:: = "\C{star-::}"
 We follow the encoding of Nielsen et. al.~\cite{Nielsen2011} that uses bit marks to
 register which branch was chosen in a parse tree for a union operator, |+|, and the beginning 
-and end of matches that corresponds to a Kleene star. Note that no marking is needed
+and end of matches that correspond to a Kleene star. Note that no marking is needed
 for concatenation and single character since coding and decoding of bit sequences are directed 
 by the underlining RE. 
 
@@ -640,7 +640,7 @@ RE |e|.
 The empty string and single character RE are both represented by empty bit lists. 
 Codes for RE |l * r| are built by concatenating codes of |l| and |r|. In RE union operator, |+|, 
 the bit |zero| marks that the parse tree for |l + r| is built from |l|'s and bit |one| that it is
-built from |r|'s. For Kleene star, we use bit |one| to denote the parse tree for the empty string and
+built from |r|'s. For the Kleene star, we use bit |one| to denote the parse tree for the empty string and
 bit |zero| to begin matchings of |l| in a parse tree for |l **|.
  
 %format decode' = "\F{decode}"
@@ -913,7 +913,7 @@ Next we define the derivative operation on BREs in Agda. The difference betwen t
 and standard Brzozowski derivatives~\cite{Brzozowski1964} is that the former inserts parse tree
 information in terms of bit annotations. For example, consider |cat bs l r| where |[] <<-<< l >>|, additional
 parse information is built from a nullability test result using functions |mkEps| and |fuse|.
-For Kleene star operation we record the start of a new iteration fusing |[ zero ]| and we mark a start of a
+For the Kleene star operation we record the start of a new iteration fusing |[ zero ]| and we mark a start of a
 new matching iteration by attaching the empty list in |star [] e|.
 
 \begin{spec}
@@ -1111,9 +1111,9 @@ and~\ref{fig:graph2}, respectively.
 
 Our tool behaves poorly when compared with all other options
 considered. The cause of this inefficiency needs further
-investigation, since the algorithm formalized uses POSIX 
+investigation, since the algorithm formalized uses the POSIX 
 disambiguation strategy, which avoids quotienting the result of derivative
-operations w.r.t. ACUI axioms, as usual Brzozowski derivatives. 
+operations w.r.t. ACUI axioms as usual Brzozowski derivatives. 
 The main reason behind POSIX and greedy disambiguation strategies in 
 derivative based parsing is to improve efficiency by eliminating 
 simplification steps on derivatives result~\cite{SulzmannL14}. We leave 
@@ -1208,10 +1208,10 @@ verified algorithm are reported.
 
 \section{Conclusion}\label{sec:conclusion}
 
-We have given a complete formalization of a Bit-coded derivative-based 
+We have given a complete formalization of a bit-coded derivative-based 
 parsing for REs in Agda. To the best of our knowledge, this is the first work
 that presents a complete verification of a bit-code based parsing algorithm 
-and that uses it to in a tool for RE-based search.
+and uses it in a tool for RE-based search.
 
 %The formalized algorithm has 381 lines of code, organized in 2
 %modules. We have proven 18 theorems and lemmas to complete the
