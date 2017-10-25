@@ -14,7 +14,7 @@ module regex where
 \usepackage{amssymb}
 \usepackage{url}
 \usepackage{stmaryrd}
-\usepackage{ifpdf}
+\usepackage{ifpdf, proof}
 \ifpdf
   \usepackage{hyperref}
 \fi
@@ -38,7 +38,8 @@ module regex where
 
 \newtheorem{Lemma}{Lemma}
 \newtheorem{Theorem}{Theorem}
-
+\theoremstyle{definition}
+\newtheorem{Example}{Example}
 
 \usepackage{color}
 \newcommand{\redFG}[1]{\textcolor[rgb]{0.6,0,0}{#1}}
@@ -99,8 +100,9 @@ module regex where
 
 \author[rgr]{Rodrigo Ribeiro}
 \cortext[rgr]{Corresponding author}
-\address{Dep. de Computa\c{c}\~ao e Sistemas, Universidade
-  Federal de Ouro Preto, \newline ICEA, Jo\~ao Monlevade, Minas Gerais, Brasil}
+\address{Dep. de Computa\c{c}\~ao, Universidade
+Federal de Ouro Preto, ICEB, \newline Campus Universit\'ario Morro do
+Cruzeiro, Ouro Preto, Minas Gerais, Brasil}
 \ead{rodrigo@@decsi.ufop.br}
 
 \author{Raul Lopes}
@@ -165,7 +167,7 @@ of specifying RLs that are extensively used in lexical analyser
 generators~\cite{Lesk1990} and string search utilities~\cite{Grep}.
 Since such tools are widely used and parsing is pervasive in
 computing, there is a growing interest on certified parsing
-algorithms~\cite{FirsovU13,FirsovU14,Danielsson2010}.  This interest
+algorithms~\cite{FirsovU13,Firsov14,Danielsson2010}.  This interest
 is motivated by the recent development of dependently typed
 languages. Such languages are powerful enough to express algorithmic
 properties as types, that are automatically checked by a compiler.
@@ -174,13 +176,15 @@ The use of derivatives for regular expressions were introduced by
 Brzozowski~\cite{Brzozowski1964} as an alternative method to compute a
 finite state machine that is equivalent to a given RE and to perform
 RE-based parsing. According to Owens et. al~\cite{Owens2009},
-``derivatives have been lost in the sands of time'' until his work on
-functional encoding of RE derivatives have renewed interest on its use
+``derivatives have been lost in the sands of time'' until their work on
+functional encoding of RE derivatives have renewed interest on their use
 for parsing~\cite{Might2011,Fischer2010}.  In this work, we provide a
 complete formalization of an algorithm for RE parsing using
-derivatives \cite{Owens2009}, and describe a RE based search tool that
-has been developed by us, using the dependently typed language
-Agda~\cite{Norell2009}.
+derivatives \cite{Owens2009}, and describe a RE based search tool we developed by 
+using the dependently typed language
+Agda~\cite{Norell2009}. We want to emphasize that what we call ``RE parsing''
+is the problem of finding all prefixes and substrings of a input that matches
+a given RE, as in RE based text search tools as GNU-grep~\cite{Grep}.
 
 More specifically, our contributions are:
 \begin{itemize}
@@ -190,20 +194,17 @@ More specifically, our contributions are:
     string is in the language of the input RE or a witness that such
     parse tree does not exist.
 
-  \item A detailed explanation of the technique used to quotient
-    derivatives with respect to ACUI axioms\footnote{Axioms, for REs,
-      of Associativity, Commutativity and Idempotence with Unit
-      elements~\cite{Brzozowski1964}.} in an implementation by Owens
-    et al.~\cite{Owens2009}, called ``smart-constructors'', and its
-    proof of correctness. We give formal proofs that smart
-    constructors indeed preserve the language recognized by REs.
+  \item A detailed explanation of the technique used to simplify
+    derivatives using ``smart-constructors''~\cite{Owens2009}.
+    We give formal proofs that smart constructors indeed preserve
+    the language recognized by REs.
 
-  \item A formalization of Antimirov's derivatives and its use to
+  \item A formalization of Antimirov's partial derivatives and their use to
     construct a RE parsing algorithm. The main difference between
     partial derivatives and Brzozowski's is that the former computes a
     set of REs using set operators instead of ``smart-constructors''.
-    Producing a set of REs avoids the need of quotienting the
-    resulting REs w.r.t. ACUI axioms.
+    Producing a set of REs avoids the need of simplification using
+    smart constructors.
 \end{itemize}
 
 This paper extends our SBLP 2016 paper~\cite{Lopes2016} by formalizing
@@ -241,8 +242,8 @@ out where all details can be found in the source code.
 %format Bool = "\D{Bool}"
 
 Agda is a dependently-typed functional programming language based on
-Martin-L\"oef intuitionistic type theory~\cite{Lof98}.  Function types
-and an infinite hierarchy of types of types, |Set l|, where |l| is a
+Martin-L\"of intuitionistic type theory~\cite{Lof98}.  Function types
+and an infinite hierarchy of types, |Set l|, where |l| is a
 natural number, are built-in. Everything else is a user-defined
 type. The type |Set|, also known as |Set0|, is the type of all
 ``small'' types, such as |Bool|, |String| and |List Bool|.  The type
@@ -273,8 +274,15 @@ length-indexed lists, also known as vectors.
     []  : Vec A zero
     _::_ : ∀ {n} -> A -> Vec A n -> Vec A (succ n)
 \end{code}
+The |Vec| type uses some interesting concepts. 
+First, |Vec| is \emph{parameterized} by a type |A : Set|, which means that 
+in every occurrence of |Vec| its parameter |A| should not change. Second, 
+the type of |Vec A| is |Nat -> Set|, i.e.
+|Vec A| is a family of types indexed by natural numbers. 
+For each natural number |n|, |Vec A n| is a type. 
+
 %format head = "\F{head}"
-Constructor |[]| builds empty vectors. The cons-operator (|_::_|)
+In |Vec| definition, the constructor |[]| builds empty vectors. The cons-operator (|_::_|)
 inserts a new element in front of a vector of $n$ elements (of type
 |Vec A n|) and returns a value of type |Vec A (succ n)|. The
 |Vec| datatype is an example of a dependent type, i.e. a type
@@ -296,7 +304,23 @@ that argument |[]| to |head| is not type-correct.
 
 Thanks to the propositions-as-types principle\footnote{Also known as
   Curry-Howard ``isomorphism''~\cite{Sorensen2006}.} we can interpret
-types as logical formulas and terms as proofs. An example is the
+types as logical formulas and terms as proofs. We can encode logical
+disjunction as the following Agda type:
+%format inj₁ = "\C{inj_1}"
+%format inj₂ = "\C{inj_2}"
+%format _⊎_    = "\D{\_\lor\_}"
+%format ⊎ = "\D{\lor}"
+
+\begin{code}
+   data _⊎_ (A B : Set) : Set where
+     inj₁ : A -> A ⊎ B
+     inj₂ : B -> A ⊎ B
+\end{code}    
+Note that each constructor of the previous data type represent how
+we can build evidence for the proposition |A ⊎ B|: using constructor
+|inj₁| together with an evidence for |A| or using constructor |inj₂| and 
+evidence for |B|. Intuitively, type |_⊎_| encodes the intuitionistic intepretation
+of disjunction. Another important example is the
 representation of equality as the following Agda type:
 
 \begin{code}
@@ -326,7 +350,7 @@ holds. The decidable proposition type is defined as:
 \begin{spec}
   data Dec (P : Set) : Set where
      yes : P -> Dec P
-     no  : not P -> Dec p
+     no  : not P -> Dec P
 \end{spec}
 Constructor |yes| stores a proof that property |P| holds
 and constructor |no| an evidence that such proof is impossible. Some functions
@@ -351,7 +375,7 @@ by the type-checker.
 \begin{spec}
 data Parity : Nat -> Set where
    Even : ∀ {n : Nat} -> Parity (n + n)
-   Odd  : ∀ {n : Nat} -> Parity (S (n + n))
+   Odd  : ∀ {n : Nat} -> Parity (succ (n + n))
 
 parity : (n : Nat) -> Parity n
 parity = -- definition omitted
@@ -386,7 +410,7 @@ deals with propositional equality for primitive types, like
 concrete primitive values; this causes computation of proofs to stop
 under variables whose type is a primitive one. Thus, we decided to use
 the inductive type |Nat| to represent the codes of alphabet
-symbols. In our Agda formalization, we represent alphabet symbols using type |Char|.
+symbols. In our Agda formalization, in contrast, we represent alphabet symbols using type |Char|.
 
 %format Regex = "\D{Regex}"
 %format Eps = "\C{\epsilon}"
@@ -414,7 +438,7 @@ Datatype |Regex| encodes RE syntax.
 \end{spec}
 Constructors |∅| and |Eps| denote respectively the
 empty language ($\emptyset$) and the empty string ($\epsilon$). Alphabet
-symbols are constructed by using the |#| constructor. Bigger REs are
+symbols are constructed by using the |#| constructor. Composite REs are
 built using concatenation (|∙|), union (|+|) and
 Kleene star (|⋆|).
 
@@ -429,14 +453,70 @@ Kleene star (|⋆|).
 %format +L = "\C{+L}"
 %format +R = "\C{+R}"
 
-The following datatype defines RE semantics inductively, i.e.~each of
-its constructor specifies how to build a parse tree for some string
-and some RE.
+We define RE semantics as the inductively defined judgment $s \in e$, 
+which means that string $s$ in is the language denoted by RE $e$.
+\[
+    \begin{array}{ccc}
+        \infer[_{Eps}]{\epsilon \in \epsilon}{}
+        & 
+        \infer[_{Chr}]{a \in a}{}
+        &
+        \infer[_{Cat}]{ss' \in ee'}
+                      {s \in e & s' \in e'} \\ \\
+        \infer[_{Left}]{s \in e + e'}
+                       {s \in e} & 
+        \infer[_{Right}]{s \in e + e'}
+                        {s \in e'} &
+        \infer[_{StarBase}]{\epsilon \in e^\star}{} \\ \\ 
+        \multicolumn{3}{c}{
+            \infer[_{StarRec}]
+                  {ss' \in e^\star}
+                  {s \in e & s' \in e^\star}
+        }
+    \end{array}
+\]
+Rule $Eps$ specifies that only the empty string is accepted by RE $\epsilon$, while 
+rule $Chr$ says that a single character string is accepted by the RE formed by this
+character. The rules for concatenation and choice are straightforward. For Kleene star, 
+we need two rules: the first specifies that the empty string is in the language of RE $e^\star$ and 
+rule $StarRec$ says that the string $ss'$ is in the language denoted by $e^\star$ if 
+$s \in e$ and $s' \in e^\star$.
+
+\begin{Example}
+    The string $aab$ is in the language of RE $(aa + b)^\star$, as the following derivation shows:
+    \[
+        \infer[_{StarRec}]{aab \in (aa + b)^\star}
+              {
+                  \infer[_{Left}]{aa \in aa + b}
+                        {
+                            \infer[_{Cat}]{aa \in aa}
+                                  {
+                                      \infer[_{Chr}]{a \in a}{} &
+                                      \infer[_{Chr}]{a \in a}{}
+                                  }
+                        }
+                  & 
+                  \infer[_{StarRec}]{b \in (aa + b)^\star}
+                        {
+                            \infer[_{Right}]{b \in aa + b}
+                                  {
+                                      \infer[_{Chr}]{b \in b}{}
+                                  }
+                            & 
+                            \infer[_{StarBase}]{\epsilon \in (aa + b)^\star}{}
+                        }          
+              }
+    \]
+\end{Example}
+In our formalization, we represent strings as values of type |List Char| and we encode the RE semantics
+as an inductive data type in which each constructor represents a rule for the previously defined semantics.
+Agda allows the overloading of constructor names. In some cases we use the same symbol for 
+the RE syntax and its underlying semantics.
 
 \begin{spec}
   data _<<-[[_]] : List Char -> Regex -> Set where
     Eps : [] <<-[[ Eps ]]
-    #_  : (c : Char) -> # c <<-[[ # c ]]
+    #_  : (a : Char) -> [ a ] <<-[[ # a ]]
     _∙_=>_ : xs <<-[[ l ]]  -> ys <<-[[ r ]]  -> zs == xs ++ ys -> zs <<-[[ l ∙ r ]]
     _+L_ : (r : Regex) -> xs <<-[[ l ]] -> xs <<-[[ l + r ]]
     _+R_ : (l : Regex) -> xs <<-[[ r ]] -> xs <<-[[ l + r ]]
@@ -453,16 +533,45 @@ for |# a|. Given parse trees for REs
 |_∙_=>_| can be used to build a parse tree
 for the concatenation of these REs.  Constructor
 |_+L_| (|_+R_|) creates a parse tree
-for |l + r| from a parse tree from |l| (|r|). Parse trees for Kleene star
+for |l + r| from a parse tree for |l| (|r|). Parse trees for Kleene star
 are built using the following well known equivalence of REs: $e^\star
 = \epsilon + e\,e^\star$.
 
 Several inversion lemmas about RE parsing relation are necessary for
 derivative-based parsing formalization. They consist of
 pattern-matching on proofs of
-\ensuremath{\D{\_\in\llbracket\_\rrbracket}} and are omitted for
-brevity.
+\ensuremath{\D{\_\in\llbracket\_\rrbracket}}. As an example, below we present the inversion 
+lemma for choice operator.
 
+%format ∈+-invert = "\F{+invert}"
+%format inj₁ = "\C{inj_1}"
+%format inj₂ = "\C{inj_2}"
+%format ⊎    = "\D{\lor}"
+\begin{spec}
+  ∈+-invert : ∀ {xs l r} → xs <<-[[ l + r ]] → xs <<-[[ l ]] ⊎ xs <<-[[ r ]]
+  ∈+-invert (r +L pr) = inj₁ pr
+  ∈+-invert (l +R pr) = inj₂ pr    
+\end{spec}    
+
+%format []∈∙-invert = "\F{∙-invert}"
+%format ** = "\D{\times}"
+%format :: = "\C{::}"
+%format #-invert = "\F{charInvert}"
+
+Intuitively, function |∈+-invert| specifies that if is the case that |xs <<-[[ l + r ]]| then
+the string |xs| matches the RE |l| or it matches the RE |r|. Another inversion lemma 
+(function |#-invert|) specifies that 
+if a string |x :: xs| matches the RE |# y| then the input string must be a single character string, 
+i.e. |xs == []| and |x == y|.
+
+\begin{spec}
+  #-invert : ∀ {x y xs} → x :: xs <<-[[ # y ]] → x == y ** xs == []
+  #-invert (# c) = refl , refl
+\end{spec}    
+
+In our formalization we have define other inversions lemmas for RE semantics relation. They follow the same
+structure of the previously defined lemmas --- they produce, as result, the necessary conditions for a RE semantics 
+proof to hold --- and are omitted for brevity.
 
 \section{Derivatives, Smart Constructors and Parsing}\label{sec:deriv}
 
@@ -512,9 +621,9 @@ or not the empty string (by returning |Eps| or |∅|, respectively):
 %format ]> = "\F{]}"
 %format proj₁ = "\F{\pi_1}"
 %format proj₂ = "\F{\pi_2}"
-%format ∈+-invert = "\F{∈+-invert}"
-%format []∈∙-invert = "\F{[]∈∙-invert}"
-Decidability of $\nu(e)$ is proved by function |nuu[ e ]|,
+%format +invert = "\F{+invert}"
+%format ∙invert = "\F{∙invert}"
+Decidability of $\nu(e)$ is proved by function |nuu[_]|,
 which is defined by induction over the structure of the input RE
 |e| and returns a proof that the empty string is accepted or
 not, using Agda type of decidable propositions, |Dec P|.
@@ -525,23 +634,23 @@ not, using Agda type of decidable propositions, |Dec P|.
   nuu[ # x ]> = no (\ ())
   nuu[ e ∙ e' ]> with nuu[ e ]> | nuu[ e' ]>
   nuu[ e ∙ e' ]> | yes pr | (yes pr1) = yes (pr ∙ pr1 ⇒ refl)
-  nuu[ e ∙ e' ]> | yes pr | (no ¬pr1) = no (¬pr1 ∘ proj₂ ∘ []∈∙-invert)
-  nuu[ e ∙ e' ]> | no ¬pr | pr1 = no (¬pr ∘ proj₁ ∘ []∈∙-invert)
+  nuu[ e ∙ e' ]> | yes pr | (no ¬pr1) = no (¬pr1 ∘ proj₂ ∘ ∙invert)
+  nuu[ e ∙ e' ]> | no ¬pr | pr1 = no (¬pr ∘ proj₁ ∘ ∙invert)
   nuu[ e + e' ]> with nuu[ e ]> | nuu[ e' ]>
   nuu[ e + e' ]> | yes pr | pr1 = yes (e' +L pr)
   nuu[ e + e' ]> | no ¬pr | (yes pr1) = yes (e +R pr1)
-  nuu[ e + e' ]> | no ¬pr | (no ¬pr1) = no ( [ ¬pr , ¬pr1 ] ∘ ∈+-invert)
+  nuu[ e + e' ]> | no ¬pr | (no ¬pr1) = no ( [ ¬pr , ¬pr1 ] ∘ +invert)
   nuu[ e ⋆ ]> = yes ((e ∙ e ⋆ +L Eps) ⋆) 
 \end{spec}
-The definition of |nuu[_]| uses several inversion lemmas about
-RE semantics. Lemma |[]∈∙-invert| states that if the empty string
-is in the language of |l ∙ r| (where |l| and |r| are arbitrary RE's)
+The definition of |nuu[_]| uses some of the inversion lemmas about
+RE semantics. Lemma |∙invert| states that if the empty string
+is in the language of |l ∙ r| (where |l| and |r| are arbitrary REs)
 then the empty string belongs to |l| and |r|'s languages.
 Lemma |∈+-invert| is defined similarly for union.
 
 \subsection{Smart Constructors}\label{sec:smart}
 
-In order to define Brzozowski derivatives, we follow Owens et. al.~\cite{Owens2009}, we use
+In order to define Brzozowski derivatives, we follow Owens et. al.~\cite{Owens2009}. We use
 smart constructors to identify equivalent REs modulo identity and nullable
 elements, $\epsilon$ and $\emptyset$, respectively. RE equivalence is
 denoted by $e \approx e'$ and it's defined as usual~\cite{Hopcroft2000}.
@@ -576,7 +685,8 @@ The equivalence axioms maintained by smart constructors are:
 %format `⋆ = "\F{`⋆}"
 
 These axioms are kept as invariants using functions that preserve them
-while building REs. For union, we just need to worry when one
+while building REs. As a convention, we name smart constructors by 
+prefixing a back quote to the constructor name. For union, we just need to worry when one
 parameter denotes the empty language:
 \begin{spec}
   _`+_ : (e e' : Regex) → Regex
@@ -607,76 +717,71 @@ Since all smart constructors produce equivalent REs, they preserve the
 parsing relation. This property is stated below as a soundness and
 completeness lemma of each smart constructor with respect to RE
 membership proofs.
-\begin{Lemma}[Soundness of union]
-For all REs |e|, |e'| and all strings |xs|, if
-|xs <<-[[ e `+ e' ]] | holds then |xs <<-[[ e + e' ]] | also holds.
+\begin{Lemma}[Soundness and completeness of union]
+For all REs |e|, |e'| and all strings |xs|,
+|xs <<-[[ e `+ e' ]] | holds if and only if, |xs <<-[[ e + e' ]] | also holds.
 \end{Lemma}
 \begin{proof}
-  By case analysis on the structure of |e| and |e'|. The
+  \begin{itemize}
+      \item[]
+      \item[($\to$)]: By case analysis on the structure of |e| and |e'|. The
   only interesting cases are when one of the expressions is
   |∅|. If |e = ∅|, then |∅ `+ e' = e'| and
   the desired result follows. The same reasoning applies for |e'
   = ∅|.
-\end{proof}
-\begin{Lemma}[Completeness of union]
-For all REs |e|, |e'| and all strings |xs|, if
-|xs <<-[[ e + e' ]] | holds then |xs <<-[[ e `+ e' ]] | also holds.
-\end{Lemma}
-\begin{proof}
-   By case analysis on the structure of |e|, |e'|. The
+      \item[($\leftarrow$)]: By case analysis on the structure of |e|, |e'|. The
    only interesting cases are when one of the REs is |∅|.  If
    |e = ∅|, we need to analyse the structure of
    |xs <<-[[ e + e' ]] |. The result follows directly or by
    contradiction using |xs <<-[[ ∅ ]] |. The same reasoning
    applies when |e' = ∅|.
+  \end{itemize}          
 \end{proof}
-\begin{Lemma}[Soundness of concatenation]
-For all REs |e|, |e'| and all strings |xs|, if
-|xs <<-[[ e `∙ e' ]] | holds then | xs <<-[[ e ∙ e' ]] |
+\begin{Lemma}[Soundness and completeness of concatenation]
+For all REs |e|, |e'| and all strings |xs|,
+|xs <<-[[ e `∙ e' ]]| holds if and only if, | xs <<-[[ e ∙ e' ]] |
 also holds.
 \end{Lemma}
 \begin{proof}
+    \item[]
+    \item[($\to$)]:
   By case analysis on the structure of |e|, |e'|. The
   interesting cases are when |e| or |e'| are equal to
   |Eps| or |∅|. When some of the REs are equal to
   |∅|, the result follows by contradiction. If one of the REs
   are equal to |Eps| the desired result is immediate, from the
-  proof term |xs <<-[[ e `∙ e' ]] |, using list concatenation
+  proof term |xs <<-[[ e `∙ e' ]]|, using list concatenation
   properties.
-\end{proof}
-\begin{Lemma}[Completeness of concatenation]
-For all REs |e|, |e'| and all strings |xs|, if
-| xs <<-[[ e ∙ e' ]] | holds then | xs <<-[[ e `∙ e' ]] | also holds.
-\end{Lemma}
-\begin{proof}
+  \item[($\leftarrow$)]:
   By case analysis on the structure of |e|, |e'|. The
   interesting cases are when |e| or |e'| are equal to
   |Eps| or |∅|. When some of the REs are equal to
   |∅|, the result follows by contradiction. If one of the REs
   are equal to |Eps| the desired result is immediate.
 \end{proof}  
-\begin{Lemma}[Soundness of Kleene star]
-For all REs |e| and string |xs|, if
-|xs <<-[[  e `⋆ ]] | then |xs <<-[[ e ⋆ ]] |.
+\begin{Lemma}[Soundness and completeness of Kleene star]
+For all REs |e| and string |xs|,
+|xs <<-[[  e `⋆ ]]| holds if and only if, |xs <<-[[ e ⋆ ]]| also holds.
 \end{Lemma}
 \begin{proof}
-  Straightforward case analysis on |e|'s structure.
-\end{proof}
-\begin{Lemma}[Completeness of Klenne star]
-For all REs |e| and all strings |xs|, if |xs <<-[[ e ⋆ ]] |
-holds then |xs <<-[[  e `⋆ ]] | also holds.
-\end{Lemma}
-\begin{proof}
-  Straightforward case analysis on |e|'s structure.
+  Both directions follows by straightforward case analysis on |e|'s structure.
 \end{proof}
 
 All definitions of smart constructors and their properties are
 contained in \texttt{Smart.agda}, in the project's on-line
 repository~\cite{regex-rep}.
 
-\subsection{Brzozowski Derivatives and its Properties}
+\subsection{Brzozowski Derivatives and their Properties}
 
-The derivative of a RE with respect to a symbol $a$, denoted by
+Intuitively, the derivative of a language $L$ w.r.t. a symbol $a$, $L_a$, is the 
+set of strings generated by stripping the leading $a$ from the strings in $L$
+that start with $a$. Formally:  
+\[
+   L_a = \{ w \,\mid\, aw \in L \}
+\]
+Regular languages are closed under the derivative operation and Janusz Brzozowski defined a
+elegant method for computing derivatives for RE in~\cite{Brzozowski1964}. 
+Formally, the derivative of a RE $e$ with respect to a symbol $a$, denoted by
 $\partial_a(e)$, is defined by recursion on $e$'s structure as
 follows:
 
@@ -695,6 +800,18 @@ follows:
   \partial_a(e^\star) & = & \partial_a(e)\,e^\star\\
 \end{array}
 \]
+
+\begin{Example}
+    Consider the RE $e = (aa + b)^\star$. The derivative of $e$ w.r.t. $a$ is $a(aa + b)^\star$, as demonstrated below:
+    \begin{align*}
+        \partial_a((aa + b)^\star) &= \partial_a(aa + b)\,(aa + b)^\star\\ 
+                                   &= \left\lbrack \partial_a (aa) + \partial_a(b)\right\rbrack\,(aa + b)^\star\\
+                                   &= \left\lbrack a + \emptyset \right\rbrack\, (aa + b)^\star \\
+                                   &= a(aa + b)^\star
+    \end{align*}
+\end{Example}    
+
+
 %format ∂[_,_] = "\F{∂[\_,\_]}"
 %format ∂[ = "\F{∂[}"
 %format =?= = "\F{\overset{?}{=}}"
@@ -753,8 +870,8 @@ RE derivatives were introduced by Brzozowski to construct a DFA (deterministic
 finite automata) from a given RE. Partial derivatives were introduced by
 Antimirov as a method to construct a NFA (non-deterministic finite automata).
 The main insight of partial derivatives for building NFAs is building a set
-of REs which collectively accepts the same strings as Brzozowski derivatives.
-Algebraic properties of set operations ensures that ACUI equations holds.
+of REs which collectively accept the same strings as Brzozowski derivatives.
+Algebraic properties of set operations ensures that ACUI equations hold.
 Below, we present function $\nabla_a(e)$ which computes the set of partial
 derivatives from a given RE |e| and a symbol |a|.
 
@@ -770,33 +887,46 @@ derivatives from a given RE |e| and a symbol |a|.
                                 \right.\\
   \nabla_a(e\:e') & = & \left \{
                            \begin{array}{lr}
-                              \partial_a(e) \odot e' \cup \partial_a(e') & \text{if }\nu(e) = \epsilon \\
-                              \partial_a(e) \odot e' & \text{otherwise} \\
+                              \nabla_a(e) \odot e' \cup \nabla_a(e') & \text{if }\nu(e) = \epsilon \\
+                              \nabla_a(e) \odot e' & \text{otherwise} \\
                            \end{array} \right . \\
   \nabla_a(e + e') & = & \nabla_a(e) \cup \nabla_a(e') \\
   \nabla_a(e^\star) & = & \nabla_a(e) \odot e^\star\\
 \end{array}
 \]
-
 Function $\nabla_a(e)$ uses the operator $S \odot e'$ which concatenates RE |e'| at the right of every $e \in S$:
 
 \[
   S \odot e' = \{e ∙ e'\,\mid\, e \in S\}
 \]
+
+\begin{Example}
+    Consider the RE $e = (aa + b)^\star$. The set of partial derivatives of $e$ w.r.t. $a$ is 
+    $\{a(aa + b)^\star\}$ as demonstrated below:
+    \begin{align*}
+        \nabla_a((aa + b)^\star) &= \nabla_a(aa + b) \odot (aa + b)^\star \\
+                                 &= \left\lbrack \nabla_a(aa) \cup \nabla_a(b)\right\rbrack \odot (aa + b)^\star \\
+                                 &= \left\{\left\lbrack \nabla_a(a) \odot a \cup \emptyset\right\rbrack \right\}\odot (aa + b)^\star \\
+                                 &= \left\{\left\lbrack \{\epsilon\} \odot a \cup \emptyset\right\rbrack \right\}\odot (aa + b)^\star \\
+                                 &= \{a\} \odot (aa + b)^\star \\
+                                 &= \{a(aa + b)^\star\}
+    \end{align*}
+\end{Example}    
+
 %format _**_ = "\F{\_\odot\_}"
 %format ** = "\F{\odot}"
 %format naa[ = "\F{\nabla[}"
 %format naa[_,_] = "\F{\nabla[\_,\_]}"
 %format Regexes = "\D{Regexes}"
-Our agda implementation models sets as lists of regular expressions.
+Our Agda implementation models sets as lists of regular expressions.
 \begin{spec}
   Regexes = List Regex
 \end{spec}
 The operator that concatenates a RE at the right of every $e \in S$ is defined by induction on $S$:
 \begin{spec}
-  _**_ : Regex → Regexes → Regexes
-  e ** [] = []
-  e ** (e' :: es) = (e' ∙ e) :: (e ** es)
+  _**_ : Regexes → Regex → Regexes
+  [] ** e = []
+  (e' :: es') ** e = (e' ∙ e) :: (es' ** e)
 \end{spec}
 Definition of a function to compute partial derivatives for a given RE is defined as a direct
 translation of mathematical notation to Agda code:
@@ -894,10 +1024,60 @@ repository~\cite{regex-rep}.
 
 \subsection{Parsing}
 
-RE parsing involves determining which prefixes and substrings of the
-input string match a given RE. For this, we define datatypes that
+Assume that we are given an RE $e$ and a string $s$ and we want to 
+determine if $s \in e$. We can use RE derivatives for building such a 
+test by extending the definition of derivatives to strings as follows~\cite{Owens2009}:
+\[
+    \begin{array}{lcl}
+        \widehat{\partial}_\epsilon(e) & = & e\\
+        \widehat{\partial}_{as}(e)     & = & \widehat{\partial}_s(\partial_a(e))
+    \end{array}
+\]
+Note that, $s \in e$ if, and only if, $\epsilon \in \widehat{\partial}_s(e)$, which is true whenever 
+$\nu(\widehat{\partial}_s(e)) = \epsilon$. Owens et. al. define a relation between strings and RE, called
+the \emph{matching} relation, defined as:
+\[
+    \begin{array}{lcl}
+        e \sim \epsilon & \Leftrightarrow & \nu(e) \\
+        e \sim as       & \Leftrightarrow & \partial_a(e) \sim s
+    \end{array}
+\] 
+A simple inductive proof shows that $s \in e$ if, and only if, $e \sim s$. 
+
+\begin{Example}
+    Suppose $e = (aa + b)^\star$ and the string $aab$. We can show that 
+    $aab \in e$ using the previously defined matching relation as follows:
+    \begin{align*}
+        (aa + b)^\star \sim aab & \Leftrightarrow \partial_a (aa + b) (aa + b)^\star \sim ab \\
+                                & \Leftrightarrow a(aa + b)^\star \sim ab \\
+                                & \Leftrightarrow \partial_a(a(aa + b)^\star) \sim b \\
+                                & \Leftrightarrow (aa + b)^\star \sim b \\
+                                & \Leftrightarrow \partial_b(aa + b)(aa + b)^\star \sim \epsilon\\
+                                & \Leftrightarrow (aa + b)^\star \sim \epsilon \\
+                                & \Leftrightarrow \nu((aa + b)^\star) = \epsilon \text{ which is true.}\\ 
+    \end{align*}
+    
+    The same idea can be used to show that a string isn't in the language of some RE. Now consider again
+    the RE $e = (aa + b)^\star$ and the string $abb$:
+    \begin{align*}
+        (aa + b)^\star \sim abb & \Leftrightarrow \partial_a (aa + b) (aa + b)^\star \sim bb \\
+                                & \Leftrightarrow a(aa + b)^\star \sim bb \\
+                                & \Leftrightarrow \partial_b (a(aa+ b)^\star) \sim b \\
+                                & \Leftrightarrow \partial_b(a)(aa + b)^\star \sim b \\
+                                & \Leftrightarrow \emptyset\,(aa + b)^\star \sim b   \\
+                                & \Leftrightarrow \emptyset \sim b                   \\
+                                & \Leftrightarrow \partial_b(\emptyset) \sim \epsilon \\
+                                & \Leftrightarrow \nu(\emptyset) = \epsilon \text{ which is false.}\\
+    \end{align*}    
+\end{Example}    
+
+For our purposes, understanding
+RE parsing as a matching relation isn't adequate because RE-based text search tools, like GNU-grep, shows
+every matching prefix and substring of a RE for a given input.
+Since our interest is determining which prefixes and substrings of the
+input string match a given RE, we define datatypes that
 represent the fact that a given RE matches a prefix or a substring of
-a given string.
+some string.
 
 %format IsPrefix = "\D{IsPrefix}"
 %format Prefix = "\C{Prefix}"
@@ -910,10 +1090,12 @@ a given string.
 
 We say that RE |e| matches a prefix of string |xs| if there exist
 strings |ys| and |zs| such that |xs == ys ++ zs| and |ys <<-[[ e ]]
-|. Definition of |IsPrefix| datatype encode this concept. Datatype
+|. Definition of |IsPrefix| datatype encodes this concept. Datatype
 |IsSubstring| specifies when a RE |e| matches a substring in |xs|:
 there must exist strings |ys|, |zs| and |ws| such that |xs == ys ++ zs
-++ ws| and |zs <<-[[ e ]] | hold.
+++ ws| and |zs <<-[[ e ]] | hold. We could represent prefix and substring 
+predicates using dependent products, but for code clarity we choose to 
+define the types |IsPrefix| and |IsSubstring|.
 
 \begin{spec}
   data IsPrefix (xs : List Char)(e : Regex) : Set where
@@ -923,7 +1105,7 @@ there must exist strings |ys|, |zs| and |ws| such that |xs == ys ++ zs
     Substring :  xs == ys ++ zs ++ ws -> zs <<-[[ e ]] -> IsSubstring xs e
 \end{spec}
 Using these datatypes we can define the following relevant properties
-of prefixes and substrings.
+of prefixes and substrings. 
 
 \begin{Lemma}[Lemma |¬IsPrefix|]\label{pref1}
   For all REs |e|, if |[] <<-[[ e ]]| does not hold then neither does |IsPrefix [] e|. 
@@ -969,7 +1151,7 @@ prefix. Otherwise, it verifies, for each symbol |x|, whether RE |∂[ e , x ]>|
 matches a prefix of the input string. If this is the case, a prefix
 including |x| is built from a recursive call to |IsPrefixDec| or if no
 prefix is matched a proof of such impossibility is constructed using
-lemma |¬IsPrefix-::|.
+lemma \ref{pref2}.
 
 \begin{spec}
   IsPrefixDec : ∀ (xs : List Char)(e : Regex) → Dec (IsPrefix xs e)
@@ -987,7 +1169,7 @@ lemma |¬IsPrefix-::|.
 %format IsSubstringDec = "\F{IsSubstringDec}"
 
 Function |IsSubstringDec| is also defined by induction on the
-structure of the input string |e|, using |IsPrefixDec| to check
+structure of the input string |xs|, using |IsPrefixDec| to check
 whether it is possible to match a prefix of |e|. In this case, a
 substring is built from this prefix. If there's no such prefix, a
 recursive call is made to check if there is a substring match,
@@ -1059,8 +1241,8 @@ and~\ref{fig:graph2}, respectively.
 
 Our tool behaves poorly when compared with all other options
 considered. The cause of this inefficiency needs further
-investigation, but we envisaged that it can be be due to the
-following: 1) Our algorithm relies on the Brzozowski definition for RE
+investigation, but we envisaged that it can be due to the
+following: 1) Our algorithm relies on the Brzozowski's definition for RE
 parsing, which needs to quotient resulting REs. 2) We use lists to
 represent sets of Antimirov's partial derivatives. We believe that
 usage of better data structures to represent sets and using
@@ -1103,26 +1285,26 @@ efficiency of the proposed algorithm, Sulzmann et al. use a bit
 encoded representation of RE parse trees. Textual proofs of
 correctness of the proposed algorithm are presented in an appendix.
 
-\paragraph{Certified parsing algorithms}. Certified algorithms for
+\paragraph{Certified parsing algorithms} Certified algorithms for
 parsing also received attention recently. Firsov et al.~describe a
 certified algorithm for RE parsing by converting an input RE to an
 equivalent NFA represented as a boolean matrix~\cite{FirsovU13}. A
 matrix library based on some ``block'' operations~\cite{MacedoO13} is
 developed and used Agda formalization of NFA-based parsing
-{Norell2009}. Compared to our work, a NFA-based formalization requires
-a lot more infrastructure (such as a Matrix library). No experiments
+~\cite{Norell2009}. Compared to our work, a NFA-based formalization requires
+much more infrastructure (such as a Matrix library). No experiments
 with the certified algorithm were reported.
 
 Firsov describes an Agda formalization of a parsing algorithm that
 deals with any CFG (CYK algorithm)~\cite{Firsov2014}. Bernardy
 et al.~describe a formalization of another CFG parsing algorithm in
 Agda~\cite{BernardyJ16}: Valiant's algorithm~\cite{Valiant1975}, which
-reduces CFG parsing to boolean matrix multiplication. In both works,
+reduces a CFG parsing problem to boolean matrix multiplication. In both works,
 no experiment with formalized parsing algorithms were reported.
 
 A certified LR(1) CFG validator is described
 in~\cite{Jourdan2012}. The formalized checking procedure verifies if
-CFG and an automaton match. They proved soundness and completeness of
+a CFG and an automaton match. They proved soundness and completeness of
 the validator in the Coq proof
 assistant~\cite{Bertot2010}. Termination of the LR(1) automaton
 interpreter is ensured by imposing a natural number bound on
@@ -1145,7 +1327,7 @@ Ridge~\cite{Ridge2011} describes a formalization, in the HOL4 theorem
 prover, of a combinator parsing library. A parser generator for such
 combinators is described and a proof that generated parsers are sound
 and complete is presented.  According to Ridge, preliminary results
-shows that parsers built using his generator are faster than those
+show that parsers built using his generator are faster than those
 created by Happy parser generator~\cite{Happy}.
 
 Ausaf et. al.~\cite{AusafDU16} describe a formalization, in
@@ -1158,7 +1340,7 @@ verified algorithm are reported.
 
 \section{Conclusion}\label{sec:conclusion}
 
-We have given a complete formalization of a derivative-based parsing
+We gave a complete formalization of a derivative-based parsing
 for REs in Agda. To the best of our knowledge, this is the first work
 that presents a complete certification and that uses the certified
 program to build a tool for RE-based search.
@@ -1177,9 +1359,8 @@ obtain a formalized but simple and efficient RE parsing tool.
 support. Second author thanks Fundação de Amparo a
 Pesquisa de Minas Gerais (FAPEMIG) for financial support.
 
-% \section*{References}
+\section*{References}
 
 \bibliography{main}
 
 \end{document}
-

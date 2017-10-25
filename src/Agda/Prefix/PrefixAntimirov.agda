@@ -3,6 +3,7 @@ open import Algebra
 open import Data.Char
 open import Data.List                               hiding (any)
 open import Data.List.Any
+open import Data.List.Any.Membership.Propositional
 open import Data.List.Properties
 open import Data.Product
 

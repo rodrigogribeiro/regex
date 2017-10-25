@@ -9,7 +9,7 @@
 \usepackage{amssymb}
 \usepackage{url}
 \usepackage{stmaryrd}
-\usepackage{ifpdf}
+\usepackage{ifpdf, proof}
 \ifpdf
   \usepackage{hyperref}
 \fi
@@ -285,7 +285,8 @@
 
 \newtheorem{Lemma}{Lemma}
 \newtheorem{Theorem}{Theorem}
-
+\theoremstyle{definition}
+\newtheorem{Example}{Example}
 
 \usepackage{color}
 \newcommand{\redFG}[1]{\textcolor[rgb]{0.6,0,0}{#1}}
@@ -342,6 +343,25 @@
 
 \title{Certified Derivative-Based Parsing of\\ Regular Expressions}
 
+%% Group authors per affiliation:
+
+\author[rgr]{Rodrigo Ribeiro}
+\cortext[rgr]{Corresponding author}
+\address{Dep. de Computa\c{c}\~ao, Universidade
+Federal de Ouro Preto, ICEB, \newline Campus Universit\'ario Morro do
+Cruzeiro, Ouro Preto, Minas Gerais, Brasil}
+\ead{rodrigo@decsi.ufop.br}
+
+\author{Raul Lopes}
+\address{Dep. de Computa\c{c}\~ao, Universidade
+  Federal de Ouro Preto, ICEB, \newline Campus Universit\'ario Morro do
+  Cruzeiro, Ouro Preto, Minas Gerais, Brasil}
+\ead{raulfpl@gmail.com}
+
+\author{Carlos Camar\~ao}
+\address{Dep. de Ci\^encia da Computa\c{c}\~ao, Universidade Federal
+  de Minas Gerais, \newline Av. Ant\^onio Carlos 6627, Belo Horizonte, Minas Gerais, Brasil}
+\ead{camarao@dcc.ufmg.br}
 
 \begin{abstract}
 
@@ -381,7 +401,7 @@ of specifying RLs that are extensively used in lexical analyser
 generators~\cite{Lesk1990} and string search utilities~\cite{Grep}.
 Since such tools are widely used and parsing is pervasive in
 computing, there is a growing interest on certified parsing
-algorithms~\cite{FirsovU13,FirsovU14,Danielsson2010}.  This interest
+algorithms~\cite{FirsovU13,Firsov14,Danielsson2010}.  This interest
 is motivated by the recent development of dependently typed
 languages. Such languages are powerful enough to express algorithmic
 properties as types, that are automatically checked by a compiler.
@@ -390,13 +410,15 @@ The use of derivatives for regular expressions were introduced by
 Brzozowski~\cite{Brzozowski1964} as an alternative method to compute a
 finite state machine that is equivalent to a given RE and to perform
 RE-based parsing. According to Owens et. al~\cite{Owens2009},
-``derivatives have been lost in the sands of time'' until his work on
-functional encoding of RE derivatives have renewed interest on its use
+``derivatives have been lost in the sands of time'' until their work on
+functional encoding of RE derivatives have renewed interest on their use
 for parsing~\cite{Might2011,Fischer2010}.  In this work, we provide a
 complete formalization of an algorithm for RE parsing using
-derivatives \cite{Owens2009}, and describe a RE based search tool that
-has been developed by us, using the dependently typed language
-Agda~\cite{Norell2009}.
+derivatives \cite{Owens2009}, and describe a RE based search tool we developed by 
+using the dependently typed language
+Agda~\cite{Norell2009}. We want to emphasize that what we call ``RE parsing''
+is the problem of finding all prefixes and substrings of a input that matches
+a given RE, as in RE based text search tools as GNU-grep~\cite{Grep}.
 
 More specifically, our contributions are:
 \begin{itemize}
@@ -406,20 +428,17 @@ More specifically, our contributions are:
     string is in the language of the input RE or a witness that such
     parse tree does not exist.
 
-  \item A detailed explanation of the technique used to quotient
-    derivatives with respect to ACUI axioms\footnote{Axioms, for REs,
-      of Associativity, Commutativity and Idempotence with Unit
-      elements~\cite{Brzozowski1964}.} in an implementation by Owens
-    et al.~\cite{Owens2009}, called ``smart-constructors'', and its
-    proof of correctness. We give formal proofs that smart
-    constructors indeed preserve the language recognized by REs.
+  \item A detailed explanation of the technique used to simplify
+    derivatives using ``smart-constructors''~\cite{Owens2009}.
+    We give formal proofs that smart constructors indeed preserve
+    the language recognized by REs.
 
-  \item A formalization of Antimirov's derivatives and its use to
+  \item A formalization of Antimirov's partial derivatives and their use to
     construct a RE parsing algorithm. The main difference between
     partial derivatives and Brzozowski's is that the former computes a
     set of REs using set operators instead of ``smart-constructors''.
-    Producing a set of REs avoids the need of quotienting the
-    resulting REs w.r.t. ACUI axioms.
+    Producing a set of REs avoids the need of simplification using
+    smart constructors.
 \end{itemize}
 
 This paper extends our SBLP 2016 paper~\cite{Lopes2016} by formalizing
@@ -455,8 +474,8 @@ out where all details can be found in the source code.
 
 
 Agda is a dependently-typed functional programming language based on
-Martin-L\"oef intuitionistic type theory~\cite{Lof98}.  Function types
-and an infinite hierarchy of types of types, \ensuremath{\D{Set}\;\V{l}}, where \ensuremath{\V{l}} is a
+Martin-L\"of intuitionistic type theory~\cite{Lof98}.  Function types
+and an infinite hierarchy of types, \ensuremath{\D{Set}\;\V{l}}, where \ensuremath{\V{l}} is a
 natural number, are built-in. Everything else is a user-defined
 type. The type \ensuremath{\D{Set}}, also known as \ensuremath{\D{Set}_{\D{0}}}, is the type of all
 ``small'' types, such as \ensuremath{\D{Bool}}, \ensuremath{\D{String}} and \ensuremath{\D{List}\;\D{Bool}}.  The type
@@ -501,7 +520,14 @@ length-indexed lists, also known as vectors.
 \>[5]{}\V{\char95 ::\char95 }\;\mathbin{:}\;\V{∀}\;\{\mskip1.5mu \V{n}\mskip1.5mu\}\;\to \;\V{A}\;\to \;\D{Vec}\;\V{A}\;\V{n}\;\to \;\D{Vec}\;\V{A}\;(\C{suc}\;\V{n}){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-Constructor \ensuremath{\C{\lbrack\:\rbrack}} builds empty vectors. The cons-operator (\ensuremath{\V{\char95 ::\char95 }})
+The \ensuremath{\D{Vec}} type uses some interesting concepts. 
+First, \ensuremath{\D{Vec}} is \emph{parameterized} by a type \ensuremath{\V{A}\;\mathbin{:}\;\D{Set}}, which means that 
+in every occurrence of \ensuremath{\D{Vec}} its parameter \ensuremath{\V{A}} should not change. Second, 
+the type of \ensuremath{\D{Vec}\;\V{A}} is \ensuremath{\D{\mathbb{N}}\;\to \;\D{Set}}, i.e.
+\ensuremath{\D{Vec}\;\V{A}} is a family of types indexed by natural numbers. 
+For each natural number \ensuremath{\V{n}}, \ensuremath{\D{Vec}\;\V{A}\;\V{n}} is a type. 
+
+In \ensuremath{\D{Vec}} definition, the constructor \ensuremath{\C{\lbrack\:\rbrack}} builds empty vectors. The cons-operator (\ensuremath{\V{\char95 ::\char95 }})
 inserts a new element in front of a vector of $n$ elements (of type
 \ensuremath{\D{Vec}\;\V{A}\;\V{n}}) and returns a value of type \ensuremath{\D{Vec}\;\V{A}\;(\C{suc}\;\V{n})}. The
 \ensuremath{\D{Vec}} datatype is an example of a dependent type, i.e. a type
@@ -525,7 +551,28 @@ that argument \ensuremath{\C{\lbrack\:\rbrack}} to \ensuremath{\F{head}} is not 
 
 Thanks to the propositions-as-types principle\footnote{Also known as
   Curry-Howard ``isomorphism''~\cite{Sorensen2006}.} we can interpret
-types as logical formulas and terms as proofs. An example is the
+types as logical formulas and terms as proofs. We can encode logical
+disjunction as the following Agda type:
+
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{4}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{6}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[4]{}\mathkw{data}\;\D{\_\lor\_}\;(\V{A}\;\V{B}\;\mathbin{:}\;\D{Set})\;\mathbin{:}\;\D{Set}\;\mathkw{where}{}\<[E]%
+\\
+\>[4]{}\hsindent{2}{}\<[6]%
+\>[6]{}\C{inj_1}\;\mathbin{:}\;\V{A}\;\to \;\V{A}\;\D{\lor}\;\V{B}{}\<[E]%
+\\
+\>[4]{}\hsindent{2}{}\<[6]%
+\>[6]{}\C{inj_2}\;\mathbin{:}\;\V{B}\;\to \;\V{A}\;\D{\lor}\;\V{B}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Note that each constructor of the previous data type represent how
+we can build evidence for the proposition \ensuremath{\V{A}\;\D{\lor}\;\V{B}}: using constructor
+\ensuremath{\C{inj_1}} together with an evidence for \ensuremath{\V{A}} or using constructor \ensuremath{\C{inj_2}} and 
+evidence for \ensuremath{\V{B}}. Intuitively, type \ensuremath{\D{\_\lor\_}} encodes the intuitionistic intepretation
+of disjunction. Another important example is the
 representation of equality as the following Agda type:
 
 \begin{hscode}\SaveRestoreHook
@@ -559,7 +606,7 @@ holds. The decidable proposition type is defined as:
 \\
 \>[3]{}\hsindent{3}{}\<[6]%
 \>[6]{}\C{no}\;{}\<[10]%
-\>[10]{}\mathbin{:}\;\F{\neg}\;\V{P}\;\to \;\D{Dec}\;\V{p}{}\<[E]%
+\>[10]{}\mathbin{:}\;\F{\neg}\;\V{P}\;\to \;\D{Dec}\;\V{P}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
 Constructor \ensuremath{\C{yes}} stores a proof that property \ensuremath{\V{P}} holds
@@ -597,7 +644,7 @@ by the type-checker.
 \\
 \>[B]{}\hsindent{4}{}\<[4]%
 \>[4]{}\C{Odd}\;{}\<[9]%
-\>[9]{}\mathbin{:}\;\V{∀}\;\{\mskip1.5mu \V{n}\;\mathbin{:}\;\D{\mathbb{N}}\mskip1.5mu\}\;\to \;\D{Parity}\;(\V{S}\;(\V{n}\;\F{+}\;\V{n})){}\<[E]%
+\>[9]{}\mathbin{:}\;\V{∀}\;\{\mskip1.5mu \V{n}\;\mathbin{:}\;\D{\mathbb{N}}\mskip1.5mu\}\;\to \;\D{Parity}\;(\C{suc}\;(\V{n}\;\F{+}\;\V{n})){}\<[E]%
 \\[\blanklineskip]%
 \>[B]{}\F{parity}\;\mathbin{:}\;(\V{n}\;\mathbin{:}\;\D{\mathbb{N}})\;\to \;\D{Parity}\;\V{n}{}\<[E]%
 \\
@@ -642,7 +689,7 @@ deals with propositional equality for primitive types, like
 concrete primitive values; this causes computation of proofs to stop
 under variables whose type is a primitive one. Thus, we decided to use
 the inductive type \ensuremath{\D{\mathbb{N}}} to represent the codes of alphabet
-symbols. In our Agda formalization, we represent alphabet symbols using type \ensuremath{\D{Char}}.
+symbols. In our Agda formalization, in contrast, we represent alphabet symbols using type \ensuremath{\D{Char}}.
 
 
 
@@ -681,14 +728,70 @@ Datatype \ensuremath{\D{Regex}} encodes RE syntax.
 \end{hscode}\resethooks
 Constructors \ensuremath{\C{\emptyset}} and \ensuremath{\C{\epsilon}} denote respectively the
 empty language ($\emptyset$) and the empty string ($\epsilon$). Alphabet
-symbols are constructed by using the \ensuremath{\C{\$}} constructor. Bigger REs are
+symbols are constructed by using the \ensuremath{\C{\$}} constructor. Composite REs are
 built using concatenation (\ensuremath{\C{∙}}), union (\ensuremath{\C{+}}) and
 Kleene star (\ensuremath{\C{\star}}).
 
 
-The following datatype defines RE semantics inductively, i.e.~each of
-its constructor specifies how to build a parse tree for some string
-and some RE.
+We define RE semantics as the inductively defined judgment $s \in e$, 
+which means that string $s$ in is the language denoted by RE $e$.
+\[
+    \begin{array}{ccc}
+        \infer[_{Eps}]{\epsilon \in \epsilon}{}
+        & 
+        \infer[_{Chr}]{a \in a}{}
+        &
+        \infer[_{Cat}]{ss' \in ee'}
+                      {s \in e & s' \in e'} \\ \\
+        \infer[_{Left}]{s \in e + e'}
+                       {s \in e} & 
+        \infer[_{Right}]{s \in e + e'}
+                        {s \in e'} &
+        \infer[_{StarBase}]{\epsilon \in e^\star}{} \\ \\ 
+        \multicolumn{3}{c}{
+            \infer[_{StarRec}]
+                  {ss' \in e^\star}
+                  {s \in e & s' \in e^\star}
+        }
+    \end{array}
+\]
+Rule $Eps$ specifies that only the empty string is accepted by RE $\epsilon$, while 
+rule $Chr$ says that a single character string is accepted by the RE formed by this
+character. The rules for concatenation and choice are straightforward. For Kleene star, 
+we need two rules: the first specifies that the empty string is in the language of RE $e^\star$ and 
+rule $StarRec$ says that the string $ss'$ is in the language denoted by $e^\star$ if 
+$s \in e$ and $s' \in e^\star$.
+
+\begin{Example}
+    The string $aab$ is in the language of RE $(aa + b)^\star$, as the following derivation shows:
+    \[
+        \infer[_{StarRec}]{aab \in (aa + b)^\star}
+              {
+                  \infer[_{Left}]{aa \in aa + b}
+                        {
+                            \infer[_{Cat}]{aa \in aa}
+                                  {
+                                      \infer[_{Chr}]{a \in a}{} &
+                                      \infer[_{Chr}]{a \in a}{}
+                                  }
+                        }
+                  & 
+                  \infer[_{StarRec}]{b \in (aa + b)^\star}
+                        {
+                            \infer[_{Right}]{b \in aa + b}
+                                  {
+                                      \infer[_{Chr}]{b \in b}{}
+                                  }
+                            & 
+                            \infer[_{StarBase}]{\epsilon \in (aa + b)^\star}{}
+                        }          
+              }
+    \]
+\end{Example}
+In our formalization, we represent strings as values of type \ensuremath{\D{List}\;\D{Char}} and we encode the RE semantics
+as an inductive data type in which each constructor represents a rule for the previously defined semantics.
+Agda allows the overloading of constructor names. In some cases we use the same symbol for 
+the RE syntax and its underlying semantics.
 
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -705,7 +808,7 @@ and some RE.
 \\
 \>[3]{}\hsindent{2}{}\<[5]%
 \>[5]{}\C{\$\_}\;{}\<[9]%
-\>[9]{}\mathbin{:}\;(\V{c}\;\mathbin{:}\;\D{Char})\;\to \;\C{\$}\;\V{c}\;\D{\in\llbracket}\;\C{\$}\;\V{c}\;\D{\rrbracket}{}\<[E]%
+\>[9]{}\mathbin{:}\;(\V{a}\;\mathbin{:}\;\D{Char})\;\to \;[\mskip1.5mu \;\V{a}\;\mskip1.5mu]\;\D{\in\llbracket}\;\C{\$}\;\V{a}\;\D{\rrbracket}{}\<[E]%
 \\
 \>[3]{}\hsindent{2}{}\<[5]%
 \>[5]{}\C{\_∙\_\Rightarrow\_}\;\mathbin{:}\;\V{xs}\;\D{\in\llbracket}\;\V{l}\;\D{\rrbracket}\;{}\<[29]%
@@ -733,16 +836,48 @@ for \ensuremath{\C{\$}\;\V{a}}. Given parse trees for REs
 \ensuremath{\C{\_∙\_\Rightarrow\_}} can be used to build a parse tree
 for the concatenation of these REs.  Constructor
 \ensuremath{\C{\_+L\_}} (\ensuremath{\C{\_+R\_}}) creates a parse tree
-for \ensuremath{\V{l}\;\C{+}\;\V{r}} from a parse tree from \ensuremath{\V{l}} (\ensuremath{\V{r}}). Parse trees for Kleene star
+for \ensuremath{\V{l}\;\C{+}\;\V{r}} from a parse tree for \ensuremath{\V{l}} (\ensuremath{\V{r}}). Parse trees for Kleene star
 are built using the following well known equivalence of REs: $e^\star
 = \epsilon + e\,e^\star$.
 
 Several inversion lemmas about RE parsing relation are necessary for
 derivative-based parsing formalization. They consist of
 pattern-matching on proofs of
-\ensuremath{\D{\_\in\llbracket\_\rrbracket}} and are omitted for
-brevity.
+\ensuremath{\D{\_\in\llbracket\_\rrbracket}}. As an example, below we present the inversion 
+lemma for choice operator.
 
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[3]{}\F{+invert}\;\mathbin{:}\;\V{∀}\;\{\mskip1.5mu \V{xs}\;\V{l}\;\V{r}\mskip1.5mu\}\;\V{→}\;\V{xs}\;\D{\in\llbracket}\;\V{l}\;\C{+}\;\V{r}\;\D{\rrbracket}\;\V{→}\;\V{xs}\;\D{\in\llbracket}\;\V{l}\;\D{\rrbracket}\;\D{\lor}\;\V{xs}\;\D{\in\llbracket}\;\V{r}\;\D{\rrbracket}{}\<[E]%
+\\
+\>[3]{}\F{+invert}\;(\V{r}\;\C{+L}\;\V{pr})\;\mathrel{=}\;\C{inj_1}\;\V{pr}{}\<[E]%
+\\
+\>[3]{}\F{+invert}\;(\V{l}\;\C{+R}\;\V{pr})\;\mathrel{=}\;\C{inj_2}\;\V{pr}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+
+Intuitively, function \ensuremath{\F{+invert}} specifies that if is the case that \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{l}\;\C{+}\;\V{r}\;\D{\rrbracket}} then
+the string \ensuremath{\V{xs}} matches the RE \ensuremath{\V{l}} or it matches the RE \ensuremath{\V{r}}. Another inversion lemma 
+(function \ensuremath{\F{charInvert}}) specifies that 
+if a string \ensuremath{\V{x}\;\C{::}\;\V{xs}} matches the RE \ensuremath{\C{\$}\;\V{y}} then the input string must be a single character string, 
+i.e. \ensuremath{\V{xs}\;\D{\equiv}\;\C{\lbrack\:\rbrack}} and \ensuremath{\V{x}\;\D{\equiv}\;\V{y}}.
+
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[3]{}\F{charInvert}\;\mathbin{:}\;\V{∀}\;\{\mskip1.5mu \V{x}\;\V{y}\;\V{xs}\mskip1.5mu\}\;\V{→}\;\V{x}\;\C{::}\;\V{xs}\;\D{\in\llbracket}\;\C{\$}\;\V{y}\;\D{\rrbracket}\;\V{→}\;\V{x}\;\D{\equiv}\;\V{y}\;\D{\times}\;\V{xs}\;\D{\equiv}\;\C{\lbrack\:\rbrack}{}\<[E]%
+\\
+\>[3]{}\F{charInvert}\;(\C{\$}\;\V{c})\;\mathrel{=}\;\C{refl}\;\red{,}\,\;\C{refl}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+In our formalization we have define other inversions lemmas for RE semantics relation. They follow the same
+structure of the previously defined lemmas --- they produce, as result, the necessary conditions for a RE semantics 
+proof to hold --- and are omitted for brevity.
 
 \section{Derivatives, Smart Constructors and Parsing}\label{sec:deriv}
 
@@ -787,7 +922,7 @@ or not the empty string (by returning \ensuremath{\C{\epsilon}} or \ensuremath{\
          \nu(e^\star) & = & \epsilon
     \end{array}
 \]
-Decidability of $\nu(e)$ is proved by function \ensuremath{\F{\nu[ }\;\V{e}\;\mskip1.5mu]},
+Decidability of $\nu(e)$ is proved by function \ensuremath{\F{\nu[\_]}},
 which is defined by induction over the structure of the input RE
 \ensuremath{\V{e}} and returns a proof that the empty string is accepted or
 not, using Agda type of decidable propositions, \ensuremath{\D{Dec}\;\V{P}}.
@@ -807,9 +942,9 @@ not, using Agda type of decidable propositions, \ensuremath{\D{Dec}\;\V{P}}.
 \\
 \>[3]{}\F{\nu[ }\;\V{e}\;\C{∙}\;\V{e'}\;\F{]}\;\mid \;\C{yes}\;\V{pr}\;\mid \;(\C{yes}\;\V{pr1})\;\mathrel{=}\;\C{yes}\;(\V{pr}\;\C{∙}\;\V{pr1}\;\V{⇒}\;\C{refl}){}\<[E]%
 \\
-\>[3]{}\F{\nu[ }\;\V{e}\;\C{∙}\;\V{e'}\;\F{]}\;\mid \;\C{yes}\;\V{pr}\;\mid \;(\C{no}\;\V{¬pr1})\;\mathrel{=}\;\C{no}\;(\V{¬pr1}\;\V{∘}\;\F{\pi_2}\;\V{∘}\;\F{[]∈∙-invert}){}\<[E]%
+\>[3]{}\F{\nu[ }\;\V{e}\;\C{∙}\;\V{e'}\;\F{]}\;\mid \;\C{yes}\;\V{pr}\;\mid \;(\C{no}\;\V{¬pr1})\;\mathrel{=}\;\C{no}\;(\V{¬pr1}\;\V{∘}\;\F{\pi_2}\;\V{∘}\;\F{∙invert}){}\<[E]%
 \\
-\>[3]{}\F{\nu[ }\;\V{e}\;\C{∙}\;\V{e'}\;\F{]}\;\mid \;\C{no}\;\V{¬pr}\;\mid \;\V{pr1}\;\mathrel{=}\;\C{no}\;(\V{¬pr}\;\V{∘}\;\F{\pi_1}\;\V{∘}\;\F{[]∈∙-invert}){}\<[E]%
+\>[3]{}\F{\nu[ }\;\V{e}\;\C{∙}\;\V{e'}\;\F{]}\;\mid \;\C{no}\;\V{¬pr}\;\mid \;\V{pr1}\;\mathrel{=}\;\C{no}\;(\V{¬pr}\;\V{∘}\;\F{\pi_1}\;\V{∘}\;\F{∙invert}){}\<[E]%
 \\
 \>[3]{}\F{\nu[ }\;\V{e}\;\C{+}\;\V{e'}\;\F{]}\;\mathkw{with}\;\F{\nu[ }\;\V{e}\;\F{]}\;\mid \;\F{\nu[ }\;\V{e'}\;\F{]}{}\<[E]%
 \\
@@ -817,20 +952,20 @@ not, using Agda type of decidable propositions, \ensuremath{\D{Dec}\;\V{P}}.
 \\
 \>[3]{}\F{\nu[ }\;\V{e}\;\C{+}\;\V{e'}\;\F{]}\;\mid \;\C{no}\;\V{¬pr}\;\mid \;(\C{yes}\;\V{pr1})\;\mathrel{=}\;\C{yes}\;(\V{e}\;\C{+R}\;\V{pr1}){}\<[E]%
 \\
-\>[3]{}\F{\nu[ }\;\V{e}\;\C{+}\;\V{e'}\;\F{]}\;\mid \;\C{no}\;\V{¬pr}\;\mid \;(\C{no}\;\V{¬pr1})\;\mathrel{=}\;\C{no}\;([\mskip1.5mu \;\V{¬pr}\;\red{,}\,\;\V{¬pr1}\;\mskip1.5mu]\;\V{∘}\;\F{∈+-invert}){}\<[E]%
+\>[3]{}\F{\nu[ }\;\V{e}\;\C{+}\;\V{e'}\;\F{]}\;\mid \;\C{no}\;\V{¬pr}\;\mid \;(\C{no}\;\V{¬pr1})\;\mathrel{=}\;\C{no}\;([\mskip1.5mu \;\V{¬pr}\;\red{,}\,\;\V{¬pr1}\;\mskip1.5mu]\;\V{∘}\;\F{+invert}){}\<[E]%
 \\
 \>[3]{}\F{\nu[ }\;\V{e}\;\C{\star}\;\F{]}\;\mathrel{=}\;\C{yes}\;((\V{e}\;\C{∙}\;\V{e}\;\C{\star}\;\C{+L}\;\C{\epsilon})\;\C{\star}){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-The definition of \ensuremath{\F{\nu[\_]}} uses several inversion lemmas about
-RE semantics. Lemma \ensuremath{\F{[]∈∙-invert}} states that if the empty string
-is in the language of \ensuremath{\V{l}\;\C{∙}\;\V{r}} (where \ensuremath{\V{l}} and \ensuremath{\V{r}} are arbitrary RE's)
+The definition of \ensuremath{\F{\nu[\_]}} uses some of the inversion lemmas about
+RE semantics. Lemma \ensuremath{\F{∙invert}} states that if the empty string
+is in the language of \ensuremath{\V{l}\;\C{∙}\;\V{r}} (where \ensuremath{\V{l}} and \ensuremath{\V{r}} are arbitrary REs)
 then the empty string belongs to \ensuremath{\V{l}} and \ensuremath{\V{r}}'s languages.
-Lemma \ensuremath{\F{∈+-invert}} is defined similarly for union.
+Lemma \ensuremath{\F{+invert}} is defined similarly for union.
 
 \subsection{Smart Constructors}\label{sec:smart}
 
-In order to define Brzozowski derivatives, we follow Owens et. al.~\cite{Owens2009}, we use
+In order to define Brzozowski derivatives, we follow Owens et. al.~\cite{Owens2009}. We use
 smart constructors to identify equivalent REs modulo identity and nullable
 elements, $\epsilon$ and $\emptyset$, respectively. RE equivalence is
 denoted by $e \approx e'$ and it's defined as usual~\cite{Hopcroft2000}.
@@ -859,7 +994,8 @@ The equivalence axioms maintained by smart constructors are:
 \end{itemize}
 
 These axioms are kept as invariants using functions that preserve them
-while building REs. For union, we just need to worry when one
+while building REs. As a convention, we name smart constructors by 
+prefixing a back quote to the constructor name. For union, we just need to worry when one
 parameter denotes the empty language:
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -915,34 +1051,33 @@ Since all smart constructors produce equivalent REs, they preserve the
 parsing relation. This property is stated below as a soundness and
 completeness lemma of each smart constructor with respect to RE
 membership proofs.
-\begin{Lemma}[Soundness of union]
-For all REs \ensuremath{\V{e}}, \ensuremath{\V{e'}} and all strings \ensuremath{\V{xs}}, if
-\ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\F{`+}\;\V{e'}\;\D{\rrbracket}} holds then \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\C{+}\;\V{e'}\;\D{\rrbracket}} also holds.
+\begin{Lemma}[Soundness and completeness of union]
+For all REs \ensuremath{\V{e}}, \ensuremath{\V{e'}} and all strings \ensuremath{\V{xs}},
+\ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\F{`+}\;\V{e'}\;\D{\rrbracket}} holds if and only if, \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\C{+}\;\V{e'}\;\D{\rrbracket}} also holds.
 \end{Lemma}
 \begin{proof}
-  By case analysis on the structure of \ensuremath{\V{e}} and \ensuremath{\V{e'}}. The
+  \begin{itemize}
+      \item[]
+      \item[($\to$)]: By case analysis on the structure of \ensuremath{\V{e}} and \ensuremath{\V{e'}}. The
   only interesting cases are when one of the expressions is
   \ensuremath{\C{\emptyset}}. If \ensuremath{\V{e}\;\mathrel{=}\;\C{\emptyset}}, then \ensuremath{\C{\emptyset}\;\F{`+}\;\V{e'}\;\mathrel{=}\;\V{e'}} and
   the desired result follows. The same reasoning applies for \ensuremath{\V{e'}\;\mathrel{=}\;\C{\emptyset}}.
-\end{proof}
-\begin{Lemma}[Completeness of union]
-For all REs \ensuremath{\V{e}}, \ensuremath{\V{e'}} and all strings \ensuremath{\V{xs}}, if
-\ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\C{+}\;\V{e'}\;\D{\rrbracket}} holds then \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\F{`+}\;\V{e'}\;\D{\rrbracket}} also holds.
-\end{Lemma}
-\begin{proof}
-   By case analysis on the structure of \ensuremath{\V{e}}, \ensuremath{\V{e'}}. The
+      \item[($\leftarrow$)]: By case analysis on the structure of \ensuremath{\V{e}}, \ensuremath{\V{e'}}. The
    only interesting cases are when one of the REs is \ensuremath{\C{\emptyset}}.  If
    \ensuremath{\V{e}\;\mathrel{=}\;\C{\emptyset}}, we need to analyse the structure of
    \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\C{+}\;\V{e'}\;\D{\rrbracket}}. The result follows directly or by
    contradiction using \ensuremath{\V{xs}\;\D{\in\llbracket}\;\C{\emptyset}\;\D{\rrbracket}}. The same reasoning
    applies when \ensuremath{\V{e'}\;\mathrel{=}\;\C{\emptyset}}.
+  \end{itemize}          
 \end{proof}
-\begin{Lemma}[Soundness of concatenation]
-For all REs \ensuremath{\V{e}}, \ensuremath{\V{e'}} and all strings \ensuremath{\V{xs}}, if
-\ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\F{`∙}\;\V{e'}\;\D{\rrbracket}} holds then \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\C{∙}\;\V{e'}\;\D{\rrbracket}}
+\begin{Lemma}[Soundness and completeness of concatenation]
+For all REs \ensuremath{\V{e}}, \ensuremath{\V{e'}} and all strings \ensuremath{\V{xs}},
+\ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\F{`∙}\;\V{e'}\;\D{\rrbracket}} holds if and only if, \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\C{∙}\;\V{e'}\;\D{\rrbracket}}
 also holds.
 \end{Lemma}
 \begin{proof}
+    \item[]
+    \item[($\to$)]:
   By case analysis on the structure of \ensuremath{\V{e}}, \ensuremath{\V{e'}}. The
   interesting cases are when \ensuremath{\V{e}} or \ensuremath{\V{e'}} are equal to
   \ensuremath{\C{\epsilon}} or \ensuremath{\C{\emptyset}}. When some of the REs are equal to
@@ -950,40 +1085,36 @@ also holds.
   are equal to \ensuremath{\C{\epsilon}} the desired result is immediate, from the
   proof term \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\F{`∙}\;\V{e'}\;\D{\rrbracket}}, using list concatenation
   properties.
-\end{proof}
-\begin{Lemma}[Completeness of concatenation]
-For all REs \ensuremath{\V{e}}, \ensuremath{\V{e'}} and all strings \ensuremath{\V{xs}}, if
-\ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\C{∙}\;\V{e'}\;\D{\rrbracket}} holds then \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\F{`∙}\;\V{e'}\;\D{\rrbracket}} also holds.
-\end{Lemma}
-\begin{proof}
+  \item[($\leftarrow$)]:
   By case analysis on the structure of \ensuremath{\V{e}}, \ensuremath{\V{e'}}. The
   interesting cases are when \ensuremath{\V{e}} or \ensuremath{\V{e'}} are equal to
   \ensuremath{\C{\epsilon}} or \ensuremath{\C{\emptyset}}. When some of the REs are equal to
   \ensuremath{\C{\emptyset}}, the result follows by contradiction. If one of the REs
   are equal to \ensuremath{\C{\epsilon}} the desired result is immediate.
 \end{proof}  
-\begin{Lemma}[Soundness of Kleene star]
-For all REs \ensuremath{\V{e}} and string \ensuremath{\V{xs}}, if
-\ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\F{`⋆}\;\D{\rrbracket}} then \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\C{\star}\;\D{\rrbracket}}.
+\begin{Lemma}[Soundness and completeness of Kleene star]
+For all REs \ensuremath{\V{e}} and string \ensuremath{\V{xs}},
+\ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\F{`⋆}\;\D{\rrbracket}} holds if and only if, \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\C{\star}\;\D{\rrbracket}} also holds.
 \end{Lemma}
 \begin{proof}
-  Straightforward case analysis on \ensuremath{\V{e}}'s structure.
-\end{proof}
-\begin{Lemma}[Completeness of Klenne star]
-For all REs \ensuremath{\V{e}} and all strings \ensuremath{\V{xs}}, if \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\C{\star}\;\D{\rrbracket}}
-holds then \ensuremath{\V{xs}\;\D{\in\llbracket}\;\V{e}\;\F{`⋆}\;\D{\rrbracket}} also holds.
-\end{Lemma}
-\begin{proof}
-  Straightforward case analysis on \ensuremath{\V{e}}'s structure.
+  Both directions follows by straightforward case analysis on \ensuremath{\V{e}}'s structure.
 \end{proof}
 
 All definitions of smart constructors and their properties are
 contained in \texttt{Smart.agda}, in the project's on-line
 repository~\cite{regex-rep}.
 
-\subsection{Brzozowski Derivatives and its Properties}
+\subsection{Brzozowski Derivatives and their Properties}
 
-The derivative of a RE with respect to a symbol $a$, denoted by
+Intuitively, the derivative of a language $L$ w.r.t. a symbol $a$, $L_a$, is the 
+set of strings generated by stripping the leading $a$ from the strings in $L$
+that start with $a$. Formally:  
+\[
+   L_a = \{ w \,\mid\, aw \in L \}
+\]
+Regular languages are closed under the derivative operation and Janusz Brzozowski defined a
+elegant method for computing derivatives for RE in~\cite{Brzozowski1964}. 
+Formally, the derivative of a RE $e$ with respect to a symbol $a$, denoted by
 $\partial_a(e)$, is defined by recursion on $e$'s structure as
 follows:
 
@@ -1002,6 +1133,18 @@ follows:
   \partial_a(e^\star) & = & \partial_a(e)\,e^\star\\
 \end{array}
 \]
+
+\begin{Example}
+    Consider the RE $e = (aa + b)^\star$. The derivative of $e$ w.r.t. $a$ is $a(aa + b)^\star$, as demonstrated below:
+    \begin{align*}
+        \partial_a((aa + b)^\star) &= \partial_a(aa + b)\,(aa + b)^\star\\ 
+                                   &= \left\lbrack \partial_a (aa) + \partial_a(b)\right\rbrack\,(aa + b)^\star\\
+                                   &= \left\lbrack a + \emptyset \right\rbrack\, (aa + b)^\star \\
+                                   &= a(aa + b)^\star
+    \end{align*}
+\end{Example}    
+
+
 This function has an immediate translation to Agda. Notice that the
 derivative function uses smart constructors to quotient result REs
 with respect to the equivalence axioms presented in
@@ -1038,12 +1181,12 @@ produces an evidence for equality of two \ensuremath{\D{Char}} values.
 From this definition we prove the following important properties of
 the derivative operation. Soundness of \ensuremath{\F{∂[\_,\_]}} ensures that if a
 string \ensuremath{\V{xs}} is in the language of \ensuremath{\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\F{]}}, then
-\ensuremath{(\V{x}\;\V{::}\;\V{xs})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} holds. Completeness ensures that the
+\ensuremath{(\V{x}\;\C{::}\;\V{xs})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} holds. Completeness ensures that the
 other direction of implication holds.
 
 \begin{Theorem}[Derivative operation soundness]\label{derivsound}
 For all REs \ensuremath{\V{e}}, all strings \ensuremath{\V{xs}} and all symbols \ensuremath{\V{x}}, if
-\ensuremath{\V{xs}\;\D{\in\llbracket}\;\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\F{]}\;\D{\rrbracket}} holds then \ensuremath{(\V{x}\;\V{::}\;\V{xs})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} holds.
+\ensuremath{\V{xs}\;\D{\in\llbracket}\;\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\F{]}\;\D{\rrbracket}} holds then \ensuremath{(\V{x}\;\C{::}\;\V{xs})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} holds.
 \end{Theorem}
 \begin{proof}
   By induction on the structure of \ensuremath{\V{e}}, using the soundness
@@ -1053,7 +1196,7 @@ For all REs \ensuremath{\V{e}}, all strings \ensuremath{\V{xs}} and all symbols 
 
 \begin{Theorem}[Derivative operation completeness]\label{derivcomplete}
 For all REs \ensuremath{\V{e}}, all strings \ensuremath{\V{xs}} and all symbols \ensuremath{\V{x}}, if
-\ensuremath{(\V{x}\;\V{::}\;\V{xs})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} holds then \ensuremath{\V{xs}\;\D{\in\llbracket}\;\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\F{]}\;\D{\rrbracket}} holds.
+\ensuremath{(\V{x}\;\C{::}\;\V{xs})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} holds then \ensuremath{\V{xs}\;\D{\in\llbracket}\;\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\F{]}\;\D{\rrbracket}} holds.
 \end{Theorem}
 \begin{proof}
   By induction on the structure of \ensuremath{\V{e}} using the completeness
@@ -1071,8 +1214,8 @@ RE derivatives were introduced by Brzozowski to construct a DFA (deterministic
 finite automata) from a given RE. Partial derivatives were introduced by
 Antimirov as a method to construct a NFA (non-deterministic finite automata).
 The main insight of partial derivatives for building NFAs is building a set
-of REs which collectively accepts the same strings as Brzozowski derivatives.
-Algebraic properties of set operations ensures that ACUI equations holds.
+of REs which collectively accept the same strings as Brzozowski derivatives.
+Algebraic properties of set operations ensures that ACUI equations hold.
 Below, we present function $\nabla_a(e)$ which computes the set of partial
 derivatives from a given RE \ensuremath{\V{e}} and a symbol \ensuremath{\V{a}}.
 
@@ -1088,20 +1231,33 @@ derivatives from a given RE \ensuremath{\V{e}} and a symbol \ensuremath{\V{a}}.
                                 \right.\\
   \nabla_a(e\:e') & = & \left \{
                            \begin{array}{lr}
-                              \partial_a(e) \odot e' \cup \partial_a(e') & \text{if }\nu(e) = \epsilon \\
-                              \partial_a(e) \odot e' & \text{otherwise} \\
+                              \nabla_a(e) \odot e' \cup \nabla_a(e') & \text{if }\nu(e) = \epsilon \\
+                              \nabla_a(e) \odot e' & \text{otherwise} \\
                            \end{array} \right . \\
   \nabla_a(e + e') & = & \nabla_a(e) \cup \nabla_a(e') \\
   \nabla_a(e^\star) & = & \nabla_a(e) \odot e^\star\\
 \end{array}
 \]
-
 Function $\nabla_a(e)$ uses the operator $S \odot e'$ which concatenates RE \ensuremath{\V{e'}} at the right of every $e \in S$:
 
 \[
   S \odot e' = \{e ∙ e'\,\mid\, e \in S\}
 \]
-Our agda implementation models sets as lists of regular expressions.
+
+\begin{Example}
+    Consider the RE $e = (aa + b)^\star$. The set of partial derivatives of $e$ w.r.t. $a$ is 
+    $\{a(aa + b)^\star\}$ as demonstrated below:
+    \begin{align*}
+        \nabla_a((aa + b)^\star) &= \nabla_a(aa + b) \odot (aa + b)^\star \\
+                                 &= \left\lbrack \nabla_a(aa) \cup \nabla_a(b)\right\rbrack \odot (aa + b)^\star \\
+                                 &= \left\{\left\lbrack \nabla_a(a) \odot a \cup \emptyset\right\rbrack \right\}\odot (aa + b)^\star \\
+                                 &= \left\{\left\lbrack \{\epsilon\} \odot a \cup \emptyset\right\rbrack \right\}\odot (aa + b)^\star \\
+                                 &= \{a\} \odot (aa + b)^\star \\
+                                 &= \{a(aa + b)^\star\}
+    \end{align*}
+\end{Example}    
+
+Our Agda implementation models sets as lists of regular expressions.
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{3}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -1114,11 +1270,11 @@ The operator that concatenates a RE at the right of every $e \in S$ is defined b
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{3}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[3]{}\F{\_\odot\_}\;\mathbin{:}\;\D{Regex}\;\V{→}\;\D{Regexes}\;\V{→}\;\D{Regexes}{}\<[E]%
+\>[3]{}\F{\_\odot\_}\;\mathbin{:}\;\D{Regexes}\;\V{→}\;\D{Regex}\;\V{→}\;\D{Regexes}{}\<[E]%
 \\
-\>[3]{}\V{e}\;\F{\odot}\;\C{\lbrack\:\rbrack}\;\mathrel{=}\;\C{\lbrack\:\rbrack}{}\<[E]%
+\>[3]{}\C{\lbrack\:\rbrack}\;\F{\odot}\;\V{e}\;\mathrel{=}\;\C{\lbrack\:\rbrack}{}\<[E]%
 \\
-\>[3]{}\V{e}\;\F{\odot}\;(\V{e'}\;\V{::}\;\V{es})\;\mathrel{=}\;(\V{e'}\;\C{∙}\;\V{e})\;\V{::}\;(\V{e}\;\F{\odot}\;\V{es}){}\<[E]%
+\>[3]{}(\V{e'}\;\C{::}\;\V{es'})\;\F{\odot}\;\V{e}\;\mathrel{=}\;(\V{e'}\;\C{∙}\;\V{e})\;\C{::}\;(\V{es'}\;\F{\odot}\;\V{e}){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
 Definition of a function to compute partial derivatives for a given RE is defined as a direct
@@ -1163,10 +1319,10 @@ when a string is accepted by some set of REs.
 \\
 \>[3]{}\hsindent{2}{}\<[5]%
 \>[5]{}\C{here}\;{}\<[11]%
-\>[11]{}\mathbin{:}\;\V{s}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}\;\to \;\V{s}\;\D{\in\langle\langle}\;\V{e}\;\V{::}\;\V{es}\;\D{\rangle\rangle}{}\<[E]%
+\>[11]{}\mathbin{:}\;\V{s}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}\;\to \;\V{s}\;\D{\in\langle\langle}\;\V{e}\;\C{::}\;\V{es}\;\D{\rangle\rangle}{}\<[E]%
 \\
 \>[3]{}\hsindent{2}{}\<[5]%
-\>[5]{}\C{there}\;\mathbin{:}\;\V{s}\;\D{\in\langle\langle}\;\V{es}\;\D{\rangle\rangle}\;\to \;\V{s}\;\D{\in\langle\langle}\;\V{e}\;\V{::}\;\V{es}\;\D{\rangle\rangle}{}\<[E]%
+\>[5]{}\C{there}\;\mathbin{:}\;\V{s}\;\D{\in\langle\langle}\;\V{es}\;\D{\rangle\rangle}\;\to \;\V{s}\;\D{\in\langle\langle}\;\V{e}\;\C{::}\;\V{es}\;\D{\rangle\rangle}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
 Essentially, a value of type \ensuremath{\V{s}\;\D{\in\langle\langle}\;\V{S}\;\D{\rangle\rangle}} indicates that \ensuremath{\V{s}} is accepted by some RE
@@ -1214,18 +1370,18 @@ For all sets of REs \ensuremath{\V{S}}, \ensuremath{\V{S'}} and all strings \ens
 
 Using these previous results about \ensuremath{\D{\_\in\langle\langle\_\rangle\rangle}}, we can enunciate the soundness and completeness theorems
 of partial derivatives. Let \ensuremath{\V{e}} be an arbitrary RE and \ensuremath{\V{a}} an arbitrary symbol. Soundness means that if a
-string \ensuremath{\V{s}} is accepted by some RE in \ensuremath{\F{\nabla[}\;\V{e}\;\red{,}\,\;\V{a}\;\mskip1.5mu]} then \ensuremath{(\V{a}\;\V{::}\;\V{s})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}. Completeness theorems shows
+string \ensuremath{\V{s}} is accepted by some RE in \ensuremath{\F{\nabla[}\;\V{e}\;\red{,}\,\;\V{a}\;\mskip1.5mu]} then \ensuremath{(\V{a}\;\C{::}\;\V{s})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}. Completeness theorems shows
 that the other direction of the soundness implication also holds.
 
 \begin{Theorem}[Partial derivative operation soundness]
-For all symbols \ensuremath{\V{a}}, all strings \ensuremath{\V{s}} and all REs \ensuremath{\V{e}}, if \ensuremath{\V{s}\;\D{\in\langle\langle}\;\F{\nabla[}\;\V{e}\;\red{,}\,\;\V{a}\;\mskip1.5mu]\;\D{\rangle\rangle}} holds then \ensuremath{(\V{a}\;\V{::}\;\V{s})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} holds.
+For all symbols \ensuremath{\V{a}}, all strings \ensuremath{\V{s}} and all REs \ensuremath{\V{e}}, if \ensuremath{\V{s}\;\D{\in\langle\langle}\;\F{\nabla[}\;\V{e}\;\red{,}\,\;\V{a}\;\mskip1.5mu]\;\D{\rangle\rangle}} holds then \ensuremath{(\V{a}\;\C{::}\;\V{s})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} holds.
 \end{Theorem}
 \begin{proof}
   Induction on the structure of \ensuremath{\V{e}}, using Lemmas \ref{wapp} and \ref{wopeq}.
 \end{proof}
 
 \begin{Theorem}[Partial derivative operation completeness]
-For all symbols \ensuremath{\V{a}}, all strings \ensuremath{\V{s}} and all REs \ensuremath{\V{e}}, if \ensuremath{(\V{a}\;\V{::}\;\V{s})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} holds then \ensuremath{\V{s}\;\D{\in\langle\langle}\;\F{\nabla[}\;\V{e}\;\red{,}\,\;\V{a}\;\mskip1.5mu]\;\D{\rangle\rangle}} holds.
+For all symbols \ensuremath{\V{a}}, all strings \ensuremath{\V{s}} and all REs \ensuremath{\V{e}}, if \ensuremath{(\V{a}\;\C{::}\;\V{s})\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} holds then \ensuremath{\V{s}\;\D{\in\langle\langle}\;\F{\nabla[}\;\V{e}\;\red{,}\,\;\V{a}\;\mskip1.5mu]\;\D{\rangle\rangle}} holds.
 \end{Theorem}
 \begin{proof}
   Induction on the structure  of \ensuremath{\V{e}}, using Lemmas \ref{wl}, \ref{wr} and \ref{wop}.
@@ -1237,16 +1393,68 @@ repository~\cite{regex-rep}.
 
 \subsection{Parsing}
 
-RE parsing involves determining which prefixes and substrings of the
-input string match a given RE. For this, we define datatypes that
+Assume that we are given an RE $e$ and a string $s$ and we want to 
+determine if $s \in e$. We can use RE derivatives for building such a 
+test by extending the definition of derivatives to strings as follows~\cite{Owens2009}:
+\[
+    \begin{array}{lcl}
+        \widehat{\partial}_\epsilon(e) & = & e\\
+        \widehat{\partial}_{as}(e)     & = & \widehat{\partial}_s(\partial_a(e))
+    \end{array}
+\]
+Note that, $s \in e$ if, and only if, $\epsilon \in \widehat{\partial}_s(e)$, which is true whenever 
+$\nu(\widehat{\partial}_s(e)) = \epsilon$. Owens et. al. define a relation between strings and RE, called
+the \emph{matching} relation, defined as:
+\[
+    \begin{array}{lcl}
+        e \sim \epsilon & \Leftrightarrow & \nu(e) \\
+        e \sim as       & \Leftrightarrow & \partial_a(e) \sim s
+    \end{array}
+\] 
+A simple inductive proof shows that $s \in e$ if, and only if, $e \sim s$. 
+
+\begin{Example}
+    Suppose $e = (aa + b)^\star$ and the string $aab$. We can show that 
+    $aab \in e$ using the previously defined matching relation as follows:
+    \begin{align*}
+        (aa + b)^\star \sim aab & \Leftrightarrow \partial_a (aa + b) (aa + b)^\star \sim ab \\
+                                & \Leftrightarrow a(aa + b)^\star \sim ab \\
+                                & \Leftrightarrow \partial_a(a(aa + b)^\star) \sim b \\
+                                & \Leftrightarrow (aa + b)^\star \sim b \\
+                                & \Leftrightarrow \partial_b(aa + b)(aa + b)^\star \sim \epsilon\\
+                                & \Leftrightarrow (aa + b)^\star \sim \epsilon \\
+                                & \Leftrightarrow \nu((aa + b)^\star) = \epsilon \text{ which is true.}\\ 
+    \end{align*}
+    
+    The same idea can be used to show that a string isn't in the language of some RE. Now consider again
+    the RE $e = (aa + b)^\star$ and the string $abb$:
+    \begin{align*}
+        (aa + b)^\star \sim abb & \Leftrightarrow \partial_a (aa + b) (aa + b)^\star \sim bb \\
+                                & \Leftrightarrow a(aa + b)^\star \sim bb \\
+                                & \Leftrightarrow \partial_b (a(aa+ b)^\star) \sim b \\
+                                & \Leftrightarrow \partial_b(a)(aa + b)^\star \sim b \\
+                                & \Leftrightarrow \emptyset\,(aa + b)^\star \sim b   \\
+                                & \Leftrightarrow \emptyset \sim b                   \\
+                                & \Leftrightarrow \partial_b(\emptyset) \sim \epsilon \\
+                                & \Leftrightarrow \nu(\emptyset) = \epsilon \text{ which is false.}\\
+    \end{align*}    
+\end{Example}    
+
+For our purposes, understanding
+RE parsing as a matching relation isn't adequate because RE-based text search tools, like GNU-grep, shows
+every matching prefix and substring of a RE for a given input.
+Since our interest is determining which prefixes and substrings of the
+input string match a given RE, we define datatypes that
 represent the fact that a given RE matches a prefix or a substring of
-a given string.
+some string.
 
 
 We say that RE \ensuremath{\V{e}} matches a prefix of string \ensuremath{\V{xs}} if there exist
-strings \ensuremath{\V{ys}} and \ensuremath{\V{zs}} such that \ensuremath{\V{xs}\;\D{\equiv}\;\V{ys}\;\F{++}\;\V{zs}} and \ensuremath{\V{ys}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}. Definition of \ensuremath{\D{IsPrefix}} datatype encode this concept. Datatype
+strings \ensuremath{\V{ys}} and \ensuremath{\V{zs}} such that \ensuremath{\V{xs}\;\D{\equiv}\;\V{ys}\;\F{++}\;\V{zs}} and \ensuremath{\V{ys}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}}. Definition of \ensuremath{\D{IsPrefix}} datatype encodes this concept. Datatype
 \ensuremath{\D{IsSubstring}} specifies when a RE \ensuremath{\V{e}} matches a substring in \ensuremath{\V{xs}}:
-there must exist strings \ensuremath{\V{ys}}, \ensuremath{\V{zs}} and \ensuremath{\V{ws}} such that \ensuremath{\V{xs}\;\D{\equiv}\;\V{ys}\;\F{++}\;\V{zs}\;\F{++}\;\V{ws}} and \ensuremath{\V{zs}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} hold.
+there must exist strings \ensuremath{\V{ys}}, \ensuremath{\V{zs}} and \ensuremath{\V{ws}} such that \ensuremath{\V{xs}\;\D{\equiv}\;\V{ys}\;\F{++}\;\V{zs}\;\F{++}\;\V{ws}} and \ensuremath{\V{zs}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} hold. We could represent prefix and substring 
+predicates using dependent products, but for code clarity we choose to 
+define the types \ensuremath{\D{IsPrefix}} and \ensuremath{\D{IsSubstring}}.
 
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -1267,7 +1475,7 @@ there must exist strings \ensuremath{\V{ys}}, \ensuremath{\V{zs}} and \ensuremat
 \ColumnHook
 \end{hscode}\resethooks
 Using these datatypes we can define the following relevant properties
-of prefixes and substrings.
+of prefixes and substrings. 
 
 \begin{Lemma}[Lemma \ensuremath{\F{¬IsPrefix}}]\label{pref1}
   For all REs \ensuremath{\V{e}}, if \ensuremath{\C{\lbrack\:\rbrack}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} does not hold then neither does \ensuremath{\D{IsPrefix}\;\C{\lbrack\:\rbrack}\;\V{e}}. 
@@ -1278,7 +1486,7 @@ of prefixes and substrings.
 
 \begin{Lemma}[Lemma \ensuremath{\F{¬IsPrefix-::}}]\label{pref2}
   For all REs \ensuremath{\V{e}} and all strings \ensuremath{\V{xs}}, if \ensuremath{\C{\lbrack\:\rbrack}\;\D{\in\llbracket}\;\V{e}\;\D{\rrbracket}} and \ensuremath{\D{IsPrefix}\;\V{xs}\;\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\F{]}} do not hold then
-  neither does \ensuremath{\D{IsPrefix}\;(\V{x}\;\V{::}\;\V{xs})\;\V{e}}.
+  neither does \ensuremath{\D{IsPrefix}\;(\V{x}\;\C{::}\;\V{xs})\;\V{e}}.
 \end{Lemma}
 \begin{proof}
   Immediate from the definition of \ensuremath{\D{IsPrefix}} and Theorem \ref{derivcomplete}.
@@ -1292,9 +1500,9 @@ of prefixes and substrings.
 \end{proof}
 
 \begin{Lemma}[Lemma \ensuremath{\F{¬IsSubstring-::}}]
-  For all strings \ensuremath{\V{xs}}, all symbols \ensuremath{\V{x}} and all REs \ensuremath{\V{e}}, if \ensuremath{\D{IsPrefix}\;(\V{x}\;\V{::}\;\V{xs})\;\V{e}} 
+  For all strings \ensuremath{\V{xs}}, all symbols \ensuremath{\V{x}} and all REs \ensuremath{\V{e}}, if \ensuremath{\D{IsPrefix}\;(\V{x}\;\C{::}\;\V{xs})\;\V{e}} 
   and \ensuremath{\D{IsSubstring}\;\V{xs}\;\V{e}} do not hold
-  then neither does \ensuremath{\D{IsSubstring}\;(\V{x}\;\V{::}\;\V{xs})\;\V{e}}.
+  then neither does \ensuremath{\D{IsSubstring}\;(\V{x}\;\C{::}\;\V{xs})\;\V{e}}.
 \end{Lemma}
 \begin{proof}
   Immediate from the definitions of \ensuremath{\D{IsPrefix}} and \ensuremath{\D{IsSubstring}}.
@@ -1310,7 +1518,7 @@ prefix. Otherwise, it verifies, for each symbol \ensuremath{\V{x}}, whether RE \
 matches a prefix of the input string. If this is the case, a prefix
 including \ensuremath{\V{x}} is built from a recursive call to \ensuremath{\F{IsPrefixDec}} or if no
 prefix is matched a proof of such impossibility is constructed using
-lemma \ensuremath{\F{¬IsPrefix-::}}.
+lemma \ref{pref2}.
 
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -1325,24 +1533,24 @@ lemma \ensuremath{\F{¬IsPrefix-::}}.
 \\
 \>[3]{}\F{IsPrefixDec}\;\C{\lbrack\:\rbrack}\;\V{e}\;\mid \;\C{no}\;\V{¬p}\;\mathrel{=}\;\C{no}\;(\F{¬IsPrefix}\;\V{¬p}){}\<[E]%
 \\
-\>[3]{}\F{IsPrefixDec}\;(\V{x}\;\V{::}\;\V{xs})\;\V{e}\;\mathkw{with}\;\F{\nu[ }\;\V{e}\;\F{]}{}\<[E]%
+\>[3]{}\F{IsPrefixDec}\;(\V{x}\;\C{::}\;\V{xs})\;\V{e}\;\mathkw{with}\;\F{\nu[ }\;\V{e}\;\F{]}{}\<[E]%
 \\
-\>[3]{}\F{IsPrefixDec}\;(\V{x}\;\V{::}\;\V{xs})\;\V{e}\;\mid \;\C{yes}\;\V{p}\;\mathrel{=}\;\C{yes}\;(\C{Prefix}\;\C{\lbrack\:\rbrack}\;(\V{x}\;\V{::}\;\V{xs})\;\C{refl}\;\V{p}){}\<[E]%
+\>[3]{}\F{IsPrefixDec}\;(\V{x}\;\C{::}\;\V{xs})\;\V{e}\;\mid \;\C{yes}\;\V{p}\;\mathrel{=}\;\C{yes}\;(\C{Prefix}\;\C{\lbrack\:\rbrack}\;(\V{x}\;\C{::}\;\V{xs})\;\C{refl}\;\V{p}){}\<[E]%
 \\
-\>[3]{}\F{IsPrefixDec}\;(\V{x}\;\V{::}\;\V{xs})\;\V{e}\;\mid \;\C{no}\;\V{¬p}\;\mathkw{with}\;\F{IsPrefixDec}\;\V{xs}\;(\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\mskip1.5mu]){}\<[E]%
+\>[3]{}\F{IsPrefixDec}\;(\V{x}\;\C{::}\;\V{xs})\;\V{e}\;\mid \;\C{no}\;\V{¬p}\;\mathkw{with}\;\F{IsPrefixDec}\;\V{xs}\;(\F{∂[}\;\V{e}\;\red{,}\,\;\V{x}\;\mskip1.5mu]){}\<[E]%
 \\
-\>[3]{}\F{IsPrefixDec}\;(\V{x}\;\V{::}\;\V{xs})\;\V{e}\;\mid \;\C{no}\;\V{¬p}\;\mid \;(\C{yes}\;(\C{Prefix}\;\V{ys}\;\V{zs}\;\V{eq}\;\V{wit}))\;{}\<[E]%
+\>[3]{}\F{IsPrefixDec}\;(\V{x}\;\C{::}\;\V{xs})\;\V{e}\;\mid \;\C{no}\;\V{¬p}\;\mid \;(\C{yes}\;(\C{Prefix}\;\V{ys}\;\V{zs}\;\V{eq}\;\V{wit}))\;{}\<[E]%
 \\
 \>[3]{}\hsindent{2}{}\<[5]%
-\>[5]{}\mathrel{=}\;\C{yes}\;(\C{Prefix}\;(\V{x}\;\V{::}\;\V{ys})\;\V{zs}\;(\F{cong}\;(\V{\char95 ::\char95 }\;\V{x})\;\V{eq})\;(\F{∂-sound}\;\anonymous \;\anonymous \;\anonymous \;\V{wit})){}\<[E]%
+\>[5]{}\mathrel{=}\;\C{yes}\;(\C{Prefix}\;(\V{x}\;\C{::}\;\V{ys})\;\V{zs}\;(\F{cong}\;(\V{\char95 ::\char95 }\;\V{x})\;\V{eq})\;(\F{∂-sound}\;\anonymous \;\anonymous \;\anonymous \;\V{wit})){}\<[E]%
 \\
-\>[3]{}\F{IsPrefixDec}\;(\V{x}\;\V{::}\;\V{xs})\;\V{e}\;\mid \;\C{no}\;\V{¬pn}\;\mid \;(\C{no}\;\V{¬p})\;\mathrel{=}\;\C{no}\;(\F{¬IsPrefix-::}\;\V{¬pn}\;\V{¬p}){}\<[E]%
+\>[3]{}\F{IsPrefixDec}\;(\V{x}\;\C{::}\;\V{xs})\;\V{e}\;\mid \;\C{no}\;\V{¬pn}\;\mid \;(\C{no}\;\V{¬p})\;\mathrel{=}\;\C{no}\;(\F{¬IsPrefix-::}\;\V{¬pn}\;\V{¬p}){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
 
 
 Function \ensuremath{\F{IsSubstringDec}} is also defined by induction on the
-structure of the input string \ensuremath{\V{e}}, using \ensuremath{\F{IsPrefixDec}} to check
+structure of the input string \ensuremath{\V{xs}}, using \ensuremath{\F{IsPrefixDec}} to check
 whether it is possible to match a prefix of \ensuremath{\V{e}}. In this case, a
 substring is built from this prefix. If there's no such prefix, a
 recursive call is made to check if there is a substring match,
@@ -1361,21 +1569,21 @@ returning such substring or a proof that it does not exist.
 \\
 \>[3]{}\F{IsSubstringDec}\;\C{\lbrack\:\rbrack}\;\V{e}\;\mid \;\C{no}\;\V{¬p}\;\mathrel{=}\;\C{no}\;(\F{¬IsSubstring}\;(\F{¬IsPrefix}\;\V{¬p})){}\<[E]%
 \\
-\>[3]{}\F{IsSubstringDec}\;(\V{x}\;\V{::}\;\V{xs})\;\V{e}\;\mathkw{with}\;\F{IsPrefixDec}\;(\V{x}\;\V{::}\;\V{xs})\;\V{e}{}\<[E]%
+\>[3]{}\F{IsSubstringDec}\;(\V{x}\;\C{::}\;\V{xs})\;\V{e}\;\mathkw{with}\;\F{IsPrefixDec}\;(\V{x}\;\C{::}\;\V{xs})\;\V{e}{}\<[E]%
 \\
-\>[3]{}\F{IsSubstringDec}\;(\V{x}\;\V{::}\;\V{xs})\;\V{e}\;\mid \;\C{yes}\;(\C{Prefix}\;\V{ys}\;\V{zs}\;\V{eq}\;\V{wit})\;{}\<[E]%
+\>[3]{}\F{IsSubstringDec}\;(\V{x}\;\C{::}\;\V{xs})\;\V{e}\;\mid \;\C{yes}\;(\C{Prefix}\;\V{ys}\;\V{zs}\;\V{eq}\;\V{wit})\;{}\<[E]%
 \\
 \>[3]{}\hsindent{2}{}\<[5]%
 \>[5]{}\mathrel{=}\;\C{yes}\;(\C{Substring}\;\C{\lbrack\:\rbrack}\;\V{ys}\;\V{zs}\;\V{eq}\;\V{wit}){}\<[E]%
 \\
-\>[3]{}\F{IsSubstringDec}\;(\V{x}\;\V{::}\;\V{xs})\;\V{e}\;\mid \;\C{no}\;\V{¬p}\;\mathkw{with}\;\F{IsSubstringDec}\;\V{xs}\;\V{e}{}\<[E]%
+\>[3]{}\F{IsSubstringDec}\;(\V{x}\;\C{::}\;\V{xs})\;\V{e}\;\mid \;\C{no}\;\V{¬p}\;\mathkw{with}\;\F{IsSubstringDec}\;\V{xs}\;\V{e}{}\<[E]%
 \\
-\>[3]{}\F{IsSubstringDec}\;(\V{x}\;\V{::}\;\V{xs})\;\V{e}\;\mid \;\C{no}\;\V{¬p}\;\mid \;(\C{yes}\;(\C{Substring}\;\V{ys}\;\V{zs}\;\V{ws}\;\V{eq}\;\V{wit}))\;{}\<[E]%
+\>[3]{}\F{IsSubstringDec}\;(\V{x}\;\C{::}\;\V{xs})\;\V{e}\;\mid \;\C{no}\;\V{¬p}\;\mid \;(\C{yes}\;(\C{Substring}\;\V{ys}\;\V{zs}\;\V{ws}\;\V{eq}\;\V{wit}))\;{}\<[E]%
 \\
 \>[3]{}\hsindent{2}{}\<[5]%
-\>[5]{}\mathrel{=}\;\C{yes}\;(\C{Substring}\;(\V{x}\;\V{::}\;\V{ys})\;\V{zs}\;\V{ws}\;(\F{cong}\;(\V{\char95 ::\char95 }\;\V{x})\;\V{eq})\;\V{wit}){}\<[E]%
+\>[5]{}\mathrel{=}\;\C{yes}\;(\C{Substring}\;(\V{x}\;\C{::}\;\V{ys})\;\V{zs}\;\V{ws}\;(\F{cong}\;(\V{\char95 ::\char95 }\;\V{x})\;\V{eq})\;\V{wit}){}\<[E]%
 \\
-\>[3]{}\F{IsSubstringDec}\;(\V{x}\;\V{::}\;\V{xs})\;\V{e}\;\mid \;\C{no}\;\V{¬p₁}\;\mid \;(\C{no}\;\V{¬p})\;{}\<[E]%
+\>[3]{}\F{IsSubstringDec}\;(\V{x}\;\C{::}\;\V{xs})\;\V{e}\;\mid \;\C{no}\;\V{¬p₁}\;\mid \;(\C{no}\;\V{¬p})\;{}\<[E]%
 \\
 \>[3]{}\hsindent{2}{}\<[5]%
 \>[5]{}\mathrel{=}\;\C{no}\;(\F{¬IsSubstring-::}\;\V{¬p₁}\;\V{¬p}){}\<[E]%
@@ -1433,8 +1641,8 @@ and~\ref{fig:graph2}, respectively.
 
 Our tool behaves poorly when compared with all other options
 considered. The cause of this inefficiency needs further
-investigation, but we envisaged that it can be be due to the
-following: 1) Our algorithm relies on the Brzozowski definition for RE
+investigation, but we envisaged that it can be due to the
+following: 1) Our algorithm relies on the Brzozowski's definition for RE
 parsing, which needs to quotient resulting REs. 2) We use lists to
 represent sets of Antimirov's partial derivatives. We believe that
 usage of better data structures to represent sets and using
@@ -1477,26 +1685,26 @@ efficiency of the proposed algorithm, Sulzmann et al. use a bit
 encoded representation of RE parse trees. Textual proofs of
 correctness of the proposed algorithm are presented in an appendix.
 
-\paragraph{Certified parsing algorithms}. Certified algorithms for
+\paragraph{Certified parsing algorithms} Certified algorithms for
 parsing also received attention recently. Firsov et al.~describe a
 certified algorithm for RE parsing by converting an input RE to an
 equivalent NFA represented as a boolean matrix~\cite{FirsovU13}. A
 matrix library based on some ``block'' operations~\cite{MacedoO13} is
 developed and used Agda formalization of NFA-based parsing
-{Norell2009}. Compared to our work, a NFA-based formalization requires
-a lot more infrastructure (such as a Matrix library). No experiments
+~\cite{Norell2009}. Compared to our work, a NFA-based formalization requires
+much more infrastructure (such as a Matrix library). No experiments
 with the certified algorithm were reported.
 
 Firsov describes an Agda formalization of a parsing algorithm that
 deals with any CFG (CYK algorithm)~\cite{Firsov2014}. Bernardy
 et al.~describe a formalization of another CFG parsing algorithm in
 Agda~\cite{BernardyJ16}: Valiant's algorithm~\cite{Valiant1975}, which
-reduces CFG parsing to boolean matrix multiplication. In both works,
+reduces a CFG parsing problem to boolean matrix multiplication. In both works,
 no experiment with formalized parsing algorithms were reported.
 
 A certified LR(1) CFG validator is described
 in~\cite{Jourdan2012}. The formalized checking procedure verifies if
-CFG and an automaton match. They proved soundness and completeness of
+a CFG and an automaton match. They proved soundness and completeness of
 the validator in the Coq proof
 assistant~\cite{Bertot2010}. Termination of the LR(1) automaton
 interpreter is ensured by imposing a natural number bound on
@@ -1519,7 +1727,7 @@ Ridge~\cite{Ridge2011} describes a formalization, in the HOL4 theorem
 prover, of a combinator parsing library. A parser generator for such
 combinators is described and a proof that generated parsers are sound
 and complete is presented.  According to Ridge, preliminary results
-shows that parsers built using his generator are faster than those
+show that parsers built using his generator are faster than those
 created by Happy parser generator~\cite{Happy}.
 
 Ausaf et. al.~\cite{AusafDU16} describe a formalization, in
@@ -1532,7 +1740,7 @@ verified algorithm are reported.
 
 \section{Conclusion}\label{sec:conclusion}
 
-We have given a complete formalization of a derivative-based parsing
+We gave a complete formalization of a derivative-based parsing
 for REs in Agda. To the best of our knowledge, this is the first work
 that presents a complete certification and that uses the certified
 program to build a tool for RE-based search.
@@ -1551,9 +1759,8 @@ obtain a formalized but simple and efficient RE parsing tool.
 support. Second author thanks Fundação de Amparo a
 Pesquisa de Minas Gerais (FAPEMIG) for financial support.
 
-% \section*{References}
+\section*{References}
 
 \bibliography{main}
 
 \end{document}
-

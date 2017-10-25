@@ -17,7 +17,6 @@ module Base.Regex where
 
   -- definition of a regular expression data type
 
-
   infixr 5 _+_
   infixr 6 _∙_
   infixl 7 _⋆

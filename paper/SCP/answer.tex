@@ -1,0 +1,399 @@
+\documentclass{article}
+
+%\newcommand{\tid}{\mbox{\texttt{T}}_{id}}
+%\newcommand{\simd}{$\mu$-\textsc{Simd}}
+
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage{graphicx}
+\usepackage{amsmath,amsthm}
+\usepackage{amssymb}
+\usepackage{url}
+\usepackage{stmaryrd}
+\usepackage{ifpdf, proof}
+
+%\newcommand\pgcc{\mbox{\textsf{pgcc}}}
+%\newcommand\ppgc{\mbox{\textsf{ppgc}}}
+%\newcommand\accull{\mbox{\textsf{AccUll}}}
+%\newcommand\psyche{\mbox{\textsf{PsycheC}}}
+
+%\newcommand{\muA}{$\mu{A}$}
+%\newcommand{\muB}{$\mu{B}$}
+%\newcommand{\muC}{$\mu{C}$}
+%\newcommand{\muD}{$\mu{D}$}
+
+%\newcommand\doubleplus{+\kern-1.3ex+\kern0.8ex}
+
+%\def\ppcg{\textsf{ppcg}}
+%\def\accull{\textsf{AccULL}}
+%\def\etino{\textsf{Etino}}
+%\def\dawncc{\textsf{dawncc}}
+
+\date{Ouro Preto, \today}
+
+%\include{macros}
+
+\begin{document}
+
+\noindent
+Dear Editor,
+
+\vspace{1cm}
+
+in this letter, we discuss how we have addressed the comments from the reviewers
+of our paper, \textit{Certified Derivative Based Parsing of Regular Expressions}. 
+The main items pointed by the reviewers, the lack of examples and the specification 
+of parsing algorithm (pointed by Reviewer 1) are properly fixed in the submission.
+
+We would like to thanks the reviewers for their careful reading that allows us 
+to improve the presenation of our work.
+
+\vspace{1cm}
+
+%\begin{flushright}
+\noindent
+Sincerely,
+%\end{flushright}
+
+% \vspace{0.6cm}
+
+%\begin{flushright}
+\vspace{1cm}
+
+\noindent
+Rodrigo Ribeiro, Raul Lopes e Carlos Camar\~ao.
+%\end{flushright}
+
+\vspace{1cm}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section*{Reviewer 1}
+
+\begin{itemize}
+
+    \item p2, l43 Authors claim "A formalization of Brzozowski derivatives based RE parsing in Agda"
+
+          The authors formalize some aspects of derivatives in Agda. But I couldn't find
+          a *clearly specified* and certified parsing algorithm in the paper.
+          The material presented on pages 17 and 18 seems connected to the claim but
+          where's the parsing algorithm including its correctness proof?
+
+    \textsc{Answer}: We understand that the parsing problem for RE consists in finding all matching prefixes and 
+          substrings for a given input string and some RE e. In section 4.4, we present types that specify 
+          when an input string has a prefix / substring that matches some RE and decidability proofs 
+          for such types. Under the propositions-as-types interpretation such proofs are certified algorithms 
+          for finding prefixes and substrings for a given RE.
+
+     \item p2, l50 Authors claim "A detailed explanation of the technique used to quotient derivatives with respect to ACUI axioms"
+           This is not true! The authors implement a few (simple) identities such as epsilon . r = r
+           ACI is not dealt with at all. It's an essential step to guarantee that the number of dissimilar derivatives (under ACI) is finite.
+           
+    \textsc{Answer}: You are right! We removed all references to ACUI axioms and mention explicitly that we use smart constructors to 
+           simplify RE using some well known equivalences.       
+          
+
+    \item p3, l13 Authors claim "A formalization of Antimirov's derivatives ..."
+          The authors use lists to represent the set of *partial* derivatives. Yet again, I(demptotence) is simply dropped.
+          Antimirov uses a smart constructor to simplify epsilon . r to r, it's only a minor detail, but again
+          something which the authors didn't discuss.
+          
+    \textsc{Answer}: We didn't mention Antimirov simplification step because we are already using it for Brzozowski derivatives.
+        Also, such simplification step doesn't affect correctness of the Antimirov partial derivative based parsing
+        algorithm.
+        
+        
+    \item The authors report poor performance result. This is no surprise as the size of derivatives and partial derivatives
+          will explode because the authors formalization doesn't simplify derivatives based on ACI
+          and the list representation used for partial derivatives contains duplicates.
+    
+    \textsc{Answer}: The number of derivatives is only relevant when one is building a finite state machine from a given RE.
+    Quotienting resulting REs under ACUI guarantees the finite number of dissimilar derivatives ensuring termination
+    of the automata construction. For parsing, simplyfing under all axioms of ACUI isn't necessary since the number
+    of dissimilar derivatives is irrelevant, because termination of RE derivative based parsing depends on the 
+    size of the input string not on the number of derivatives of a given RE.      
+
+    \item p3, l13     Antimorov's *partial* derivatives
+    
+    \textsc{Answer}: Fixed.
+    
+    \item p8, l14    "...inversion lemmas...", at least provide some details, otherwise, the reader is left clueless
+    
+    \textsc{Answer:} We have added the inversion lemma for choice and single character RE and some text explaining these definitions.
+    
+    \item agda instead of Agda, various places
+ 
+    \textsc{Answer}: Fixed. 
+    
+    \item The contributions are not significant enough. In fact, the contributions claimed
+          at the beginning of the paper are not substantiated at all.
+          
+    \textsc{Answer}: We appreciate Reviewer 1 detailed comments which allowed us to fix and improve the presentation of our work. 
+     We believe that the text is now consistent, and that we have properly addressed the main concerns of Reviewer 1:
+     \begin{enumerate}
+         \item We remove the references to ACUI axioms, since they aren't needed for RE derivative based parsing. Also 
+               we explicitly mention that smart-constructors only perform simplifications based on simple RE equivalences.
+         \item We have added some examples of RE semantics relation, Brzozowski derivatives, Antimirov partial derivatives 
+               and parsing using derivatives. 
+     \end{enumerate}
+     
+     \item The structure can be improved (mainly a boring sequences of Agda formalization and results).
+           I couldn't find a single worked out example!
+           
+     \textsc{Answer}: We add some examples in the paper: RE semantics relation, Brzozowski derivatives,
+     Antimirov partial derivatives and on derivative based parsing.
+\end{itemize}
+
+\section*{Reviewer 2}
+
+\begin{itemize}
+    \item The paper is clear and in general well-written. 
+    
+    \textsc{Answer}: Thank you!
+    
+    \item l. 33: until his work $\to$ until their work (or it is his work because there you are referring to Brzozowski?)
+    
+    \textsc{Answer:} Fixed.
+    
+    \item l. 34: interest on its use $\to$ interest on their use
+
+    \textsc{Answer}: Fixed.
+    
+    \item l. 39: that has been developed by us, using $\to$ we developed by using
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 13: derivatives and its use $\to$ derivatives and their use
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 14: of types of types $\to$ of types
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 42: Dec p $\to$ Dec P
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 36: suc $\to$ S
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 12: In our Agda formalization, *in contrast*, we represent....
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 31: Bigger $\to$ Composite
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 36: constructor*s* specifies
+
+    \textsc{Answer}: Fixed.
+
+    \item In the definition of RE semantics:
+    perhaps  mention that in Agda one can overload constructor names. 
+
+    \textsc{Answer}: We add the following sentences before the definition of RE semantics data type:
+    "Agda allows the overloading of constructor names. In some cases we use the same symbol for 
+    the RE syntax and its underlying semantics."
+
+    \item l. 42: \$ c $\to$ [c] (outside the double brackets)
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 43: Is it neccesary to define zs? couldn't you directly say xs++ys $\in$ [[l $\bullet$ r]], instead of zs = xs++ys $\to$ zs $\in$ [[l $\bullet$ r]]?
+
+    \textsc{Answer}: It is possible to define the semantics of concatenation without mention zs. We introduce this extra equality because it simplifies
+    some proofs.  
+
+    \item l. 53: Simply for uniformity, perhaps you can speak about character c instead of a in order to use the same name as in the data definition.
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 9: from a parse tree from l (r) $\to$ from a parse tree for l (r)
+
+    \textsc{Answer}: Fixed.
+
+    \item In section 4, perhaps it is useful if you present examples of derivatives
+
+    \textsc{Answer}: We added examples of derivatives and partial derivatives.
+
+    \item l. 47: is proved by function $\nu[e]$ $\to$ is proved by function $\nu[\_]$
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 29: RE's $\to$ REs
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 35: [8], we use smart $\to$ [8]. We use smart
+
+    \textsc{Answer}: Fixed.
+
+    \item Mention somewhere that smart constructors are denoted by prefixing a back quote to the constructor name.
+
+    \textsc{Answer}: Before the definitions of the smart constructors we put the following sentence:
+    "As a convention, we name smart constructors by 
+    prefixing a back quote to the constructor name."
+
+
+    \item Instead of stating 6 different lemmas, I would join the soundness lemmas in only 
+     one with cases as 1, 2 and 3 (and a proof for each case), and the same with the completeness lemmas.
+
+    \textsc{Answer}: We simplify the presentation by joining soundness and completeness lemmas for each of the smart constructors.
+
+    \item l. 32: one of the REs are $\to$ one of the REs is
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 17: a RE with respect $\to$ a RE e with respect
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 40: (section title) and its Properties $\to$ and their Properties
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 48: collectively accepts $\to$ collectively accept
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 50: ACUI equations holds $\to$ ACUI equations hold
+    
+    \textsc{Answer}: Fixed.
+
+    \item l. 30: agda $\to$ Agda
+
+    \textsc{Answer}: Fixed.
+
+    \item There is a mismatch in the order of the parameters between Agda's definition of $\odot$ and the formal definition of $\odot$ in line 28 (S $\odot$ e').
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 21: theorems $\to$ theorem
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 50: encode $\to$ encodes
+
+    \textsc{Answer}: Fixed.
+
+    \item From the explanation on page 16 about what "matching a prefix" and "matching a substring" mean one would expect that 
+    the definitions of those concepts are given by sigma types. Perhaps it would be helpful to mention that the GADTs 
+    provided in fact express such existentials.
+
+    \textsc{Answer}: We add a sentence explaining that such predicates (prefix and substring) could be easily defined by dependent products.
+    We choose to define new types for clarity.
+
+    \item In the definition of constructor String of IsSubstring a ($\forall$ (ys zs ws)) is missed.
+
+    \textsc{Answer}: We omit such parameters to avoid clutter. In Section 2, we have:
+    "To avoid clutter, we'll omit implicit arguments from the source code presentation. The reader can safely assume that every free variable in a type is an implicity parameter."
+
+    \item l. 9: better refer to Lemma 13
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 31: e $\to$ xs
+
+    \textsc{Answer}: Fixed.
+
+
+    \item l. 54: 'be' appears twice
+          l. 54: the Brzozowski definition $\to$ Brzozowski's definition
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 50: drop a '.'
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 57: \cite missed (Norell2009)
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 9: a lot $\to$ much
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 22: CFG $\to$ a CFG
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 45: shows $\to$ show
+
+    \textsc{Answer}: Fixed.
+
+    \item l. 11: have given $\to$ gave
+
+    \textsc{Answer}: Fixed.
+
+    \item A section name ("References") needs to be added.
+
+    \textsc{Answer}: Fixed.
+
+    \item References [5] and [25] are the same.
+
+    \textsc{Answer}: Fixed.
+
+    \item Reference [12] is the SBLP 2016 paper, isn't it? Year is 2016 and should say SBLP instead of Programming Languages.
+
+    \textsc{Answer}: We cited the book chapter on LNCS 9889 which consists of the proceedings for SBLP 2016. 
+        
+\end{itemize}
+
+\section*{Reviewer 3}
+
+\begin{itemize}
+    
+    \item For example, I had to go look up "indexed datatypes" in an Agda tutorial
+    to understand the N -> Set and A -> Set parts in the data definitions of Vec
+    and equality on pages 4 and 5. It seems that the text has been kept from
+    the previous version of the paper, that used Idris for the mechanization,
+    but the notation that Idris use is more explicit. In the definition of Dec,
+    shouldn't the lowercase p in the type of "no" be an uppercase P?
+
+    \textsc{Answer}: Yes! We fixed the lower case p in the definition of Dec type.
+    We also add text to explain the concepts of indexed and parameterized types in
+    Section 2.
+
+    \item The section on "smart constructors" could be greatly shortened. They are
+    not essential to the correctness of the derivative parsing algorithm,
+    just for performance, and the identities and accompanying lemmas are
+    very simple.
+
+    \textsc{Answer}: We joined the soundness and completeness lemmas for each smart constructor to
+    reduce the description of such functions.
+
+    \item On the other hand, the explanation about Brzozowski derivatives could
+    be expanded with a concrete example of why they are interesting for
+    regular expression parsing.
+
+    \textsc{Answer}: We modify the sections on Brzozowski derivatives, Antimirov partial derivatives 
+    and parsing by adding examples and explaining how to use derivatives for parsing.
+
+    \item The definition of Antimirov's derivatives is using the symbol for
+    the Brzozowski derivative in the right side of concatenation.
+
+    \textsc{Answer}: Yes, fixed!
+
+    \item My recommendation is to accept after minor revisions, basically to
+    better explain both the use of Agda and an informal explanation of why
+    derivatives of regular expressions work and why they are interesting
+    for parsing. The experimental results also need better analysis, as
+    I am not convinced that the two reasons they gave tell the whole story;
+    the other implementations should be better by a constant factor, but
+    with the exception of haskell-regexp they are exhibiting better asymptotic
+    behavior.
+
+    \textsc{Answer}: Thank you for your careful reading. We extended the text in order
+    to better explain (partial) derivatives and their use
+    for parsing and examples of these concepts. We also add some explanation about
+    indexed and parameterized data types in Section 2.
+\end{itemize}    
+
+\end{document}
+
+
