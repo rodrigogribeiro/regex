@@ -219,7 +219,8 @@ module BitCoded.BitRegex where
     bitDerivComplete x xs (choice bs e e') (inr .e .bs pr) = inr (bitDeriv e x) bs (bitDerivComplete x xs e' pr)
     bitDerivComplete x xs (cat bs e e') (cat {xs = xs'}.bs pr pr₁ x₁) with nullDec e
     bitDerivComplete x xs (cat bs e e') (cat {_} {_} {[]} .bs pr pr₁ refl) | yes p = inr (cat bs (bitDeriv e x) e') bs (semFuse _ _ (bitDerivComplete _ _ _ pr₁))
-    bitDerivComplete x .(xs₁ ++ _) (cat bs e e') (cat {_} {_} {.x ∷ xs₁} .bs pr pr₁ refl) | yes p = inl (fuse (mkEps p) (bitDeriv e' x)) bs (cat bs (bitDerivComplete _ _ _ pr) pr₁ refl)
+    bitDerivComplete x .(xs₁ ++ _) (cat bs e e') (cat {_} {_} {.x ∷ xs₁} .bs pr pr₁ refl) | yes p
+      = inl (fuse (mkEps p) (bitDeriv e' x)) bs (cat bs (bitDerivComplete _ _ _ pr) pr₁ refl)
     bitDerivComplete x xs (cat bs e e') (cat {_} {_} {[]} .bs pr pr₁ x₁) | no p = ⊥-elim (p pr)
     bitDerivComplete x .(xs₁ ++ _) (cat bs e e') (cat {_} {_} {.x ∷ xs₁} .bs pr pr₁ refl) | no p = cat bs (bitDerivComplete _ _ _ pr) pr₁ refl
     bitDerivComplete x .(xs ++ _) (star bs e) (star-∷ {x = .x} {xs} .bs pr pr₁ refl) = cat bs (semFuse _ _ (bitDerivComplete _ _ _ pr)) pr₁ refl

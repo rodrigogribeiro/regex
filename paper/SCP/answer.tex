@@ -40,13 +40,13 @@ Dear Editor,
 
 \vspace{1cm}
 
-in this letter, we discuss how we have addressed the comments from the reviewers
-of our paper, \textit{Certified Derivative Based Parsing of Regular Expressions}. 
-The main items pointed by the reviewers, the lack of examples and the specification 
-of parsing algorithm (pointed by Reviewer 1) are properly fixed in the submission.
+we discuss below all reviewer's comments on our paper Certified
+Derivative Based Parsing of Regular Expressions. We have included some
+examples and fixed some errors, to address comments by the reviewers,
+to which we thank for careful reading that has allowed a significant
+improvement of the paper.
 
-We would like to thanks the reviewers for their careful reading that allows us 
-to improve the presentation of our work.
+Sincerely,
 
 \vspace{1cm}
 
@@ -87,7 +87,7 @@ Rodrigo Ribeiro, Raul Lopes e Carlos Camar\~ao.
           for finding prefixes and substrings for a given RE.
 
      \item p2, l50 Authors claim "A detailed explanation of the technique used to quotient derivatives with respect to ACUI axioms"
-           This is not true! The authors implement a few (simple) identities such as epsilon . r = r
+           This is not true! The authors implement a few (simple) identities such as epsilon . r = r\\
            ACI is not dealt with at all. It's an essential step to guarantee that the number of dissimilar derivatives (under ACI) is finite.
            
     \textsc{Answer}: You are right! We removed all references to ACUI axioms and mention explicitly that we use smart constructors to 
@@ -129,20 +129,22 @@ Rodrigo Ribeiro, Raul Lopes e Carlos Camar\~ao.
     \item The contributions are not significant enough. In fact, the contributions claimed
           at the beginning of the paper are not substantiated at all.
           
-    \textsc{Answer}: We appreciate Reviewer 1 detailed comments which allowed us to fix and improve the presentation of our work. 
-     We believe that the text is now consistent, and that we have properly addressed the main concerns of Reviewer 1:
+    \textsc{Answer}: We appreciate Reviewer 1's detailed comments which allowed us to fix and improve the presentation of our work. 
+     In our view the text now addresses Reviewer 1's concerns:
      \begin{enumerate}
-         \item We remove the references to ACUI axioms, since they aren't needed for RE derivative based parsing. Also 
-               we explicitly mention that smart-constructors only perform simplifications based on simple RE equivalences.
-         \item We have added some examples of RE semantics relation, Brzozowski derivatives, Antimirov partial derivatives 
+         \item References to ACUI axioms were removed, as they are not needed for
+RE derivative based parsing. The text now explicitly mentions that
+smart constructors only perform simnplifications based on RE
+equivalences.
+         \item We have added some examples of: RE semantics relation, Brzozowski derivatives, Antimirov partial derivatives 
                and parsing using derivatives. 
      \end{enumerate}
      
      \item The structure can be improved (mainly a boring sequences of Agda formalization and results).
            I couldn't find a single worked out example!
            
-     \textsc{Answer}: We add some examples in the paper: RE semantics relation, Brzozowski derivatives,
-     Antimirov partial derivatives and on derivative based parsing.
+     \textsc{Answer}: We have added some examples in the paper: RE semantics relation, Brzozowski derivatives,
+     Antimirov partial derivatives and derivative based parsing.
 \end{itemize}
 
 \section*{Reviewer 2}
@@ -196,8 +198,8 @@ Rodrigo Ribeiro, Raul Lopes e Carlos Camar\~ao.
     perhaps  mention that in Agda one can overload constructor names. 
 
     \textsc{Answer}: We add the following sentences before the definition of RE semantics data type:
-    "Agda allows the overloading of constructor names. In some cases we use the same symbol for 
-    the RE syntax and its underlying semantics."
+    "Agda allows the overloading of constructor names. In some cases we use the same symbol in 
+    the RE syntax and in the definition of its semantics."
 
     \item l. 42: \$ c $\to$ [c] (outside the double brackets)
 
@@ -205,7 +207,7 @@ Rodrigo Ribeiro, Raul Lopes e Carlos Camar\~ao.
 
     \item l. 43: Is it neccesary to define zs? couldn't you directly say xs++ys $\in$ [[l $\bullet$ r]], instead of zs = xs++ys $\to$ zs $\in$ [[l $\bullet$ r]]?
 
-    \textsc{Answer}: It is possible to define the semantics of concatenation without mention zs. We introduce this extra equality because it simplifies
+    \textsc{Answer}: It is possible to define the semantics of concatenation without mentioning zs. We introduce this extra equality because it simplifies
     some proofs.  
 
     \item l. 53: Simply for uniformity, perhaps you can speak about character c instead of a in order to use the same name as in the data definition.
@@ -234,15 +236,14 @@ Rodrigo Ribeiro, Raul Lopes e Carlos Camar\~ao.
 
     \item Mention somewhere that smart constructors are denoted by prefixing a back quote to the constructor name.
 
-    \textsc{Answer}: Before the definitions of the smart constructors we put the following sentence:
-    "As a convention, we name smart constructors by 
-    prefixing a back quote to the constructor name."
+    \textsc{Answer}: The following sentence was introduced before the definitions of the smart constructors:
+    "As a convention, a smart constructors is named by prefixing the constructor name with a back quote."
 
 
     \item Instead of stating 6 different lemmas, I would join the soundness lemmas in only 
      one with cases as 1, 2 and 3 (and a proof for each case), and the same with the completeness lemmas.
 
-    \textsc{Answer}: We simplify the presentation by joining soundness and completeness lemmas for each of the smart constructors.
+    \textsc{Answer}:  We have simplified the presentation by combining soundness and completeness lemmas for each smart constructor.
 
     \item l. 32: one of the REs are $\to$ one of the REs is
 
@@ -284,8 +285,8 @@ Rodrigo Ribeiro, Raul Lopes e Carlos Camar\~ao.
     the definitions of those concepts are given by sigma types. Perhaps it would be helpful to mention that the GADTs 
     provided in fact express such existentials.
 
-    \textsc{Answer}: We add a sentence explaining that such predicates (prefix and substring) could be easily defined by dependent products.
-    We choose to define new types for clarity.
+    \textsc{Answer}: A sentence was added explaining that such predicates (prefix and substring) could be easily defined by dependent products.
+    New types were defined for clarity.
 
     \item In the definition of constructor String of IsSubstring a ($\forall$ (ys zs ws)) is missed.
 
@@ -356,7 +357,7 @@ Rodrigo Ribeiro, Raul Lopes e Carlos Camar\~ao.
     shouldn't the lowercase p in the type of "no" be an uppercase P?
 
     \textsc{Answer}: Yes! We fixed the lower case p in the definition of Dec type.
-    We also add text to explain the concepts of indexed and parameterized types in
+    We also add text to explain the concepts of indexed and parameterised types in
     Section 2.
 
     \item The section on "smart constructors" could be greatly shortened. They are
@@ -391,7 +392,10 @@ Rodrigo Ribeiro, Raul Lopes e Carlos Camar\~ao.
     \textsc{Answer}: Thank you for your careful reading. We extended the text in order
     to better explain (partial) derivatives and their use
     for parsing and examples of these concepts. We also add some explanation about
-    indexed and parameterized data types in Section 2.
+    indexed and parameterized data types in Section 2. The reason of why tools like 
+    GNU-Grep and Google re2 are exhibiting better asymptotic behaviour needs further 
+    investigation on how such tools are implemented and how efficient is the code 
+    generated by Agda's compiler. 
 \end{itemize}    
 
 \end{document}

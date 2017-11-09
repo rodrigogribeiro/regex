@@ -183,7 +183,7 @@ complete formalization of an algorithm for RE parsing using
 derivatives \cite{Owens2009}, and describe a RE based search tool we developed by 
 using the dependently typed language
 Agda~\cite{Norell2009}. We want to emphasize that what we call ``RE parsing''
-is the problem of finding all prefixes and substrings of a input that matches
+is the problem of finding all prefixes and substrings of an input that matches
 a given RE, as in RE based text search tools as GNU-grep~\cite{Grep}.
 
 More specifically, our contributions are:
@@ -282,7 +282,7 @@ the type of |Vec A| is |Nat -> Set|, i.e.
 For each natural number |n|, |Vec A n| is a type. 
 
 %format head = "\F{head}"
-In |Vec| definition, the constructor |[]| builds empty vectors. The cons-operator (|_::_|)
+In |Vec|'s definition, constructor |[]| builds empty vectors. The cons-operator (|_::_|)
 inserts a new element in front of a vector of $n$ elements (of type
 |Vec A n|) and returns a value of type |Vec A (succ n)|. The
 |Vec| datatype is an example of a dependent type, i.e. a type
@@ -316,7 +316,7 @@ disjunction as the following Agda type:
      inj₁ : A -> A ⊎ B
      inj₂ : B -> A ⊎ B
 \end{code}    
-Note that each constructor of the previous data type represent how
+Note that each constructor of the previous data type represents how
 we can build evidence for the proposition |A ⊎ B|: using constructor
 |inj₁| together with an evidence for |A| or using constructor |inj₂| and 
 evidence for |B|. Intuitively, type |_⊎_| encodes the intuitionistic intepretation
@@ -413,7 +413,7 @@ the inductive type |Nat| to represent the codes of alphabet
 symbols. In our Agda formalization, in contrast, we represent alphabet symbols using type |Char|.
 
 %format Regex = "\D{Regex}"
-%format Eps = "\C{\epsilon}"
+%format Eps = "\C{\lambda}"
 %format ∅ = "\C{\emptyset}"
 %format # = "\C{\$}"
 %format ∙ = "\C{∙}"
@@ -437,7 +437,7 @@ Datatype |Regex| encodes RE syntax.
     _⋆  : Regex -> Regex
 \end{spec}
 Constructors |∅| and |Eps| denote respectively the
-empty language ($\emptyset$) and the empty string ($\epsilon$). Alphabet
+empty language ($\emptyset$) and the empty string ($\lambda$). Alphabet
 symbols are constructed by using the |#| constructor. Composite REs are
 built using concatenation (|∙|), union (|+|) and
 Kleene star (|⋆|).
@@ -454,7 +454,7 @@ Kleene star (|⋆|).
 %format +R = "\C{+R}"
 
 We define RE semantics as the inductively defined judgment $s \in e$, 
-which means that string $s$ in is the language denoted by RE $e$.
+which means that string $s$ is in the language denoted by RE $e$.
 \[
     \begin{array}{ccc}
         \infer[_{Eps}]{\epsilon \in \epsilon}{}
@@ -510,8 +510,8 @@ $s \in e$ and $s' \in e^\star$.
 \end{Example}
 In our formalization, we represent strings as values of type |List Char| and we encode the RE semantics
 as an inductive data type in which each constructor represents a rule for the previously defined semantics.
-Agda allows the overloading of constructor names. In some cases we use the same symbol for 
-the RE syntax and its underlying semantics.
+Agda allows the overloading of constructor names. In some cases we use the same symbol both 
+in the RE syntax and in the definition of its semantics.
 
 \begin{spec}
   data _<<-[[_]] : List Char -> Regex -> Set where
@@ -540,7 +540,7 @@ are built using the following well known equivalence of REs: $e^\star
 Several inversion lemmas about RE parsing relation are necessary for
 derivative-based parsing formalization. They consist of
 pattern-matching on proofs of
-\ensuremath{\D{\_\in\llbracket\_\rrbracket}}. As an example, below we present the inversion 
+\ensuremath{\D{\_\in\llbracket\_\rrbracket}}. As an example, we present below the inversion 
 lemma for choice operator.
 
 %format ∈+-invert = "\F{+invert}"
@@ -558,10 +558,10 @@ lemma for choice operator.
 %format :: = "\C{::}"
 %format #-invert = "\F{charInvert}"
 
-Intuitively, function |∈+-invert| specifies that if is the case that |xs <<-[[ l + r ]]| then
-the string |xs| matches the RE |l| or it matches the RE |r|. Another inversion lemma 
+Intuitively, function |∈+-invert| specifies that, in the case that |xs <<-[[ l + r ]]|,
+the string |xs| matches RE |l| or it matches the RE |r|. Another inversion lemma 
 (function |#-invert|) specifies that 
-if a string |x :: xs| matches the RE |# y| then the input string must be a single character string, 
+if a string |x :: xs| matches RE |# y| then the input string must be a single character string, 
 i.e. |xs == []| and |x == y|.
 
 \begin{spec}
@@ -569,7 +569,7 @@ i.e. |xs == []| and |x == y|.
   #-invert (# c) = refl , refl
 \end{spec}    
 
-In our formalization we have define other inversions lemmas for RE semantics relation. They follow the same
+In our formalization of RE semantics we have defined other inversions lemmas. They follow the same
 structure of the previously defined lemmas --- they produce, as result, the necessary conditions for a RE semantics 
 proof to hold --- and are omitted for brevity.
 
@@ -685,19 +685,21 @@ The equivalence axioms maintained by smart constructors are:
 %format `⋆ = "\F{`⋆}"
 
 These axioms are kept as invariants using functions that preserve them
-while building REs. As a convention, we name smart constructors by 
-prefixing a back quote to the constructor name. For union, we just need to worry when one
-parameter denotes the empty language:
+while building REs. As a convention, a smart constructor is named by 
+prefixing the constructor name with a back quote. In the case of union, 
+the definition of the smart constructor differs only when one the 
+parameters denotes the empty language:
 \begin{spec}
   _`+_ : (e e' : Regex) → Regex
   ∅ `+ e' = e'
   e `+ ∅  = e
   e `+ e' = e + e'
 \end{spec}
-In concatenation, we need to deal with the possibility of parameters
-being empty (denoting the empty language) or the empty string. If one
-of them is empty (|∅|) the result is also empty. Since the empty string
-is the identity for concatenation, the other parameter is returned.
+In the case of concatenation, we need to deal with the possibilities of each 
+parameter being empty (denoting the empty language) or the empty string. If one
+of them is empty (|∅|) the result is also empty, and the empty string is the 
+identity for concatenation.
+
 \begin{spec}
   _`∙_ : (e e' : Regex) -> Regex
   ∅ `∙ e' = ∅
@@ -773,7 +775,7 @@ repository~\cite{regex-rep}.
 
 \subsection{Brzozowski Derivatives and their Properties}
 
-Intuitively, the derivative of a language $L$ w.r.t. a symbol $a$, $L_a$, is the 
+Intuitively, the derivative $L_a$ of a language $L$ w.r.t. a symbol $a$ is the 
 set of strings generated by stripping the leading $a$ from the strings in $L$
 that start with $a$. Formally:  
 \[
@@ -901,7 +903,7 @@ Function $\nabla_a(e)$ uses the operator $S \odot e'$ which concatenates RE |e'|
 \]
 
 \begin{Example}
-    Consider the RE $e = (aa + b)^\star$. The set of partial derivatives of $e$ w.r.t. $a$ is 
+    Consider RE $e = (aa + b)^\star$. The set of partial derivatives of $e$ w.r.t. $a$ is 
     $\{a(aa + b)^\star\}$ as demonstrated below:
     \begin{align*}
         \nabla_a((aa + b)^\star) &= \nabla_a(aa + b) \odot (aa + b)^\star \\
@@ -928,7 +930,7 @@ The operator that concatenates a RE at the right of every $e \in S$ is defined b
   [] ** e = []
   (e' :: es') ** e = (e' ∙ e) :: (es' ** e)
 \end{spec}
-Definition of a function to compute partial derivatives for a given RE is defined as a direct
+The definition of a function to compute partial derivatives for a given RE is a direct
 translation of mathematical notation to Agda code:
 \begin{spec}
   naa[_,_] : Regex → Char → Regexes
@@ -984,7 +986,7 @@ For all sets of REs |S|, |S'| and all strings |s|, if |s <<-<[ S ++ S' ]]> | hol
 \end{proof}
 
 \begin{Lemma}\label{wop}
-  For all sets of REs |S|, all REs |e| and all strings |s|, |s'|; if |s <<-<[ S ]]>| and |s' <<-[[ e ]] | holds then
+  For all sets of REs |S|, all REs |e| and all strings |s|, |s'|, if |s <<-<[ S ]]>| and |s' <<-[[ e ]] | holds then
   |s ++ s' <<-<[ e ** S ]]> | holds.
 \end{Lemma}
 \begin{proof}
@@ -999,9 +1001,9 @@ For all sets of REs |S|, |S'| and all strings |s|, if |s <<-<[ S ++ S' ]]> | hol
   Induction on the derivation of |s <<-<[ e ** S ]]> |.
 \end{proof}
 
-Using these previous results about |_<<-<[_]]>|, we can enunciate the soundness and completeness theorems
+Using these previous results about |_<<-<[_]]>|, we can enunciate soundness and completeness theorems
 of partial derivatives. Let |e| be an arbitrary RE and |a| an arbitrary symbol. Soundness means that if a
-string |s| is accepted by some RE in |naa[ e , a ]| then |(a :: s) <<-[[ e ]]|. Completeness theorems shows
+string |s| is accepted by some RE in |naa[ e , a ]| then |(a :: s) <<-[[ e ]]|. The completeness theorem shows
 that the other direction of the soundness implication also holds.
 
 \begin{Theorem}[Partial derivative operation soundness]
@@ -1033,7 +1035,7 @@ test by extending the definition of derivatives to strings as follows~\cite{Owen
         \widehat{\partial}_{as}(e)     & = & \widehat{\partial}_s(\partial_a(e))
     \end{array}
 \]
-Note that, $s \in e$ if, and only if, $\epsilon \in \widehat{\partial}_s(e)$, which is true whenever 
+Note that $s \in e$ if and only if $\epsilon \in \widehat{\partial}_s(e)$, which is true whenever 
 $\nu(\widehat{\partial}_s(e)) = \epsilon$. Owens et. al. define a relation between strings and RE, called
 the \emph{matching} relation, defined as:
 \[
@@ -1042,7 +1044,7 @@ the \emph{matching} relation, defined as:
         e \sim as       & \Leftrightarrow & \partial_a(e) \sim s
     \end{array}
 \] 
-A simple inductive proof shows that $s \in e$ if, and only if, $e \sim s$. 
+A simple inductive proof shows that $s \in e$ if and only if $e \sim s$. 
 
 \begin{Example}
     Suppose $e = (aa + b)^\star$ and the string $aab$. We can show that 
@@ -1058,7 +1060,7 @@ A simple inductive proof shows that $s \in e$ if, and only if, $e \sim s$.
     \end{align*}
     
     The same idea can be used to show that a string isn't in the language of some RE. Now consider again
-    the RE $e = (aa + b)^\star$ and the string $abb$:
+    RE $e = (aa + b)^\star$ and the string $abb$:
     \begin{align*}
         (aa + b)^\star \sim abb & \Leftrightarrow \partial_a (aa + b) (aa + b)^\star \sim bb \\
                                 & \Leftrightarrow a(aa + b)^\star \sim bb \\
@@ -1074,7 +1076,7 @@ A simple inductive proof shows that $s \in e$ if, and only if, $e \sim s$.
 For our purposes, understanding
 RE parsing as a matching relation isn't adequate because RE-based text search tools, like GNU-grep, shows
 every matching prefix and substring of a RE for a given input.
-Since our interest is determining which prefixes and substrings of the
+Since our interest is in determining which prefixes and substrings of the
 input string match a given RE, we define datatypes that
 represent the fact that a given RE matches a prefix or a substring of
 some string.
@@ -1104,8 +1106,8 @@ define the types |IsPrefix| and |IsSubstring|.
   data IsSubstring (xs : List Char)(e : Regex) : Set where
     Substring :  xs == ys ++ zs ++ ws -> zs <<-[[ e ]] -> IsSubstring xs e
 \end{spec}
-Using these datatypes we can define the following relevant properties
-of prefixes and substrings. 
+Using these datatypes we can state and prove the following relevant properties of 
+prefixes and substrings. 
 
 \begin{Lemma}[Lemma |¬IsPrefix|]\label{pref1}
   For all REs |e|, if |[] <<-[[ e ]]| does not hold then neither does |IsPrefix [] e|. 
@@ -1194,7 +1196,7 @@ Previously defined functions for computing prefixes and substrings use Brzozowsk
 derivatives. Functions for building prefixes and substrings using Antimirov's
 partial derivatives are similar to Brzozowski derivative based ones.
 The main differences between them are in the necessary lemmas used to prove
-decidability of prefix and substring relation. Such lemmas are slighly modified
+decidability of the prefix and substring relations. Such lemmas are slightly modified
 versions of Lemmas \ref{pref1} and \ref{pref2} that consider the relation
 |_<<-<[_]]>|  and are omitted for brevity.
 
@@ -1218,9 +1220,9 @@ experiments on a machine with a Intel Core I7 1.7 GHz, 8GB RAM running
 Mac OS X 10.12.3; the results were collected and the median of several
 test runs was computed.
 
-We use the same experiments as those used in ~\cite{SulzmannL14};
+We used the same experiments as those used in ~\cite{SulzmannL14};
 these consist of parsing files containing thousands of occurrences of
-symbol \texttt{a}, using the RE $(a + b + ab)^\star$; and parsing
+symbol \texttt{a}, using the RE $(a + b + ab)^\star$, and parsing
 files containing thousands of occurrences of \texttt{ab}, using the
 same RE. Results are presented in Figures~\ref{fig:graph1}
 and~\ref{fig:graph2}, respectively.
@@ -1328,7 +1330,7 @@ prover, of a combinator parsing library. A parser generator for such
 combinators is described and a proof that generated parsers are sound
 and complete is presented.  According to Ridge, preliminary results
 show that parsers built using his generator are faster than those
-created by Happy parser generator~\cite{Happy}.
+created by the Happy parser generator~\cite{Happy}.
 
 Ausaf et. al.~\cite{AusafDU16} describe a formalization, in
 Isabelle/HOL~\cite{Nipkow02}, of the POSIX matching algorithm proposed
@@ -1355,7 +1357,9 @@ program of greedy and POSIX RE parsing using Brzozowski
 derivatives~\cite{SulzmannL14,FrischC04} and investigate ways to
 obtain a formalized but simple and efficient RE parsing tool.
 
-\paragraph{Acknowledgements:} The first author thanks CNPq for financial
+\paragraph{Acknowledgements:} We would like to thank the reviewers 
+for their insightful comments on the paper, as these comments led us 
+to an improvement of the work. The first author thanks CAPES for financial
 support. Second author thanks Fundação de Amparo a
 Pesquisa de Minas Gerais (FAPEMIG) for financial support.
 
